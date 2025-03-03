@@ -22,7 +22,12 @@ BANG_CHECKSUM=$(curl -s "$BANG_URL_PREFIX$NEW_VERSION$BANG_URL_SUFFIX" | sha256s
 echo "bc: $BANG_CHECKSUM"
 
 # 2. update mkbangs
-sed -i'' \
+case $OSTYPE in
+  darwin*) SED_CMD=gsed;;
+  *) SED_CMD=sed;;
+esac
+
+$SED_CMD -i \
 "s/VERSION = '.*'/VERSION = '$NEW_VERSION'/g;"\
 "s/BANG_CHECKSUM = '.*'/BANG_CHECKSUM = '$BANG_CHECKSUM'/g" \
 "$MKBANGS"
