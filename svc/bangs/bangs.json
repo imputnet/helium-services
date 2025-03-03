@@ -1,4 +1,4 @@
-// Generated at 2025-03-03T17:35:09.536Z
+// Generated at 2025-03-03T19:25:32.624Z
 //
 // MIT License
 //
@@ -4547,7 +4547,7 @@
  {
   "s": "AboutYou",
   "t": "ay",
-  "u": "https://www.aboutyou.de/suche?term={searchTerms}&search_source=ddgo"
+  "u": "https://www.aboutyou.de/suche?term={searchTerms}"
  },
  {
   "s": "Amazon.com",
@@ -4847,12 +4847,12 @@
  {
   "s": "Search all !bangs",
   "t": "bang",
-  "u": "https://duckduckgo.com/bang?q={searchTerms}"
+  "u": "https://kbe.smaertness.net/search?q={searchTerms}"
  },
  {
   "s": "Search all !bangs",
   "t": "bangs",
-  "u": "https://duckduckgo.com/bang?q={searchTerms}"
+  "u": "https://kbe.smaertness.net/search?q={searchTerms}"
  },
  {
   "s": "banned.video",
@@ -4917,7 +4917,7 @@
  {
   "s": "BASE Search",
   "t": "basesearch",
-  "u": "https://www.base-search.net/Search/Results?lookfor={searchTerms}&refid=duckduckgo"
+  "u": "https://www.base-search.net/Search/Results?lookfor={searchTerms}"
  },
  {
   "s": "GNU Bash Homepage",
@@ -7922,7 +7922,7 @@
  {
   "s": "Cambridge Dictionary",
   "t": "cald",
-  "u": "https://dictionary.cambridge.org/search/british/?source=duckduckgo&q={searchTerms}"
+  "u": "https://dictionary.cambridge.org/search/british/?q={searchTerms}"
  },
  {
   "s": "Google Calendar",
@@ -8428,11 +8428,6 @@
   "s": "CryptoCurrency Market",
   "t": "ccm",
   "u": "https://coinmarketcap.com/currencies/search/?q={searchTerms}"
- },
- {
-  "s": "CNET",
-  "t": "c",
-  "u": "https://www.cnet.com/1770-5_1-0.html?query={searchTerms}"
  },
  {
   "s": "Cheapies NZ",
@@ -9837,17 +9832,7 @@
  {
   "s": "CNET",
   "t": "cnet",
-  "u": "https://www.cnet.com/1770-5_1-0.html?query={searchTerms}&tag=srch&target=nw"
- },
- {
-  "s": "CNET en español",
-  "t": "cnete",
-  "u": "https://www.cnet.com/es/busqueda/?query={searchTerms}"
- },
- {
-  "s": "CNET UK",
-  "t": "cnetuk",
-  "u": "https://www.cnet.com/search/?query={searchTerms}"
+  "u": "https://www.cnet.com/search/?searchQuery={searchTerms}"
  },
  {
   "s": "Conservative Home",
@@ -14360,16 +14345,6 @@
   "u": "https://downforeveryoneorjustme.com/{searchTerms}"
  },
  {
-  "s": "Cnet Downloads",
-  "t": "downloadcnet",
-  "u": "https://download.cnet.com/1770-20_4-0.html?query={searchTerms}&platformSelect=&tag=srch&searchtype=downloads&filterName=platform=Windows,Mobile,Mac,Webware&filter=platform=Windows,Mobile,Mac,Webware"
- },
- {
-  "s": "Download.com",
-  "t": "download",
-  "u": "https://download.cnet.com/1770-20_4-0.html?searchtype=downloads&query={searchTerms}&tg=dl-20&search.x=0&search.y=0&search=+Go!"
- },
- {
   "s": "Downpour",
   "t": "downpour",
   "u": "https://www.downpour.com/catalogsearch/result/?q={searchTerms}"
@@ -15517,7 +15492,7 @@
  {
   "s": "European Bioinformatics Institute",
   "t": "ebi",
-  "u": "https://www.ebi.ac.uk/ebisearch/search.ebi?db=allebi&query={searchTerms}&requestFrom=duckduckgo"
+  "u": "https://www.ebi.ac.uk/ebisearch/search.ebi?db=allebi&query={searchTerms}"
  },
  {
   "s": "ebay.in",
@@ -17892,7 +17867,7 @@
  {
   "s": "Fab",
   "t": "fab",
-  "u": "https://fab.com/search/?q={searchTerms}&ref=ddb"
+  "u": "https://fab.com/search/?q={searchTerms}"
  },
  {
   "s": "fabienm",
@@ -18122,7 +18097,7 @@
  {
   "s": "FARMALINE",
   "t": "farmaline",
-  "u": "https://www.farmaline.be/apotheek/zoeken/{searchTerms}/?ref=duckduckgo"
+  "u": "https://www.farmaline.be/apotheek/zoeken/{searchTerms}/"
  },
  {
   "s": "Blog do Farmfor",
@@ -20462,7 +20437,7 @@
  {
   "s": "G Adventures",
   "t": "gadv",
-  "u": "https://www.gadventures.com/search/?q={searchTerms}&ref=ddgsearch"
+  "u": "https://www.gadventures.com/search/?q={searchTerms}"
  },
  {
   "s": "Google AE",
@@ -27585,6 +27560,11 @@
   "u": "https://www.iconfinder.com/search/?q={searchTerms}"
  },
  {
+  "s": "Icônes",
+  "t": "icones",
+  "u": "https://icones.js.org/collection/all?s={searchTerms}"
+ },
+ {
   "s": "Icons8",
   "t": "icons8",
   "u": "https://icons8.com/web-app/for/all/{searchTerms}"
@@ -29595,11 +29575,6 @@
   "u": "https://www.jetbrains.com/search/?q={searchTerms}"
  },
  {
-  "s": "Jet.com",
-  "t": "jet",
-  "u": "https://jet.com/search?term={searchTerms}"
- },
- {
   "s": "The Happy Jetlagger",
   "t": "jetlag",
   "u": "https://thehappyjetlagger.com/?s={searchTerms}"
@@ -29693,11 +29668,6 @@
   "s": "JouwICTvacature",
   "t": "jiv",
   "u": "https://www.jouwictvacature.nl/vacatures?s={searchTerms}"
- },
- {
-  "s": "Jet.com",
-  "t": "j",
-  "u": "https://jet.com/search?term={searchTerms}"
  },
  {
   "s": "Jinja",
@@ -39590,6 +39560,11 @@
   "u": "https://npms.io/search?q={searchTerms}"
  },
  {
+  "s": "npm jump to",
+  "t": "njt",
+  "u": "https://njt.vercel.app/jump?to={searchTerms}"
+ },
+ {
   "s": "NPM Search",
   "t": "npms",
   "u": "http://npmsearch.com/?q={searchTerms}"
@@ -39800,9 +39775,9 @@
   "u": "https://docs.scipy.org/doc/numpy/search.html?q={searchTerms}&check_keywords=yes&area=default"
  },
  {
-  "s": "Nu.nl",
+  "s": "nu.nl",
   "t": "nu",
-  "u": "https://www.nu.nl/zoeken/?q={searchTerms}"
+  "u": "https://www.nu.nl/zoeken?q={searchTerms}"
  },
  {
   "s": "Nusagates Institute",
@@ -41657,7 +41632,7 @@
  {
   "s": "OuiCar",
   "t": "ouicar",
-  "u": "http://www.ouicar.fr/car/search?where={searchTerms}&from=ddgbang"
+  "u": "http://www.ouicar.fr/car/search?where={searchTerms}"
  },
  {
   "s": "offerup",
@@ -42963,6 +42938,11 @@
   "s": "Phineas and Ferb Wiki",
   "t": "pfwiki",
   "u": "https://phineasandferb.wikia.com/wiki/Special:Search?search={searchTerms}"
+ },
+ {
+  "s": "Phind",
+  "t": "phind",
+  "u": "https://www.phind.com/search?q={searchTerms}"
  },
  {
   "s": "The Portable Freeware Collection",
@@ -46155,6 +46135,11 @@
   "u": "https://rawg.io/search?query={searchTerms}"
  },
  {
+  "s": "Raycast Store",
+  "t": "raycast",
+  "u": "https://www.raycast.com/search?q={searchTerms}"
+ },
+ {
   "s": "Raymond-nh",
   "t": "raymond",
   "u": "https://raymond-nh.com/?s={searchTerms}"
@@ -46912,7 +46897,7 @@
  {
   "s": "Repology",
   "t": "repology",
-  "u": "https://repology.org/metapackages/?search={searchTerms}"
+  "u": "https://repology.org/projects/?search={searchTerms}"
  },
  {
   "s": "RepRap Wiki",
@@ -46987,7 +46972,7 @@
  {
   "s": "Resto.lu",
   "t": "restolu",
-  "u": "https://www.resto.lu/fr/Luxembourg/guide.cfm?searchmode=classic&RESTOTYPE=isresto&nom={searchTerms}&idcuisine_type=&ville=&region=&idprix=ddg@pivert.org"
+  "u": "https://www.resto.lu/fr/Luxembourg/guide.cfm?searchmode=classic&RESTOTYPE=isresto&nom={searchTerms}&idcuisine_type=&ville=&region="
  },
  {
   "s": "RetailgMeNot",
@@ -50035,11 +50020,6 @@
   "u": "https://share.servicenow.com/app.do#/search-result?search_query={searchTerms}"
  },
  {
-  "s": "Download.com",
-  "t": "shareware",
-  "u": "https://download.cnet.com/1770-20_4-0.html?searchtype=downloads&query={searchTerms}&tg=dl-20&search.x=0&search.y=0&search=+Go!"
- },
- {
   "s": "Shaw",
   "t": "shaw",
   "u": "https://www.shaw.ca/store/search/search.jsp?q={searchTerms}"
@@ -51395,11 +51375,6 @@
   "u": "https://www.softpedia.com/dyn-search.php?search_term={searchTerms}&x=0&y=0"
  },
  {
-  "s": "Download.com",
-  "t": "software",
-  "u": "https://download.cnet.com/1770-20_4-0.html?searchtype=downloads&query={searchTerms}&tg=dl-20&search.x=0&search.y=0&search=+Go!"
- },
- {
   "s": "SoFurry",
   "t": "sofurry",
   "u": "https://www.sofurry.com/browse/search?search={searchTerms}"
@@ -51510,9 +51485,9 @@
   "u": "https://www.songkick.com/search?query={searchTerms}"
  },
  {
-  "s": "song.link",
+  "s": "Songlink/Odesli",
   "t": "songlink",
-  "u": "https://odesli.co/embed?url={searchTerms}"
+  "u": "https://odesli.co/?q={searchTerms}"
  },
  {
   "s": "Songmeaning",
@@ -59172,7 +59147,7 @@
  {
   "s": "Viasona",
   "t": "viasona",
-  "u": "https://www.viasona.cat/cerca?que={searchTerms}&cerca=&sourceid=duckduckgo"
+  "u": "https://www.viasona.cat/cerca?que={searchTerms}&cerca="
  },
  {
   "s": "vibe.d Documentation",
@@ -61180,11 +61155,6 @@
   "u": "https://en.wikiversity.org/w/index.php?search={searchTerms}"
  },
  {
-  "s": "wiki.vg",
-  "t": "wikivg",
-  "u": "https://wiki.vg/index.php?search={searchTerms}"
- },
- {
   "s": "Wikivoyage (Deutsch)",
   "t": "wikivoyagede",
   "u": "https://de.wikivoyage.org/w/index.php?search={searchTerms}&title=Special:Search&go=Go"
@@ -61847,7 +61817,7 @@
  {
   "s": "Wooroll",
   "t": "wooroll",
-  "u": "http://www.wooroll.com/search.html?q={searchTerms}&ref=duckduckgo"
+  "u": "http://www.wooroll.com/search.html?q={searchTerms}"
  },
  {
   "s": "WooordHunt",
@@ -63028,11 +62998,6 @@
   "s": "WikiWand Türkçe",
   "t": "wwtr",
   "u": "https://www.wikiwand.com/tr/{searchTerms}"
- },
- {
-  "s": "Porno İzle",
-  "t": "www.89porno.com",
-  "u": "https://www.89porno.com/?s={searchTerms}"
  },
  {
   "s": "Wikiwand",
@@ -64548,11 +64513,6 @@
   "s": "http://wiki.killuglyradio.com/wiki/Main_Page",
   "t": "zwj",
   "u": "https://wiki.killuglyradio.com/index.php?title=Special:Search&profile=default&search={searchTerms}"
- },
- {
-  "s": "www.zalando.de",
-  "t": "z",
-  "u": "https://www.zalando.de/katalog/?q={searchTerms}"
  },
  {
   "s": "Zephyr Cross Reference",
@@ -67553,5 +67513,40 @@
   "s": "Cloudflare Developer Documentation",
   "t": "cdev",
   "u": "https://developers.cloudflare.com/search/?q={searchTerms}"
+ },
+ {
+  "s": "Hugging Face Datasets",
+  "t": "hfd",
+  "u": "https://huggingface.co/datasets?search={searchTerms}"
+ },
+ {
+  "s": "Hugging Face Models",
+  "t": "hfm",
+  "u": "https://huggingface.co/models?search={searchTerms}"
+ },
+ {
+  "s": "Bugs!",
+  "t": "bugs",
+  "u": "https://music.bugs.co.kr/search/integrated?q={searchTerms}"
+ },
+ {
+  "s": "Melon",
+  "t": "melon",
+  "u": "https://www.melon.com/search/total/index.htm?q={searchTerms}"
+ },
+ {
+  "s": "Genie",
+  "t": "genie",
+  "u": "https://www.genie.co.kr/search/searchMain?query={searchTerms}"
+ },
+ {
+  "s": "Vibe",
+  "t": "vibe",
+  "u": "https://vibe.naver.com/search?query={searchTerms}"
+ },
+ {
+  "s": "Chromium Code Search",
+  "t": "chromium",
+  "u": "https://source.chromium.org/search?q={searchTerms}&ss=chromium/chromium/src"
  }
 ]
