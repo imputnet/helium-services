@@ -6,6 +6,7 @@ import * as ResponseHandler from './lib/response.ts';
 
 const handle = async (request: Request) => {
     const { apps, responseType } = await RequestHandler.getData(request);
+    RequestHandler.normalizeApps(apps);
 
     const appsWithMixin = Util.shuffle(Mixins.addRandomExtensions(apps));
 

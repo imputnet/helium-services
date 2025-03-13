@@ -17,10 +17,6 @@ const getAppsFromQuery = (params: string[]): App[] => {
             throw 'invalid x string';
         }
 
-        if (appid.length < 16 || appid.length > 36) {
-            throw 'invalid app id';
-        }
-
         return {
             appid,
             version: params.get('v') ?? '0.0.0.0',
@@ -74,4 +70,26 @@ export const getData = async (request: Request): Promise<RequestData> => {
     }
 
     throw { status: 405, text: 'method not allowed' };
+};
+
+const APP_ID_REGEX = /^[a-z]{32}$/;
+
+export const normalizeApps = (apps: App[]) => {
+    const ids = new Set();
+
+    apps.forEach((obj) => {
+        obj.appid = obj.appid.toLowerCase();
+
+        const { appid, version } = obj;
+
+        if (ids.has(appid)) {
+            throw 'duplicates not allowed';
+        } else if (APP_ID_REGEX.test(appid)) {
+            throw 'invalid app id';
+        } else if (version.length > 16 || version.length === 0) {
+            throw 'invalid version';
+        }
+
+        ids.add(appid);
+    });
 };
