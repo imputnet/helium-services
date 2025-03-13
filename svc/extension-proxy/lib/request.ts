@@ -47,7 +47,7 @@ const handlePost = async (request: Request): Promise<RequestData> => {
         throw { status: 422, text: 'invalid content-type' };
     }
 
-    let body: OmahaRequest;
+    let body: { request: OmahaRequest };
     try {
         body = await request.json();
     } catch {
@@ -56,7 +56,7 @@ const handlePost = async (request: Request): Promise<RequestData> => {
 
     return {
         responseType: 'json',
-        apps: body.app.map(
+        apps: body.request.app.map(
             ({ appid, version }) => ({ appid, version }),
         ),
     };
