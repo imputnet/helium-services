@@ -83,11 +83,11 @@ export const normalizeApps = (apps: App[]) => {
         const { appid, version } = obj;
 
         if (ids.has(appid)) {
-            throw 'duplicates not allowed';
-        } else if (APP_ID_REGEX.test(appid)) {
-            throw 'invalid app id';
+            throw `duplicates not allowed -- ${appid}`;
+        } else if (!APP_ID_REGEX.test(appid)) {
+            throw `invalid app id -- ${appid}`;
         } else if (version.length > 16 || version.length === 0) {
-            throw 'invalid version';
+            throw `invalid version -- ${version}`;
         }
 
         ids.add(appid);
