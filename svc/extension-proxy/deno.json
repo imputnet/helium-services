@@ -4,6 +4,7 @@
         "run": "deno serve -N --parallel main.ts"
     },
     "imports": {
+        "@libs/xml": "jsr:@libs/xml@^6.0.4",
         "@std/assert": "jsr:@std/assert@1"
     },
     "fmt": {

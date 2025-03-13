@@ -27,7 +27,7 @@ const addToPool = ({ appid, version }: App) => {
     }
 };
 
-export const addFromResponse = ({ response }: OmahaResponse) => {
+export const addToPoolFromResponse = ({ response }: OmahaResponse) => {
     if (!response.app) {
         return;
     }
@@ -35,7 +35,7 @@ export const addFromResponse = ({ response }: OmahaResponse) => {
     response.app
         .map((app) => {
             if (
-                app.updatecheck.status === 'ok' &&
+                app.updatecheck?.status === 'ok' &&
                 app.updatecheck.manifest.version
             ) {
                 return {
@@ -68,4 +68,15 @@ export const addRandomExtensions = (apps: App[]) => {
 
     apps.push(...mixins);
     return apps;
+};
+
+export const unmixResponse = (expectedApps: App[], response: OmahaResponse) => {
+    if (response.response.app) {
+        const allowedIds = new Set(expectedApps.map(a => a.appid));
+        response.response.app = response.response.app?.filter(app => {
+            return allowedIds.has(app?.appid);
+        });
+    }
+
+    return response;
 };

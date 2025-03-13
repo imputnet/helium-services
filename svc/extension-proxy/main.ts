@@ -9,15 +9,17 @@ const handle = async (request: Request) => {
 
     const appsWithMixin = Util.shuffle(Mixins.addRandomExtensions(apps));
 
-    // TODO: remove mixins from omaha response
     const omahaResponse = await Omaha.request(
         'CHROME_WEBSTORE',
         appsWithMixin,
         { userAgent: request.headers.get('user-agent') || '' },
     );
 
-    Mixins.addFromResponse(omahaResponse);
-    return ResponseHandler.createResponse(responseType, omahaResponse);
+    Mixins.addToPoolFromResponse(omahaResponse);
+    return ResponseHandler.createResponse(
+        responseType,
+        Mixins.unmixResponse(apps, omahaResponse)
+    );
 };
 
 export default {

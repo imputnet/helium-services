@@ -1,10 +1,11 @@
 type OmahaResponseApp = {
     appid: string;
+    status?: string,
     cohort: string;
     cohortname: string;
     cohorthint: string;
     ping: { status: string };
-    updatecheck:
+    updatecheck?:
         | { status: 'noupdate' }
         | {
             status: 'ok';
