@@ -2,7 +2,7 @@ import { OMAHA_JSON_PREFIX } from './omaha/constants.ts';
 import { OmahaResponse } from './omaha/response.ts';
 import { ResponseType } from './request.ts';
 import { respond } from './util.ts';
-import * as xml from "jsr:@libs/xml";
+import * as xml from 'jsr:@libs/xml';
 
 const transformURL = (url: string) => {
     // TODO: crx proxying
@@ -68,64 +68,68 @@ const makeHeaders = ({ response }: OmahaResponse) => {
         'x-daystart': String(response.daystart.elapsed_seconds),
         'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
         'accept-ranges': 'none',
-        pragma: 'no-cache'
+        pragma: 'no-cache',
     };
-}
+};
 
 const handleJSON = (response: OmahaResponse) => {
     return respond(200, OMAHA_JSON_PREFIX + JSON.stringify(response), {
         ...makeHeaders(response),
-        'content-type': 'application/json; charset=utf-8'
+        'content-type': 'application/json; charset=utf-8',
     });
 };
 
 const handleXML = ({ response }: OmahaResponse) => {
-    return respond(200, xml.stringify({
-        "@version": "1.0",
-        "@encoding": "UTF-8",
-        gupdate: {
-            "@xmlns": "http://www.google.com/update2/response",
-            "@protocol": "2.0",
-            "@server": response.server,
-            daystart: {
-                "@elapsed_days": response.daystart.elapsed_days,
-                "@elapsed_seconds": response.daystart.elapsed_seconds,
-            },
-            app: response.app?.map(app => {
-                let updatecheck = null;
+    return respond(
+        200,
+        xml.stringify({
+            '@version': '1.0',
+            '@encoding': 'UTF-8',
+            gupdate: {
+                '@xmlns': 'http://www.google.com/update2/response',
+                '@protocol': '2.0',
+                '@server': response.server,
+                daystart: {
+                    '@elapsed_days': response.daystart.elapsed_days,
+                    '@elapsed_seconds': response.daystart.elapsed_seconds,
+                },
+                app: response.app?.map((app) => {
+                    let updatecheck = null;
 
-                if (app.updatecheck?.status === 'ok') {
-                    const urls = app.updatecheck.urls.url[0];
-                    const package_ = app.updatecheck.manifest.packages.package[0];
-                    if ('codebase' in urls) {
-                        updatecheck = {
-                            "@status": app.updatecheck?.status,
-                            '@fp': '',
-                            '@hash_sha256': package_.hash_sha256,
-                            '@size': package_.size,
-                            '@protected': '0',
-                            '@version': app.updatecheck.manifest.version,
-                            '@codebase': urls.codebase,
-                        };
+                    if (app.updatecheck?.status === 'ok') {
+                        const urls = app.updatecheck.urls.url[0];
+                        const package_ = app.updatecheck.manifest.packages.package[0];
+                        if ('codebase' in urls) {
+                            updatecheck = {
+                                '@status': app.updatecheck?.status,
+                                '@fp': '',
+                                '@hash_sha256': package_.hash_sha256,
+                                '@size': package_.size,
+                                '@protected': '0',
+                                '@version': app.updatecheck.manifest.version,
+                                '@codebase': urls.codebase,
+                            };
+                        } else {
+                            throw 'differential updates are not supported here';
+                        }
                     } else {
-                        throw 'differential updates are not supported here';
+                        updatecheck = app.updatecheck;
                     }
-                } else {
-                    updatecheck = app.updatecheck;
-                }
 
-                return {
-                    "@appid": app.appid,
-                    "@status": app.status,
-                    ...(app.cohort ? {"@cohort": "", "@cohortname": "" } : {}),
-                    ...(updatecheck ? { updatecheck } : {})
-                };
-            })
-        }
-    }), {
-        ...makeHeaders({ response }),
-        'content-type': 'application/xml; charset=utf-8'
-    });
+                    return {
+                        '@appid': app.appid,
+                        '@status': app.status,
+                        ...(app.cohort ? { '@cohort': '', '@cohortname': '' } : {}),
+                        ...(updatecheck ? { updatecheck } : {}),
+                    };
+                }),
+            },
+        }),
+        {
+            ...makeHeaders({ response }),
+            'content-type': 'application/xml; charset=utf-8',
+        },
+    );
 };
 
 export function createResponse(

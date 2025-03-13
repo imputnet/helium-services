@@ -37,7 +37,9 @@ const handleGet = (request: Request) => {
     }
 
     const xParams = url.searchParams.getAll('x');
-    if (xParams.length === 0 || (xParams.length > 1 && responseType === 'redirect')) {
+    if (
+        xParams.length === 0 || (xParams.length > 1 && responseType === 'redirect')
+    ) {
         throw 'malformed request';
     }
 

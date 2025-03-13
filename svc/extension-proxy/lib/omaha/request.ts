@@ -31,7 +31,9 @@ type AppInternal = App & {
     updatecheck: Exclude<App['updatecheck'], undefined>;
 };
 
-export type OmahaRequest = Omit<typeof REQUEST_TEMPLATE, 'app'> & { app: AppInternal[] };
+export type OmahaRequest = Omit<typeof REQUEST_TEMPLATE, 'app'> & {
+    app: AppInternal[];
+};
 
 const omaha_uuid = () => `{${crypto.randomUUID()}}`;
 
@@ -107,5 +109,7 @@ export default async function request(
         throw 'invalid response';
     }
 
-    return JSON.parse(jsonWithPrefix.replace(OMAHA_JSON_PREFIX, '')) as OmahaResponse;
+    return JSON.parse(
+        jsonWithPrefix.replace(OMAHA_JSON_PREFIX, ''),
+    ) as OmahaResponse;
 }

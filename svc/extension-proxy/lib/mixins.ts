@@ -72,8 +72,8 @@ export const addRandomExtensions = (apps: App[]) => {
 
 export const unmixResponse = (expectedApps: App[], response: OmahaResponse) => {
     if (response.response.app) {
-        const allowedIds = new Set(expectedApps.map(a => a.appid));
-        response.response.app = response.response.app?.filter(app => {
+        const allowedIds = new Set(expectedApps.map((a) => a.appid));
+        response.response.app = response.response.app?.filter((app) => {
             return allowedIds.has(app?.appid);
         });
     }

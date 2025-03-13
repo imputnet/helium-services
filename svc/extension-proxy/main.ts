@@ -18,7 +18,7 @@ const handle = async (request: Request) => {
     Mixins.addToPoolFromResponse(omahaResponse);
     return ResponseHandler.createResponse(
         responseType,
-        Mixins.unmixResponse(apps, omahaResponse)
+        Mixins.unmixResponse(apps, omahaResponse),
     );
 };
 

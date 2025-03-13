@@ -1,6 +1,6 @@
 type OmahaResponseApp = {
     appid: string;
-    status?: string,
+    status?: string;
     cohort: string;
     cohortname: string;
     cohorthint: string;
