@@ -1,6 +1,6 @@
 #!/bin/sh
 set -xae
-source .env
+. ./.env
 set +a
 
 docker compose build \
