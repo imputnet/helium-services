@@ -41,6 +41,9 @@ export const respond = (
     }
     response ||= '';
 
+    headers ??= {};
+    headers['content-type'] ??= 'text/plain';
+
     return new Response(response, { status, headers });
 };
 
