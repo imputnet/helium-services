@@ -1,0 +1,5 @@
+# private files
+private
+
+# environment variables
+.env

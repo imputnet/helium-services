@@ -1,0 +1,45 @@
+services:
+  nginx:
+    init: true
+    read_only: true
+    build:
+      context: ./svc/nginx
+      args:
+        SERVICES_HOSTNAME: ${SERVICES_HOSTNAME}
+    volumes:
+      - ./private/acme-tmp:/var/tmp/acme.sh:ro
+      - ./private/certs:/certs:ro
+      - type: tmpfs
+        target: /tmp
+        tmpfs: { size: 5.12e+8 }
+    ports:
+      - 80:80/tcp
+      - 443:443/tcp
+      - 443:443/udp
+
+  ext_proxy:
+    container_name: ext_proxy
+    read_only: true
+    build: ./svc/extension-proxy
+    restart: unless-stopped
+
+  ext_proxy_2:
+    container_name: ext_proxy_backup
+    read_only: true
+    build: ./svc/extension-proxy
+    restart: unless-stopped
+
+  acme.sh:
+    image: "neilpang/acme.sh@sha256:6960358a673694fc18d895f812585ca73f973ed278c2750c7b3f74485f493485"
+    volumes:
+      - acme.sh:/acme.sh
+      - ./private/certs:/certs
+      - ./private/acme-tmp:/webroot
+    network_mode: host
+    command: daemon
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+volumes:
+  acme.sh: {}
