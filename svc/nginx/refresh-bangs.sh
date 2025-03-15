@@ -12,7 +12,9 @@ while :; do
          -o "$TMPFILE_PATH" \
          -z "$OUTFILE_PATH" \
          "$BANG_SOURCE" \
-    && mv "$TMPFILE_PATH" "$OUTFILE_PATH"
+    && gzip -k9 "$TMPFILE_PATH" \
+    && mv "$TMPFILE_PATH" "$OUTFILE_PATH" \
+    && mv "$TMPFILE_PATH.gz" "$OUTFILE_PATH.gz"
 
     sleep 3600
 done

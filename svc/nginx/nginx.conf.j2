@@ -32,6 +32,7 @@ http {
 
     gzip on;
     gzip_vary on;
+    gzip_static on;
     gzip_types text/plain application/json "application/xml; charset=utf-8" "application/json; charset=utf-8";
 
     keepalive_timeout 20s;
