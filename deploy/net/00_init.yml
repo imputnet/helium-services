@@ -1,0 +1,45 @@
+---
+- name: Perform initial setup
+  hosts: servers
+  gather_facts: false
+
+  tasks:
+    - name: Set a hostname
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}.{{ fqdn }}"
+        use: systemd
+
+    - name: Update APT cache & upgrade packages
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: true
+
+    - name: Gather the package facts
+      ansible.builtin.package_facts:
+
+    - name: Remove ufw and clean up
+      when: "'ufw' in ansible_facts.packages"
+      block:
+        - name: Reset ufw
+          community.general.ufw:
+            state: reset
+        - name: Disable ufw
+          community.general.ufw:
+            state: disabled
+        - name: Uninstall ufw
+          ansible.builtin.apt:
+            name:
+              - ufw
+            state: absent
+            purge: true
+
+    - name: Install iptables-persistent
+      ansible.builtin.apt:
+        name: iptables-persistent
+        state: present
+
+    - name: Install bird2
+      when: bgp is defined
+      ansible.builtin.apt:
+        name: bird2
+        state: present

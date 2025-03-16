@@ -1,0 +1,37 @@
+---
+- name: Configure BIRD
+  hosts: servers
+  gather_facts: false
+
+  tasks:
+    - name: Set up BIRD configuration
+      when: bgp is defined
+      ansible.builtin.template:
+        src: ./configs/bird.conf.j2
+        dest: /etc/bird/bird.conf
+        owner: bird
+        group: bird
+        mode: u=r,g=r,o=
+      notify: Reload BIRD
+
+    - name: Create ifupdown config
+      when: bgp is defined
+      ansible.builtin.template:
+        src: ./configs/ifconfig-lo.conf.j2
+        dest: /etc/network/interfaces.d/99-lo
+        owner: root
+        group: root
+        mode: u=rw,g=rw,o=r
+      notify: Bring interfaces up
+
+  handlers:
+    - name: Reload BIRD
+      ansible.builtin.systemd_service:
+        name: bird
+        state: reloaded
+        enabled: true
+        masked: false
+    - name: Bring interfaces up
+      ansible.builtin.shell: ifdown -f lo:0 lo:1; ifup lo:0 lo:1
+      register: out
+      changed_when: out.rc != 0

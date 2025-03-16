@@ -1,0 +1,19 @@
+auto lo:0 lo:1
+
+iface lo:0 inet static
+    address {{ bgp.ip.v4 }}
+    netmask 32
+
+iface lo:0 inet6 static
+    address {{ bgp.ip.v6 }}
+    netmask 128
+    accept_ra 0
+
+iface lo:1 inet static
+    address {{ bgp_host.source_ip.v4 }}
+    netmask 32
+
+iface lo:1 inet6 static
+    address {{ bgp_host.source_ip.v6 }}
+    netmask 128
+    accept_ra 0

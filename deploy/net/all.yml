@@ -1,0 +1,4 @@
+---
+- import_playbook: 00_init.yml
+- import_playbook: 01_firewall.yml
+- import_playbook: 02_bgp.yml

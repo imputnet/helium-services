@@ -1,0 +1,36 @@
+servers:
+  hosts:
+    example:
+      ansible_host: 10.13.37.1
+      ## Do not configure or include bgp_host in your
+      ## config unless you know exactly why it's there.
+      #bgp_host:
+      ## The IP addresses of your server which it already
+      ## has assigned by the provider.
+      #  source_ip:
+      #    v4: "10.13.37.3"
+      #    v6: "2001:db8::"
+      #  peer:
+      #    asn: 64497
+      #    v4: "10.13.37.2"
+      #    v6: "2001:db8:1::"
+      ## Optional parameters:
+      #    multihop: 2
+      #    password: "demo"
+
+  vars:
+    # The domain on which the services will be available.
+    fqdn: "services.helium.computer"
+    # Do not configure or include bgp in your hosts file
+    # unless you know exactly why it's there.
+    #bgp:
+    ## Your ASN goes here.
+    #  asn: 64496
+    ## The IP ranges you plan to announce.
+    #  cidr:
+    #    v4: "10.42.42.0/24"
+    #    v6: "2001:db8:2::/48"
+    ## The specific IPs from `cidr` you assign to your server.
+    #  ip:
+    #    v4: "10.42.42.1"
+    #    v6: "2001:db8:2::"

@@ -3,3 +3,6 @@ private
 
 # environment variables
 .env
+
+# ansible hosts file
+deploy/hosts.yml

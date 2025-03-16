@@ -1,0 +1,131 @@
+---
+- name: Configure network firewall
+  hosts: servers
+  gather_facts: true
+  vars:
+    has_v4: "{{ 'default_ipv4' in ansible_facts }}"
+    has_v6: "{{ 'default_ipv6' in ansible_facts }}"
+    default_ipv4: "{{ bgp_host.source_ip.v4 if bgp_host is defined else ansible_facts.default_ipv4.address if has_v4 else '' }}"
+    default_ipv6: "{{ bgp_host.source_ip.v6 if bgp_host is defined else ansible_facts.default_ipv6.address if has_v6 else '' }}"
+    public_ipv4: "{{ bgp.ip.v4 if bgp is defined else ansible_facts.default_ipv4.address if has_v4 else '' }}"
+    public_ipv6: "{{ bgp.ip.v6 if bgp is defined else ansible_facts.default_ipv6.address if has_v6 else '' }}"
+
+  tasks:
+    - name: Accept established connections
+      block:
+        - name: Accept established connections (v4)
+          ansible.builtin.iptables:
+            ip_version: ipv4
+            chain: INPUT
+            ctstate: ESTABLISHED,RELATED
+            jump: ACCEPT
+        - name: Accept established connections (v6)
+          ansible.builtin.iptables:
+            ip_version: ipv6
+            chain: INPUT
+            ctstate: ESTABLISHED,RELATED
+            jump: ACCEPT
+
+    - name: Accept loopback packets
+      ansible.builtin.iptables:
+        ip_version: "{{ item }}"
+        chain: INPUT
+        in_interface: lo
+        jump: ACCEPT
+        action: insert
+      with_items: ["ipv4", "ipv6"]
+
+    - name: Accept SSH on original server IP
+      block:
+        - name: Allow SSH (v4)
+          when: has_v4
+          ansible.builtin.iptables:
+            ip_version: ipv4
+            chain: INPUT
+            protocol: tcp
+            match: tcp
+            destination: "{{ default_ipv4 }}"
+            destination_port: 22
+            jump: ACCEPT
+        - name: Allow SSH (v6)
+          when: has_v6
+          ansible.builtin.iptables:
+            ip_version: ipv6
+            chain: INPUT
+            protocol: tcp
+            match: tcp
+            destination: "{{ default_ipv6 }}"
+            destination_port: 22
+            jump: ACCEPT
+
+    - name: Accept router advertisements on original server IP (v6 only)
+      ansible.builtin.iptables:
+        ip_version: ipv6
+        chain: INPUT
+        protocol: ipv6-icmp
+        icmp_type: "{{ item }}"
+        jump: ACCEPT
+      loop: "{{ [133, 134, 135, 136] }}"
+
+    - name: Allow SSH to our default IP
+      block:
+        - name: Allow SSH (v4)
+          when: has_v4
+          ansible.builtin.iptables:
+            ip_version: ipv4
+            chain: INPUT
+            protocol: tcp
+            match: tcp
+            destination: "{{ default_ipv4 }}"
+            destination_port: 22
+            jump: ACCEPT
+        - name: Allow SSH (v6)
+          when: has_v6
+          ansible.builtin.iptables:
+            ip_version: ipv6
+            chain: INPUT
+            protocol: tcp
+            match: tcp
+            destination: "{{ default_ipv6 }}"
+            destination_port: 22
+            jump: ACCEPT
+
+    - name: Allow HTTP traffic to our public IP
+      block:
+        - name: Allow HTTP (v4)
+          when: has_v4
+          ansible.builtin.iptables:
+            ip_version: ipv4
+            chain: INPUT
+            protocol: "{{ item[1] }}"
+            match: "{{ item[1] }}"
+            destination: "{{ public_ipv4 }}"
+            destination_port: "{{ item[0] }}"
+            jump: ACCEPT
+          loop: [[80, "tcp"], [443, "tcp"], [443, "udp"]]
+        - name: Allow HTTP (v6)
+          when: has_v6
+          ansible.builtin.iptables:
+            ip_version: ipv6
+            chain: INPUT
+            protocol: "{{ item[1] }}"
+            match: "{{ item[1] }}"
+            destination: "{{ public_ipv6 }}"
+            destination_port: "{{ item[0] }}"
+            jump: ACCEPT
+          loop: [[80, "tcp"], [443, "tcp"], [443, "udp"]]
+
+    - name: Drop everything else
+      ansible.builtin.iptables:
+        ip_version: "{{ item }}"
+        chain: INPUT
+        policy: DROP
+      with_items: ["ipv4", "ipv6"]
+
+    - name: Save IPtables config
+      community.general.iptables_state:
+        ip_version: "ip{{ item }}"
+        table: filter
+        state: saved
+        path: "/etc/iptables/rules.{{ item }}"
+      with_items: ["v4", "v6"]

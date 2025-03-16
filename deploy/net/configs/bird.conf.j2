@@ -1,0 +1,34 @@
+router id {{ ansible_facts.default_ipv4.address }};
+
+{% for protocol in ['v4', 'v6'] %}
+protocol static {
+    ip{{ protocol }};
+    route {{ bgp.cidr[protocol] }} reject;
+}
+
+protocol bgp {{ protocol }} {
+    local as {{ bgp.asn }};
+    source address {{ bgp_host.source_ip[protocol] }};
+
+    graceful restart on;
+    neighbor {{ bgp_host.peer[protocol] }} as {{ bgp_host.peer.asn }};
+
+    {% if bgp_host.peer.multihop is defined %}
+    multihop {{ bgp_host.peer.multihop }};
+    {% endif %}
+
+    {% if bgp_host.peer.password is defined %}
+    password "{{ bgp_host.peer.password }}";
+    {% endif %}
+
+    ip{{ protocol }} {
+        /* we only have one upstream here, so we really don't care
+        ** about getting a full routing table */
+        import none;
+        export filter {
+            if (net ~ [ {{ bgp.cidr[protocol] }} ]) then accept;
+            reject;
+        };
+    };
+}
+{% endfor %}
