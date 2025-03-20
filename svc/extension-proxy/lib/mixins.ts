@@ -52,19 +52,9 @@ export const addRandomExtensions = (apps: App[]) => {
     const nAppsToMixin = Math.ceil(2 * (1 + Math.log2(apps.length)));
     const idSet = new Set(apps.map((a) => a.appid));
 
-    let mixins: App[] = [];
-    if (extensionPool.length < nAppsToMixin) {
-        mixins = extensionPool.filter((a) => !idSet.has(a.appid));
-    } else {
-        // FIXME: this is really really shit
-        while (mixins.length < nAppsToMixin) {
-            const app = Util.any(extensionPool);
-            if (!idSet.has(app.appid)) {
-                idSet.add(app.appid);
-                mixins.push(app);
-            }
-        }
-    }
+    const mixins = Util.shuffle(
+        extensionPool.filter(app => !idSet.has(app.appid))
+    ).slice(0, nAppsToMixin);
 
     apps.push(...mixins);
     return apps;
