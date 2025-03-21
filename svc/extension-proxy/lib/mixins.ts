@@ -53,7 +53,7 @@ export const addRandomExtensions = (apps: App[]) => {
     const idSet = new Set(apps.map((a) => a.appid));
 
     const mixins = Util.shuffle(
-        extensionPool.filter(app => !idSet.has(app.appid))
+        extensionPool.filter((app) => !idSet.has(app.appid)),
     ).slice(0, nAppsToMixin);
 
     apps.push(...mixins);
