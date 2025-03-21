@@ -81,3 +81,35 @@ export const parseURLStrict = (url_: unknown) => {
 
     return url;
 };
+
+export const SAFE_REQUEST_HEADERS = [
+    'user-agent',
+    'accept-encoding',
+    'range',
+    'if-match',
+    'if-none-match',
+    'if-modified-since',
+    'if-range',
+];
+
+export const SAFE_RESPONSE_HEADERS = [
+    'content-type',
+    'etag',
+    'last-modified',
+    'accept-ranges',
+    'content-length',
+    'vary',
+    'content-range',
+];
+
+export const filterHeaders = (old: Headers, allowlist: string[]) => {
+    const headers = new Headers();
+
+    for (const name of allowlist) {
+        if (old.has(name)) {
+            headers.set(name, old.get(name)!);
+        }
+    }
+
+    return headers;
+};

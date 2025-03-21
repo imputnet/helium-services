@@ -27,12 +27,20 @@ const handleOmahaQuery = async (request: Request) => {
 const handlePayloadProxy = async (request: Request) => {
     const originalURL = await ExtensionProxy.unwrap(request.url);
     const response = await fetch(originalURL, {
-        headers: {
-            'User-Agent': request.headers.get('user-agent') || '',
-        },
+        headers: Util.filterHeaders(
+            request.headers,
+            Util.SAFE_REQUEST_HEADERS,
+        ),
     });
 
-    return response;
+    return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Util.filterHeaders(
+            response.headers,
+            Util.SAFE_RESPONSE_HEADERS,
+        ),
+    });
 };
 
 const handle = (request: Request) => {

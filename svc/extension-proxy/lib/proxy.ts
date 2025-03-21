@@ -15,9 +15,9 @@ const _get_secret = () => {
 const _get_base_origin = () => {
     if (!Deno.env.has('PROXY_BASE_URL')) {
         console.error('PROXY_BASE_URL is not set, CRX requests will not be proxied');
-    } else {
-        return new URL(Deno.env.get('PROXY_BASE_URL')!);
     }
+
+    return new URL(Deno.env.get('PROXY_BASE_URL')!);
 };
 
 const baseOrigin = _get_base_origin();
