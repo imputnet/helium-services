@@ -1,7 +1,7 @@
 {
     "tasks": {
         "dev": "deno serve -A main.ts",
-        "run": "deno serve --allow-net=chromiumdash.appspot.com:443,clients2.google.com:443 --cached-only --parallel main.ts"
+        "run": "deno serve --allow-env=HMAC_SECRET,PROXY_BASE_URL --allow-net --cached-only --parallel main.ts"
     },
     "imports": {
         "@libs/xml": "jsr:@libs/xml@^6.0.4",
