@@ -9,7 +9,15 @@ const MAX_EXTENSIONS_IN_POOL = 2 ** 10;
 const getKey = (app: App) => `${app.appid}_${app.version}`;
 
 Deno.unrefTimer(
-    setInterval(() => Util.shuffle(extensionPool), 60000),
+    setInterval(() => {
+        Util.shuffle(extensionPool);
+    }, Util.ms.minutes(1)),
+);
+
+Deno.unrefTimer(
+    setInterval(() => {
+        console.log(`[mixins] Apps in mixin pool: ${extensionPoolDedup.size}`);
+    }, Util.ms.minutes(15)),
 );
 
 const addToPool = ({ appid, version }: App) => {
