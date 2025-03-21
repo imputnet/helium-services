@@ -2,31 +2,29 @@ import { OMAHA_JSON_PREFIX } from './omaha/constants.ts';
 import { OmahaResponse } from './omaha/response.ts';
 import { ResponseType } from './request.ts';
 import { respond } from './util.ts';
+import * as ExtensionProxy from './proxy.ts';
 import * as xml from 'jsr:@libs/xml';
 
-const transformURL = (url: string) => {
-    // TODO: crx proxying
-    return url;
-};
-
-const filterResponse = ({ response }: OmahaResponse) => {
+const filterResponse = async ({ response }: OmahaResponse) => {
     return {
         server: response.server,
         protocol: response.protocol,
         daystart: response.daystart,
-        app: response.app?.map((app) => {
+        app: response.app && await Promise.all(response.app.map(async (app) => {
             const updatecheck = app.updatecheck;
 
             if (updatecheck?.status === 'ok') {
-                updatecheck.urls.url.map((obj) => {
-                    if ('codebase' in obj) {
-                        obj.codebase = transformURL(obj.codebase);
-                    } else {
-                        throw 'differential updates are not supported here';
-                    }
+                await Promise.all(
+                    updatecheck.urls.url.map(async (obj) => {
+                        if ('codebase' in obj) {
+                            obj.codebase = await ExtensionProxy.wrap(obj.codebase);
+                        } else {
+                            throw 'differential updates are not supported here';
+                        }
 
-                    return obj;
-                });
+                        return obj;
+                    }),
+                );
             }
 
             return {
@@ -38,7 +36,7 @@ const filterResponse = ({ response }: OmahaResponse) => {
                 ping: app.ping,
                 updatecheck,
             };
-        }),
+        })),
     };
 };
 
@@ -127,11 +125,11 @@ const handleXML = ({ response }: OmahaResponse) => {
     );
 };
 
-export function createResponse(
+export async function createResponse(
     responseType: ResponseType,
     data: OmahaResponse,
-): Response {
-    data.response = filterResponse(data);
+): Promise<Response> {
+    data.response = await filterResponse(data);
 
     if (responseType === 'redirect') {
         return handleRedirect(data);

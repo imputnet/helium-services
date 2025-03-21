@@ -1,10 +1,11 @@
 import * as Util from './lib/util.ts';
 import * as Mixins from './lib/mixins.ts';
 import * as Omaha from './lib/omaha/index.ts';
+import * as ExtensionProxy from './lib/proxy.ts';
 import * as RequestHandler from './lib/request.ts';
 import * as ResponseHandler from './lib/response.ts';
 
-const handle = async (request: Request) => {
+const handleOmahaQuery = async (request: Request) => {
     const { apps, responseType } = await RequestHandler.getData(request);
     RequestHandler.normalizeApps(apps);
 
@@ -21,6 +22,26 @@ const handle = async (request: Request) => {
         responseType,
         Mixins.unmixResponse(apps, omahaResponse),
     );
+};
+
+const handlePayloadProxy = async (request: Request) => {
+    const originalURL = await ExtensionProxy.unwrap(request.url);
+    const response = await fetch(originalURL, {
+        headers: {
+            'User-Agent': request.headers.get('user-agent') || '',
+        },
+    });
+
+    return response;
+};
+
+const handle = (request: Request) => {
+    const url = new URL(request.url);
+    if (url.pathname.endsWith('/proxy')) {
+        return handlePayloadProxy(request);
+    }
+
+    return handleOmahaQuery(request);
 };
 
 export default {

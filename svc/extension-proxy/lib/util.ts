@@ -60,3 +60,24 @@ export const respondWithError = (e: unknown) => {
 
     return respond(500, 'server error');
 };
+
+export const parseURLStrict = (url_: unknown) => {
+    if (url_ instanceof URL) {
+        return;
+    }
+
+    if (typeof url_ !== 'string') {
+        throw 'url is not a string or URL object';
+    }
+
+    const url = new URL(url_);
+    if (url.username || url.password || url.port) {
+        throw 'usernames/passwords/ports in url are disallowed';
+    }
+
+    if (!['http:', 'https:'].includes(url.protocol)) {
+        throw 'only http/https urls are supported';
+    }
+
+    return url;
+};
