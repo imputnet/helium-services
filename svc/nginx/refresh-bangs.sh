@@ -8,7 +8,7 @@ mkdir -p "$(dirname "$OUTFILE_PATH")"
 [ -f "$OUTFILE_PATH" ] || touch "$OUTFILE_PATH";
 
 while :; do
-    curl -m 5 \
+    curl --fail -m 5 \
          -o "$TMPFILE_PATH" \
          -z "$OUTFILE_PATH" \
          "$BANG_SOURCE" \
