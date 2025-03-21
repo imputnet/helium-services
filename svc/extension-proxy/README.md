@@ -12,6 +12,6 @@ this service does not log, track or store any personal information of any kind. 
 you download may be added to the mixin pool and used to enhance the privacy of other users by mixing it
 into the requests this proxy makes towards third-party services.
 
-however, we may temporarily log anonymous data related to these endpoints for debugging or abuse
+we may temporarily log anonymous data related to these endpoints for debugging or abuse
 prevention when deemed necessary, in which case, the logs are kept in RAM for a maximum of 30
 minutes and subsequently discarded.
