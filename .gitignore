@@ -6,3 +6,6 @@ private
 
 # ansible hosts file
 deploy/hosts.yml
+
+# compose override file
+compose.override.yml
