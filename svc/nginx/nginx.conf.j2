@@ -97,6 +97,7 @@ http {
         }
 
         location = /bangs.json {
+            add_header Cache-Control "public, max-age=86400, stale-if-error=604800";
             root /dev/shm/bangs;
         }
 
