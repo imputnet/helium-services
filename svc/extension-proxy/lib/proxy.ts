@@ -68,7 +68,7 @@ export const wrap = async (url: string) => {
     }
 
     const proxyURL = new URL(baseOrigin);
-    const expiry = Util.now() + Util.ms.seconds(1);
+    const expiry = Util.now() + Util.ms.hours(1);
 
     proxyURL.pathname = '/proxy';
     proxyURL.searchParams.set('url', url);
