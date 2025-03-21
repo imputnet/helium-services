@@ -27,11 +27,6 @@ const filterResponse = ({ response }: OmahaResponse) => {
 
                     return obj;
                 });
-
-                updatecheck.manifest.packages.package.map((obj) => {
-                    obj.fp = '';
-                    return obj;
-                });
             }
 
             return {
