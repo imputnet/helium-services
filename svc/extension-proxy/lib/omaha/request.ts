@@ -11,6 +11,7 @@ import * as Util from '../util.ts';
 export type App = {
     appid: string;
     version: string;
+    brand?: string;
     updatecheck?: {
         rollback_allowed?: boolean;
         sameversionupdate?: boolean;

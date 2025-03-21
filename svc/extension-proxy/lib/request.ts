@@ -56,7 +56,7 @@ const handlePost = async (request: Request): Promise<RequestData> => {
 
     return {
         responseType: 'json',
-        apps: body.request.app.map(
+        apps: body.request.app.filter((app) => app.brand !== 'GGRO').map(
             ({ appid, version }) => ({ appid, version }),
         ),
     };
