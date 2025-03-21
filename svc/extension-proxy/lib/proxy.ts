@@ -93,5 +93,10 @@ export const unwrap = async (url_: string) => {
     }
 
     await verify(originalURL, expiry, signature);
+
+    if (Util.now() > +expiry) {
+        throw { status: 410, text: 'URL expired' };
+    }
+
     return originalURL;
 };
