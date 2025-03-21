@@ -8,7 +8,9 @@ https://services.helium.computer/ext/*
 
 ### privacy policy
 
-this service does not log, track or store any personal information of any kind.
+this service does not log, track or store any personal information of any kind. however, the extensions
+you download may be added to the mixin pool and used to enhance the privacy of other users by mixing it
+into the requests this proxy makes towards third-party services.
 
 however, we may temporarily log anonymous data related to these endpoints for debugging or abuse
 prevention when deemed necessary, in which case, the logs are kept in RAM for a maximum of 30
