@@ -6,7 +6,7 @@
 #         --fullchain-file ~/helium-services/deploy/private/certs/fullchain.pem \
 #         --key-file ~/helium-services/deploy/private/certs/private.key \
 #         -d <your_fqdn>
-#         --reloadcmd "bash -c 'cd ~/helium-services/deploy && ansible-playbook services/02_tls.yaml'"
+#         --reloadcmd "bash -c 'cd ~/helium-services/deploy && ansible-playbook services/02_tls.yml'"
 #
 - name: Push SSL certificates - multi-deployment only
   hosts: servers

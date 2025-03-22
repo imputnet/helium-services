@@ -23,7 +23,7 @@ servers:
     fqdn: "services.helium.computer"
     ##Set this only if you have a multi-deployment setup and need
     ##to push a certificate from a centralized path. Refer to
-    ##services/02_tls.yaml for more instructions.
+    ##services/02_tls.yml for more instructions.
     # multi_deployment: true
     # Do not configure or include bgp in your hosts file
     # unless you know exactly why it's there.
