@@ -65,14 +65,12 @@
             ip_version: ipv4
             chain: INPUT
             protocol: icmp
-            icmp_type: "{{ item }}"
             jump: ACCEPT
         - name: Accept ICMP (v6)
           ansible.builtin.iptables:
             ip_version: ipv6
             chain: INPUT
             protocol: ipv6-icmp
-            icmp_type: "{{ item }}"
             jump: ACCEPT
 
     - name: Allow SSH to our default IP
