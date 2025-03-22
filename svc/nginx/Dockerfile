@@ -12,11 +12,19 @@ RUN jinja2 --strict \
     /nginx.conf.j2 -o /nginx.conf
 
 FROM nginx:1.26.3-alpine3.20-slim@sha256:b72dec66dea425356956e863bfbccca6c1f8748f5913e094d4ca20b71e4ba2c3
+ARG SERVICES_HOSTNAME
+ENV SERVICES_HOSTNAME "$SERVICES_HOSTNAME"
 
 RUN apk add --no-cache inotify-tools curl
 
 COPY --from=prep /dhparam.pem /etc/nginx/dhparam.pem
 COPY --from=prep /nginx.conf /etc/nginx/nginx.conf
 COPY ./*.sh /
+
+HEALTHCHECK CMD \
+    curl -f \
+    --resolve "${SERVICES_HOSTNAME}:443:127.0.0.1" \
+    -o /dev/null \
+    "https://${SERVICES_HOSTNAME}/bangs.json"
 
 ENTRYPOINT ["/entrypoint.sh"]
