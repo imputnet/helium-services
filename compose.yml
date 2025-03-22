@@ -16,6 +16,7 @@ services:
       - 80:80/tcp
       - 443:443/tcp
       - 443:443/udp
+    restart: unless-stopped
 
   ext_proxy:
     container_name: ext_proxy
