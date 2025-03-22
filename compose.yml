@@ -35,7 +35,6 @@ services:
       - acme.sh:/acme.sh
       - ./private/certs:/certs
       - ./private/acme-tmp:/webroot
-    network_mode: host
     command: daemon
     stdin_open: true
     tty: true
