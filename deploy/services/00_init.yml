@@ -1,0 +1,41 @@
+---
+- name: Perform initial setup
+  hosts: servers
+  gather_facts: false
+
+  tasks:
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - git
+        state: present
+
+    - name: Ensure keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Docker GPG apt Key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/debian/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+        force: true
+
+    - name: Add Docker Repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable"
+        state: present
+
+    - name: Update apt and install docker
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-compose-plugin # `docker compose`
+          - python3-docker
+        state: present
+        update_cache: true
