@@ -4,27 +4,4 @@
   gather_facts: false
 
   tasks:
-    - name: Install required packages
-      ansible.builtin.apt:
-        name: git
-        state: present
-
-    - name: Ensure up to date clone
-      ansible.builtin.git:
-        repo: https://github.com/imputnet/helium-services.git
-        dest: /opt/services
-        version: main
-        update: true
-
-    - name: Copy over compose override
-      when: multi_deployment is defined and multi_deployment
-      ansible.builtin.copy:
-        src: ./configs/compose.override.yml
-        dest: /opt/services/compose.override.yml
-        mode: '0644'
-
-    - name: Copy over .env file
-      ansible.builtin.copy:
-        src: ../../.env
-        dest: /opt/services/.env
-        mode: '0644'
+    - ansible.builtin.include_tasks: ./tasks/01_repo.yml

@@ -5,22 +5,4 @@
   gather_facts: false
 
   tasks:
-    - name: Build and bring up ext_proxy
-      community.docker.docker_compose_v2:
-        project_src: /opt/services
-        services: ["ext_proxy"]
-        build: always
-        state: present
-        wait: true
-        wait_timeout: 300
-
-    - name: Give some time for load balancer to catch up
-      ansible.builtin.pause:
-        seconds: 15
-
-    - name: Build and bring up remaining services
-      community.docker.docker_compose_v2:
-        project_src: /opt/services
-        build: always
-        state: present
-        wait: true
+    - ansible.builtin.include_tasks: ./tasks/03_compose.yml

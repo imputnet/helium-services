@@ -1,0 +1,34 @@
+---
+- name: Update services runner
+  hosts: servers
+  gather_facts: false
+  strategy: linear
+  serial: 1
+  tasks:
+    - name: Bring BIRD down
+      ansible.builtin.systemd_service:
+        name: bird
+        state: stopped
+    - name: Give some time for routes to catch up
+      ansible.builtin.pause:
+        seconds: 30
+
+    - name: Update packages
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: true
+    - name: Update repo
+      ansible.builtin.include_tasks: services/tasks/01_repo.yml
+    - name: Update certs
+      ansible.builtin.include_tasks: services/tasks/02_tls.yml
+    - name: Update services
+      ansible.builtin.include_tasks: services/tasks/03_compose.yml
+    - name: Wait some time before accepting requests again
+      ansible.builtin.pause:
+        seconds: 30
+
+    - name: Bring BIRD back up
+      ansible.builtin.systemd_service:
+        name: bird
+        state: started
+        enabled: true

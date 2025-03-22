@@ -13,15 +13,4 @@
   gather_facts: false
 
   tasks:
-    - name: Copy over TLS certificate
-      when: multi_deployment is defined and multi_deployment
-      ansible.builtin.copy:
-        src: ../private/certs/fullchain.pem
-        dest: /opt/services/private/certs/
-        mode: '0644'
-    - name: Copy over TLS key
-      when: multi_deployment is defined and multi_deployment
-      ansible.builtin.copy:
-        src: ../private/certs/private.key
-        dest: /opt/services/private/certs/
-        mode: '0644'
+    - ansible.builtin.include_tasks: ./tasks/02_tls.yml
