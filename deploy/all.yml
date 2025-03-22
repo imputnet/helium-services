@@ -1,3 +1,4 @@
 ---
 - import_playbook: net/all.yml
 - import_playbook: services/all.yml
+- import_playbook: net/02_bgp.yml
