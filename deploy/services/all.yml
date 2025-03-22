@@ -1,5 +1,5 @@
 ---
 - import_playbook: 00_init.yml
-- import_playbook: 01_init.yml
+- import_playbook: 01_repo.yml
 - import_playbook: 02_tls.yml
 - import_playbook: 03_compose.yml
