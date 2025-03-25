@@ -11,8 +11,15 @@ while :; do
     curl --fail -m 5 \
          -o "$TMPFILE_PATH" \
          -z "$OUTFILE_PATH" \
-         "$BANG_SOURCE" \
-    && gzip -k9 "$TMPFILE_PATH" \
+         "$BANG_SOURCE" || {
+            sleep 3600; continue
+         }
+
+    cmp --silent "$TMPFILE_PATH" "$OUTFILE_PATH" && {
+        sleep 3600; continue
+    }
+
+    gzip -k9 "$TMPFILE_PATH" \
     && mv "$TMPFILE_PATH" "$OUTFILE_PATH" \
     && mv "$TMPFILE_PATH.gz" "$OUTFILE_PATH.gz"
 
