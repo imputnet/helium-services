@@ -56,7 +56,7 @@ export const addToPoolFromResponse = ({ response }: OmahaResponse) => {
         .map(addToPool);
 };
 
-export const addRandomExtensions = (apps: App[]) => {
+export const addRandomExtensions = (apps: readonly App[]) => {
     const nAppsToMixin = Math.ceil(2 * (1 + Math.log2(apps.length)));
     const idSet = new Set(apps.map((a) => a.appid));
 
@@ -64,11 +64,10 @@ export const addRandomExtensions = (apps: App[]) => {
         extensionPool.filter((app) => !idSet.has(app.appid)),
     ).slice(0, nAppsToMixin);
 
-    apps.push(...mixins);
-    return apps;
+    return [...apps, ...mixins];
 };
 
-export const unmixResponse = (expectedApps: App[], response: OmahaResponse) => {
+export const unmixResponse = (expectedApps: readonly App[], response: OmahaResponse) => {
     if (response.response.app) {
         const allowedIds = new Set(expectedApps.map((a) => a.appid));
         response.response.app = response.response.app?.filter((app) => {
