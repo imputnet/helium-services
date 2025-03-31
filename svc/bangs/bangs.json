@@ -1,4 +1,4 @@
-// Generated at 2025-03-21T10:05:46.250Z
+// Generated at 2025-03-31T20:04:26.273Z
 //
 // MIT License
 //
@@ -3705,8 +3705,18 @@
   "u": "https://www.artdiscount.co.uk/catalogsearch/result/?cat=0&q={searchTerms}"
  },
  {
-  "s": "Arte TV",
+  "s": "Arte (DE)",
+  "t": "artede",
+  "u": "https://www.arte.tv/de/search/?q={searchTerms}&page=1"
+ },
+ {
+  "s": "Arte (FR)",
   "t": "arte",
+  "u": "https://www.arte.tv/fr/search/?q={searchTerms}&page=1"
+ },
+ {
+  "s": "Arte (FR)",
+  "t": "artefr",
   "u": "https://www.arte.tv/fr/search/?q={searchTerms}&page=1"
  },
  {
@@ -4733,6 +4743,11 @@
   "s": "Baidu",
   "t": "baidu",
   "u": "https://www.baidu.com/s?wd={searchTerms}&cl=3"
+ },
+ {
+  "s": "Bayerischer Rundfunk",
+  "t": "brde",
+  "u": "https://www.br.de/service/suche/index.html?query={searchTerms}"
  },
  {
   "s": "British and Irish Legal Information Institute",
@@ -25452,7 +25467,7 @@
  {
   "s": "Grok",
   "t": "grok",
-  "u": "https://x.com/i/grok?text={searchTerms}"
+  "u": "https://grok.com/?q={searchTerms}"
  },
  {
   "s": "h2g2",
@@ -26518,6 +26533,11 @@
   "s": "hessen.OPAC",
   "t": "hopac",
   "u": "https://opac.hebib.de/search?scope=R1&q={searchTerms}"
+ },
+ {
+  "s": "Hessischer Rundfunk",
+  "t": "hrde",
+  "u": "https://www.hr.de/suche/index.nc.html?query={searchTerms}"
  },
  {
   "s": "Hornbach",
@@ -37685,6 +37705,16 @@
   "u": "https://www.mittelbayerische.de/suche/?scope=20000&type=articles,galleries,videos&interval=month&searchterm={searchTerms}"
  },
  {
+  "s": "Mitteldeutscher Rundfunk",
+  "t": "mdr",
+  "u": "https://www.mdr.de/nachrichten/index.html?q={searchTerms}"
+ },
+ {
+  "s": "Mitteldeutscher Rundfunk",
+  "t": "mdrde",
+  "u": "https://www.mdr.de/nachrichten/index.html?q={searchTerms}"
+ },
+ {
   "s": "n11.com",
   "t": "n11",
   "u": "https://www.n11.com/arama?q={searchTerms}"
@@ -38095,9 +38125,9 @@
   "u": "https://ndpr.nd.edu/search/?search_keyword=&as_sitesearch=ndpr.nd.edu&q={searchTerms}"
  },
  {
-  "s": "NDR.de - Der Norddeutsche Rundfunk",
+  "s": "Norddeutscher Rundfunk",
   "t": "ndrde",
-  "u": "https://ndr.de/suche10.html?query={searchTerms}"
+  "u": "https://www.ndr.de/suche10.html?query={searchTerms}"
  },
  {
   "s": "Norddeutscher Rundfunk",
@@ -44685,6 +44715,16 @@
   "u": "http://pixabay.com/en/photos/?q={searchTerms}"
  },
  {
+  "s": "phoenix",
+  "t": "phoenix",
+  "u": "https://www.phoenix.de/suche.html?vt={searchTerms}"
+ },
+ {
+  "s": "phoenix",
+  "t": "phoenixde",
+  "u": "https://www.phoenix.de/suche.html?vt={searchTerms}"
+ },
+ {
   "s": "Phoenix Contact",
   "t": "pxc",
   "u": "http://www.phoenixcontact.com/online/portal/us?q={searchTerms}&uri=pxc-search:website&library=usen"
@@ -45275,6 +45315,16 @@
   "u": "https://www.radio24.ilsole24ore.com/ricerca/{searchTerms}"
  },
  {
+  "s": "Radiobremen",
+  "t": "radiobremen",
+  "u": "https://www.radiobremen.de/service/suche/suche-112.html?term={searchTerms}"
+ },
+ {
+  "s": "Radiobremen",
+  "t": "rbde",
+  "u": "https://www.radiobremen.de/service/suche/suche-112.html?term={searchTerms}"
+ },
+ {
   "s": "https://radiopaedia.org/",
   "t": "radio",
   "u": "https://radiopaedia.org/search?utf8=✓&q={searchTerms}&scope=all"
@@ -45518,6 +45568,21 @@
   "s": "RBC Royal Bank",
   "t": "rbc",
   "u": "https://www.rbcroyalbank.com/search-public/index.html?question={searchTerms}"
+ },
+ {
+  "s": "Rundfunk Berlin-Brandenburg",
+  "t": "rbb",
+  "u": "https://www.rbb24.de/suche/#searchform_q__{searchTerms}"
+ },
+ {
+  "s": "Rundfunk Berlin-Brandenburg",
+  "t": "rbb24",
+  "u": "https://www.rbb24.de/suche/#searchform_q__{searchTerms}"
+ },
+ {
+  "s": "Rundfunk Berlin-Brandenburg",
+  "t": "rbbde",
+  "u": "https://www.rbb24.de/suche/#searchform_q__{searchTerms}"
  },
  {
   "s": "Current ruby docs",
@@ -47215,6 +47280,21 @@
   "u": "https://uk.rs-online.com/web/c/?searchTerm={searchTerms}"
  },
  {
+  "s": "Royal Society Collections Catalogues, archives",
+  "t": "rsca",
+  "u": "https://catalogues.royalsociety.org/CalmView/Overview.aspx?src=CalmView.Catalog&r=((((text)='{searchTerms}')))"
+ },
+ {
+  "s": "Royal Society Collections Catalogues, printed works",
+  "t": "rscp",
+  "u": "https://catalogues.royalsociety.org/CalmView/Overview.aspx?src=CalmView.CatalogL&r=((((text)='{searchTerms}')))"
+ },
+ {
+  "s": "Royal Society Collections Catalogues, past Fellows by surname",
+  "t": "rscf",
+  "u": "https://catalogues.royalsociety.org/CalmView/Overview.aspx?src=CalmView.Persons&r=(((Surname='{searchTerms}')))"
+ },
+ {
   "s": "RS Components (DE)",
   "t": "rsde",
   "u": "https://de.rs-online.com/web/c/?searchTerm={searchTerms}"
@@ -47753,6 +47833,11 @@
   "s": "Saabforum.nl",
   "t": "saabforum",
   "u": "https://www.saabforum.nl/search.php?keywords={searchTerms}"
+ },
+ {
+  "s": "Saarländischer Rundfunk",
+  "t": "srde",
+  "u": "https://www.sr.de/sr/suche.jsp?phrase={searchTerms}"
  },
  {
   "s": "Saavn",
@@ -49493,6 +49578,11 @@
   "s": "SimilarWeb",
   "t": "similarweb",
   "u": "http://www.similarweb.com/website/{searchTerms}"
+ },
+ {
+  "s": "Simple Icons",
+  "t": "sicons",
+  "u": "https://simpleicons.org/?q={searchTerms}"
  },
  {
   "s": "Simplicité.io",
@@ -52852,7 +52942,7 @@
  {
   "s": "Tagesschau",
   "t": "tagesschau",
-  "u": "https://www.tagesschau.de/suche2.html?query={searchTerms}"
+  "u": "https://www.tagesschau.de/suche#/all/1/?searchText={searchTerms}"
  },
  {
   "s": "Tageswoche",
@@ -58770,6 +58860,11 @@
   "u": "https://www.westonaprice.org/?s={searchTerms}"
  },
  {
+  "s": "Westdeutscher Rundfunk",
+  "t": "wdrde",
+  "u": "https://www1.wdr.de/suche/index.jsp?q={searchTerms}"
+ },
+ {
   "s": "WhatsApp",
   "t": "wapp",
   "u": "https://api.whatsapp.com/send?phone={searchTerms}&text="
@@ -61997,7 +62092,7 @@
  {
   "s": "Yahoo Finance Australia",
   "t": "yahoofinau",
-  "u": "https://au.finance.yahoo.com/q?s={searchTerms}"
+  "u": "https://au.finance.yahoo.com/quote/{searchTerms}"
  },
  {
   "s": "Yahoo!",
@@ -62197,7 +62292,7 @@
  {
   "s": "Yahoo Finance Charts",
   "t": "yfc",
-  "u": "https://finance.yahoo.com/echarts?s={searchTerms}"
+  "u": "https://finance.yahoo.com/chart/{searchTerms}"
  },
  {
   "s": "Yufid",
@@ -62207,17 +62302,17 @@
  {
   "s": "Yahoo Finance",
   "t": "yfinance",
-  "u": "https://finance.yahoo.com/q?s={searchTerms}"
+  "u": "https://finance.yahoo.com/quote/{searchTerms}"
  },
  {
   "s": "Yahoo Finance (Company Profile)",
   "t": "yfp",
-  "u": "https://finance.yahoo.com/q/pr?s={searchTerms}+Profile"
+  "u": "https://finance.yahoo.com/quote/{searchTerms}/profile"
  },
  {
   "s": "Yahoo Finance",
   "t": "yf",
-  "u": "https://finance.yahoo.com/q?s={searchTerms}"
+  "u": "https://finance.yahoo.com/quote/{searchTerms}"
  },
  {
   "s": "Yu-Gi-Oh! Wikia",
