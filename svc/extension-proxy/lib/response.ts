@@ -105,8 +105,11 @@ const handleXML = ({ response }: OmahaResponse) => {
                         } else {
                             throw 'differential updates are not supported here';
                         }
-                    } else {
-                        updatecheck = app.updatecheck;
+                    } else if (app.updatecheck) {
+                        updatecheck = Object.fromEntries(
+                            Object.entries(app.updatecheck)
+                                .map(([key, value]) => [`@${key}`, value]),
+                        );
                     }
 
                     return {
