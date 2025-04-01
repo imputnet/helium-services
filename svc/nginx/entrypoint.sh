@@ -2,6 +2,7 @@
 export SSL_CERT_PATH="/certs/fullchain.pem"
 
 ./refresh-bangs.sh &
+./refresh-dicts.sh &
 
 echo -en "waiting for ssl cert at $SSL_CERT_PATH"
 while ! [ -f "$SSL_CERT_PATH" ]; do

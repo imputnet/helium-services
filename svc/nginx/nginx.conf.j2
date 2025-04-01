@@ -101,6 +101,15 @@ http {
             root /dev/shm/bangs;
         }
 
+        location /dict {
+            gzip_static always;
+            root /dev/shm/dictionaries;
+
+            autoindex on;
+            sub_filter ".gz" "";
+            sub_filter_once off;
+        }
+
         location /ext {
             proxy_pass http://exts/;
         }
