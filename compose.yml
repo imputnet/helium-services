@@ -12,6 +12,7 @@ services:
       - type: tmpfs
         target: /tmp
         tmpfs: { size: 5.12e+8 }
+    shm_size: 512mb
     ports:
       - 80:80/tcp
       - 443:443/tcp
