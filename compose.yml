@@ -24,12 +24,18 @@ services:
     read_only: true
     build: ./svc/extension-proxy
     restart: unless-stopped
+    environment:
+      - HMAC_SECRET=${HMAC_SECRET}
+      - PROXY_BASE_URL=${PROXY_BASE_URL}
 
   ext_proxy_2:
     container_name: ext_proxy_backup
     read_only: true
     build: ./svc/extension-proxy
     restart: unless-stopped
+    environment:
+      - HMAC_SECRET=${HMAC_SECRET}
+      - PROXY_BASE_URL=${PROXY_BASE_URL}
 
   acme.sh:
     image: "neilpang/acme.sh@sha256:6960358a673694fc18d895f812585ca73f973ed278c2750c7b3f74485f493485"
