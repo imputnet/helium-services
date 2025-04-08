@@ -9,3 +9,4 @@ deploy/hosts.yml
 
 # compose override file
 compose.override.yml
+!deploy/**/compose.override.yml

@@ -1,0 +1,6 @@
+services:
+  acme.sh:
+    # We disable acme.sh here because we have multiple
+    # deployments and generate a central certificate
+    # which is shared amongst all of them.
+    profiles: ["disabled"]
