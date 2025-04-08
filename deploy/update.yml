@@ -6,10 +6,12 @@
   serial: 1
   tasks:
     - name: Bring BIRD down
+      when: bgp is defined
       ansible.builtin.systemd_service:
         name: bird
         state: stopped
     - name: Give some time for routes to catch up
+      when: bgp is defined
       ansible.builtin.pause:
         seconds: 30
 
@@ -24,10 +26,12 @@
     - name: Update services
       ansible.builtin.include_tasks: services/tasks/03_compose.yml
     - name: Wait some time before accepting requests again
+      when: bgp is defined
       ansible.builtin.pause:
         seconds: 30
 
     - name: Bring BIRD back up
+      when: bgp is defined
       ansible.builtin.systemd_service:
         name: bird
         state: started
