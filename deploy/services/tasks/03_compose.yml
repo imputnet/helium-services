@@ -18,3 +18,11 @@
     build: always
     state: present
     wait: true
+
+- name: "Clean up dangling resources"
+  community.docker.docker_prune:
+    containers: true
+    images: true
+    networks: true
+    volumes: true
+    builder_cache: true
