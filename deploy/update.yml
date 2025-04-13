@@ -10,6 +10,7 @@
       ansible.builtin.systemd_service:
         name: bird
         state: stopped
+        enabled: false
     - name: Give some time for routes to catch up
       when: bgp is defined
       ansible.builtin.pause:
@@ -19,6 +20,15 @@
       ansible.builtin.apt:
         update_cache: true
         upgrade: true
+
+    - name: Check if reboot required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot
+    - name: Reboot if required
+      ansible.builtin.reboot:
+      when: reboot.stat.exists
+
     - name: Update repo
       ansible.builtin.include_tasks: services/tasks/01_repo.yml
     - name: Update certs
