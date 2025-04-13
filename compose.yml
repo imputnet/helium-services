@@ -3,7 +3,8 @@ services:
     init: true
     read_only: true
     build:
-      context: ./svc/nginx
+      context: ./svc
+      dockerfile: ./nginx/Dockerfile
       args:
         SERVICES_HOSTNAME: ${SERVICES_HOSTNAME}
     volumes:
