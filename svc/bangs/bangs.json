@@ -1,4 +1,4 @@
-// Generated at 2025-03-31T20:04:26.273Z
+// Generated at 2025-04-13T10:57:14.434Z
 //
 // MIT License
 //
@@ -58877,7 +58877,7 @@
  {
   "s": "Warframe",
   "t": "warframe",
-  "u": "https://warframe.wikia.com/wiki/Special:Search?search={searchTerms}&fulltext=Search&ns0=1&ns14=1"
+  "u": "https://wiki.warframe.com/?search={searchTerms}"
  },
  {
   "s": "Total war Warhammer Wiki",
@@ -59492,7 +59492,7 @@
  {
   "s": "WARFRAME Wiki",
   "t": "wfen",
-  "u": "https://warframe.wikia.com/wiki/Special:Search?query={searchTerms}"
+  "u": "https://wiki.warframe.com/?search={searchTerms}"
  },
  {
   "s": "Webfordítás hu-de",
@@ -59517,7 +59517,7 @@
  {
   "s": "Warframe",
   "t": "wframe",
-  "u": "https://warframe.wikia.com/wiki/Special:Search?search={searchTerms}&fulltext=Search&ns0=1&ns14=1"
+  "u": "https://wiki.warframe.com/?search={searchTerms}"
  },
  {
   "s": "Wordreference",
@@ -59532,12 +59532,12 @@
  {
   "s": "WARFRAME Wiki",
   "t": "wfwiki",
-  "u": "https://warframe.wikia.com/wiki/Special:Search?search={searchTerms}"
+  "u": "https://wiki.warframe.com/?search={searchTerms}"
  },
  {
   "s": "WARFRAME Wiki",
   "t": "wfw",
-  "u": "https://warframe.wikia.com/wiki/Special:WikiaSearch?search={searchTerms}&fulltext=Search"
+  "u": "https://wiki.warframe.com/?search={searchTerms}"
  },
  {
   "s": "WGBH News",
