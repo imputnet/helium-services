@@ -33,6 +33,21 @@ const load = async () => {
 const transform = async (assets) => {
     const listSources = {}, queue = [];
 
+    const readList = async (filename, sourceURL) => {
+        const res = await fetch(sourceURL, { redirect: 'follow' });
+        if (listSources[filename]) {
+            throw "duplicate source key: " + filename;
+        }
+
+        listSources[filename] = res.url;
+
+        if (res.ok) {
+            return [ res.url, res.text() ];
+        }
+
+        throw new Error(res);
+    }
+
     for (const [ id, asset ] of Object.entries(assets)) {
         const allUrls = [asset.contentURL, asset.cdnURLs].flat();
         delete asset.cdnURLs;
@@ -58,14 +73,7 @@ const transform = async (assets) => {
             ...locals,
         ];
 
-        const contents = fetch(sourceURL, { redirect: 'follow' }).then(res => {
-            if (listSources[filename]) throw "duplicate source key: " + filename;
-            listSources[filename] = res.url;
-
-            if (res.ok) return [ res.url, res.text() ];
-            throw new Error(res);
-        });
-
+        const contents = readList(filename, sourceURL);
         queue.push(contents);
 
         if (asset.contentURL.length === 1) {
@@ -73,29 +81,31 @@ const transform = async (assets) => {
         }
     }
 
-    const listContents = await Promise.all(queue);
-    for (const [ base_str, contents ] of listContents) {
-        const base = new URL(base_str);
-        const text = await contents;
+    while (queue.length) {
+        const listContents = await Promise.all(queue);
+        queue.length = 0;
 
-        text.split('\n')
-            .filter(a => a.startsWith('!#include'))
-            .forEach(importLine => {
-                const url = new URL(importLine.replace('!#include ', ''), base);
-                if (url.origin !== base.origin) {
-                    throw `origin mismatch: ${url.origin} != ${base.origin}`;
-                }
+        for (const [ base_str, contents ] of listContents) {
+            const base = new URL(base_str);
+            const text = await contents;
 
-                const base_base = base.pathname.split('/').slice(0, -1).join('/');
-                if (!url.pathname.startsWith(base_base)) {
-                    throw `invalid base: ${url.pathname} !starts_with(${base_base})`;
-                }
+            text.split('\n')
+                .filter(a => a.startsWith('!#include'))
+                .forEach(importLine => {
+                    const url = new URL(importLine.replace('!#include ', ''), base);
+                    if (url.origin !== base.origin) {
+                        throw `origin mismatch: ${url.origin} != ${base.origin}`;
+                    }
 
-                const filename = url.pathname.replace(base_base, '').replace(/^\//, '');
-                if (listSources[filename]) throw "duplicate source key: " + filename;
-                listSources[filename] = url.toString();
-            })
+                    const base_base = base.pathname.split('/').slice(0, -1).join('/');
+                    if (!url.pathname.startsWith(base_base)) {
+                        throw `invalid base: ${url.pathname} !starts_with(${base_base})`;
+                    }
 
+                    const filename = url.pathname.replace(base_base, '').replace(/^\//, '');
+                    queue.push(readList(filename, url.toString()));
+                })
+        }
     }
 
     return { assets, listSources };
