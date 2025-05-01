@@ -30,8 +30,8 @@ const load = async () => {
     return JSON.parse(assetList);
 }
 
-const transform = (assets) => {
-    const listSources = {};
+const transform = async (assets) => {
+    const listSources = {}, queue = [];
 
     for (const [ id, asset ] of Object.entries(assets)) {
         const allUrls = [asset.contentURL, asset.cdnURLs].flat();
@@ -51,7 +51,6 @@ const transform = (assets) => {
 
         const filename = id.includes('.') ? id : `${id}.txt`;
         const proxyURL = `https://{{ services_hostname }}/ubo/lists/${filename}`;
-        listSources[filename] = sourceURL;
 
         delete asset.cdnURLs;
         asset.contentURL = [
@@ -59,9 +58,44 @@ const transform = (assets) => {
             ...locals,
         ];
 
+        const contents = fetch(sourceURL, { redirect: 'follow' }).then(res => {
+            if (listSources[filename]) throw "duplicate source key: " + filename;
+            listSources[filename] = res.url;
+
+            if (res.ok) return [ res.url, res.text() ];
+            throw new Error(res);
+        });
+
+        queue.push(contents);
+
         if (asset.contentURL.length === 1) {
             asset.contentURL = asset.contentURL[0];
         }
+    }
+
+    const listContents = await Promise.all(queue);
+    for (const [ base_str, contents ] of listContents) {
+        const base = new URL(base_str);
+        const text = await contents;
+
+        text.split('\n')
+            .filter(a => a.startsWith('!#include'))
+            .forEach(importLine => {
+                const url = new URL(importLine.replace('!#include ', ''), base);
+                if (url.origin !== base.origin) {
+                    throw `origin mismatch: ${url.origin} != ${base.origin}`;
+                }
+
+                const base_base = base.pathname.split('/').slice(0, -1).join('/');
+                if (!url.pathname.startsWith(base_base)) {
+                    throw `invalid base: ${url.pathname} !starts_with(${base_base})`;
+                }
+
+                const filename = url.pathname.replace(base_base, '').replace(/^\//, '');
+                if (listSources[filename]) throw "duplicate source key: " + filename;
+                listSources[filename] = url.toString();
+            })
+
     }
 
     return { assets, listSources };
