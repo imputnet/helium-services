@@ -70,7 +70,11 @@ const transform = (assets) => {
 const toNginxConfig = (listSources) => {
     let out = [];
 
-    for (const [ path, url ] of Object.entries(listSources)) {
+    const sortedSources = Object.entries(listSources).sort(
+        (a, b) => a[0].localeCompare(b[0])
+    );
+
+    for (const [ path, url ] of sortedSources) {
         out.push(
             `location = /ubo/lists/${path} {`,
             `   limit_except GET { deny all; }`,
