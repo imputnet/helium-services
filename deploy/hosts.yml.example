@@ -20,7 +20,7 @@ servers:
 
   vars:
     # The domain on which the services will be available.
-    fqdn: "services.helium.computer"
+    fqdn: "services.helium.imput.net"
     ##Set this only if you have a multi-deployment setup and need
     ##to push a certificate from a centralized path. Refer to
     ##services/02_tls.yml for more instructions.

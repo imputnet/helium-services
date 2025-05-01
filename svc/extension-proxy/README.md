@@ -4,7 +4,7 @@ proxy for the chrome webstore and other stores in the future.
 
 ### url
 
-https://services.helium.computer/ext/*
+https://services.helium.imput.net/ext/*
 
 ### privacy policy
 
