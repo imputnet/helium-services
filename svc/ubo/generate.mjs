@@ -76,7 +76,7 @@ const toNginxConfig = (listSources) => {
 
     for (const [ path, url ] of sortedSources) {
         out.push(
-            `location = /ubo/lists/${path} {`,
+            `location = ${JSON.stringify(`/ubo/lists/${decodeURIComponent(path)}`)} {`,
             `   limit_except GET { deny all; }`,
             `   proxy_pass ${JSON.stringify(url)};`,
             `}\n`,
