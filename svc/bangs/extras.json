@@ -1,0 +1,22 @@
+[
+    {
+        "s": "cobalt",
+        "t": ["co", "cobalt"],
+        "u": "https://cobalt.tools/#{{{s}}}"
+    },
+    {
+        "s": "Kagi",
+        "t": ["k", "kagi"],
+        "u": "https://kagi.com/search?q={{{s}}}"
+    },
+    {
+        "s": "Kagi Translate",
+        "t": ["kt", "ktr", "kagit"],
+        "u": "https://translate.kagi.com/?from=auto&to=en&text={{{s}}}"
+    },
+    {
+        "s": "Kagi Assistant",
+        "t": ["kaa", "kag", "kassistant"],
+        "u": "https://kagi.com/assistant?q={{{s}}}"
+    }
+]

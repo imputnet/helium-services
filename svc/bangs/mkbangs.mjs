@@ -19,12 +19,50 @@ const load = async () => {
     }
 
     const bangs = JSON.parse(bangText);
+    const extras = await import(
+        './extras.json', { with: { type: 'json' } }
+    ).then(i => i.default);
     const license = await fetch(prefix + '/LICENSE').then(a => a.text());
 
-    return { bangs, license }
+    return { bangs, extras, license }
 }
 
-const transform = ({ bangs, license }) => {
+const transform = ({ bangs, extras, ...rest }) => {
+    const seen = new Set();
+    const handleBang = ({ s, t, u }) => {
+        const transformedURL = u.replace(/{{{s}}}/g, '{searchTerms}');
+        if (!u.includes('{{{s}}}') || transformedURL.includes('{{{s}}}')) {
+            throw `malformed url for ${t}: ${u}`
+        }
+
+        if (seen.has(t)) {
+            throw `duplicate bang key: !${t}`;
+        }
+
+        seen.add(t);
+
+        return { s, t, u: transformedURL };
+    };
+
+    const strippedBangs = bangs.filter(({ u }) => {
+        try {
+            new URL(u);
+            return true;
+        } catch {}
+    }).map(handleBang);
+
+    const extraBangs = extras.map(bang => {
+        if (Array.isArray(bang.t)) {
+            return bang.t.map(t => ({ ...bang, t }));
+        }
+
+        return bang;
+    }).flat(1).map(handleBang);
+
+    return { bangs: [ ...strippedBangs, ...extraBangs ], ...rest };
+}
+
+const print = ({ bangs, license }) => {
     const commentLicense = [
         `Generated at ${new Date().toISOString()}`,
         '',
@@ -36,23 +74,9 @@ const transform = ({ bangs, license }) => {
         })
     ].map(line => `//${line ? ' ' : ''}${line}`);
 
-    const strippedBangs = bangs.filter(({ u }) => {
-        try {
-            new URL(u);
-            return true;
-        } catch {}
-    }).map(({ s, t, u }) => {
-        const transformedURL = u.replace(/{{{s}}}/g, '{searchTerms}');
-        if (!u.includes('{{{s}}}') || transformedURL.includes('{{{s}}}')) {
-            throw `malformed url for ${t}: ${u}`
-        }
-
-        return { s, t, u: transformedURL };
-    });
-
     return [
         ...commentLicense, '',
-        JSON.stringify(strippedBangs, null, 1)
+        JSON.stringify(bangs, null, 1)
     ].join('\n');
 }
 
@@ -67,4 +91,4 @@ const sort = ({ bangs, ...rest }) => {
     return { bangs, ...rest }
 }
 
-load().then(sort).then(transform).then(console.log);
+load().then(transform).then(sort).then(print).then(console.log);
