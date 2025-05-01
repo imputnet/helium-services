@@ -56,4 +56,15 @@ const transform = ({ bangs, license }) => {
     ].join('\n');
 }
 
-load().then(transform).then(console.log);
+const sort = ({ bangs, ...rest }) => {
+    bangs.sort((a, b) => {
+        a = a.t;
+        b = b.t;
+
+        return (a.length - b.length) || a.localeCompare(b);
+    });
+
+    return { bangs, ...rest }
+}
+
+load().then(sort).then(transform).then(console.log);
