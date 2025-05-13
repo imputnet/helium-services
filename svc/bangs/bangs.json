@@ -1,4 +1,4 @@
-// Generated at 2025-05-01T16:20:46.117Z
+// Generated at 2025-05-13T13:45:37.782Z
 //
 // MIT License
 //
@@ -3165,6 +3165,11 @@
   "u": "https://smile.amazon.com/s?url=search-alias=aps&field-keywords={searchTerms}"
  },
  {
+  "s": "Apple Music",
+  "t": "amu",
+  "u": "https://music.apple.com/us/search?term={searchTerms}"
+ },
+ {
   "s": "Amazon México",
   "t": "amx",
   "u": "https://www.amazon.com.mx/s?k={searchTerms}"
@@ -5387,7 +5392,7 @@
  {
   "s": "The Doctor Who Wiki",
   "t": "dww",
-  "u": "https://tardis.wikia.com/wiki/index.php?search={searchTerms}"
+  "u": "https://tardis.wiki/wiki/Special:Search?search={searchTerms}"
  },
  {
   "s": "Dictionary.com",
@@ -24127,7 +24132,7 @@
  {
   "s": "VIAF (Virtual Internet Authority File)",
   "t": "viaf",
-  "u": "https://viaf.org/viaf/search?query=local.names+all+\"{searchTerms}\"&stylesheet=/viaf/xsl/results.xsl&sortKeys=holdingscount&maximumRecords=100"
+  "u": "https://viaf.org/en/viaf/search?field=local%2Cnames&index=VIAF&searchTerms={searchTerms}"
  },
  {
   "s": "Vibe",
@@ -24683,6 +24688,11 @@
   "s": "WNYC",
   "t": "wnyc",
   "u": "https://www.wnyc.org/search/?q={searchTerms}"
+ },
+ {
+  "s": "Words of Brandon (WoBs)",
+  "t": "wobs",
+  "u": "https://wob.coppermind.net/adv_search/?query={searchTerms}"
  },
  {
   "s": "Wolfram Alpha",
@@ -30760,9 +30770,9 @@
   "u": "https://www.evilinnocence.com/shop/catalogsearch/result/?q={searchTerms}"
  },
  {
-  "s": "The Open Group",
+  "s": "The Open Group Base Specifications",
   "t": "posix",
-  "u": "https://pubs.opengroup.org/cgi/kman4.cgi?value={searchTerms}"
+  "u": "https://pubs.opengroup.org/cgi/kman5.cgi?value={searchTerms}"
  },
  {
   "s": "Poste Italiane",
@@ -39692,7 +39702,7 @@
  {
   "s": "TARDIS Data Core",
   "t": "tardis",
-  "u": "https://tardis.wikia.com/wiki/Special:Search?search={searchTerms}"
+  "u": "https://tardis.wiki/wiki/Special:Search?search={searchTerms}"
  },
  {
   "s": "Targeo",
@@ -41988,6 +41998,11 @@
   "s": "Arageek",
   "t": "arageek",
   "u": "https://www.arageek.com/?s={searchTerms}"
+ },
+ {
+  "s": "Words of Brandon (WoBs)",
+  "t": "arcanum",
+  "u": "https://wob.coppermind.net/adv_search/?query={searchTerms}"
  },
  {
   "s": "ArcGIS Blogs",
@@ -58012,7 +58027,7 @@
  {
   "s": "Apple Music",
   "t": "applemusic",
-  "u": "https://itunes.apple.com/search?term={searchTerms}&entity=musicTrack"
+  "u": "https://music.apple.com/us/search?term={searchTerms}"
  },
  {
   "s": "Appshopper",
