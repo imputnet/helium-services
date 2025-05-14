@@ -34,9 +34,6 @@ $SED_CMD -i \
 "$GENERATE_SCRIPT"
 
 # 3. update template
-TMP=$(mktemp)
-node $GENERATE_SCRIPT > "$TMP" \
-  && chmod 444 "$TMP" \
-  && mv -f $TMP ./assets.json.in
+node $GENERATE_SCRIPT
 
 echo 'git add .; git diff --staged; git commit -m "ubo-filters: update from upstream"'
