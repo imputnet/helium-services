@@ -1,4 +1,4 @@
-// Generated at 2025-05-13T13:45:37.782Z
+// Generated at 2025-05-17T14:38:28.285Z
 //
 // MIT License
 //
@@ -2047,7 +2047,8 @@
  {
   "s": "T3 Chat",
   "t": "t3",
-  "u": "https://www.t3.chat/new?q={searchTerms}"
+  "u": "https://www.t3.chat/new?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "tripadvisor",
@@ -2207,7 +2208,8 @@
  {
   "s": "v0",
   "t": "v0",
-  "u": "https://v0.dev/chat?q={searchTerms}"
+  "u": "https://v0.dev/chat?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "Vim Awesome",
@@ -10162,7 +10164,8 @@
  {
   "s": "OpenRouter",
   "t": "opr",
-  "u": "https://openrouter.ai/models?q={searchTerms}"
+  "u": "https://openrouter.ai/models?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "OùQuoiComment",
@@ -17522,7 +17525,8 @@
  {
   "s": "Felo",
   "t": "felo",
-  "u": "https://felo.ai/search?q={searchTerms}"
+  "u": "https://felo.ai/search?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "admin.ch - Feuille fédérale",
@@ -18397,7 +18401,8 @@
  {
   "s": "Grok",
   "t": "grok",
-  "u": "https://grok.com/?q={searchTerms}"
+  "u": "https://grok.com/?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "Grubhub",
@@ -19572,7 +19577,8 @@
  {
   "s": "Ithy",
   "t": "ithy",
-  "u": "https://ithy.com/?query={searchTerms}"
+  "u": "https://ithy.com/?query={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "Indiana University Knowledge Base",
@@ -30632,7 +30638,8 @@
  {
   "s": "Phind",
   "t": "phind",
-  "u": "https://www.phind.com/search?q={searchTerms}"
+  "u": "https://www.phind.com/search?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "Phish.Net",
@@ -34212,7 +34219,8 @@
  {
   "s": "Claude",
   "t": "claude",
-  "u": "https://claude.ai/new?q={searchTerms}"
+  "u": "https://claude.ai/new?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "Climed Seviços de Saude",
@@ -36962,7 +36970,8 @@
  {
   "s": "Le Chat",
   "t": "lechat",
-  "u": "https://chat.mistral.ai/chat?q={searchTerms}"
+  "u": "https://chat.mistral.ai/chat?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "Lecker",
@@ -42717,7 +42726,8 @@
  {
   "s": "ChatGPT",
   "t": "chatgpt",
-  "u": "https://chatgpt.com/?q={searchTerms}"
+  "u": "https://chatgpt.com/?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "CheatCC.com",

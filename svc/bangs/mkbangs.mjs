@@ -4,6 +4,10 @@ const BANG_CHECKSUM = '76377a8bef87e137f7fcc989b1c7b4a5e02d480cd9ac34894f9c2cb19
 
 const prefix = `https://raw.githubusercontent.com/kagisearch/bangs/refs/tags/${VERSION}`;
 
+const categoryMap = {
+    "AI Chatbots": 'ai'
+}
+
 const digest = async (str) => {
     const u8 = new TextEncoder().encode(str);
     const hashBytes = await crypto.subtle.digest('SHA-256', u8);
@@ -29,7 +33,7 @@ const load = async () => {
 
 const transform = ({ bangs, extras, ...rest }) => {
     const seen = new Set();
-    const handleBang = ({ s, t, u }) => {
+    const handleBang = ({ s, t, u, sc }) => {
         const transformedURL = u.replace(/{{{s}}}/g, '{searchTerms}');
         if (!u.includes('{{{s}}}') || transformedURL.includes('{{{s}}}')) {
             throw `malformed url for ${t}: ${u}`
@@ -41,7 +45,12 @@ const transform = ({ bangs, extras, ...rest }) => {
 
         seen.add(t);
 
-        return { s, t, u: transformedURL };
+        return {
+            s,
+            t,
+            u: transformedURL,
+            sc: categoryMap[sc]
+        };
     };
 
     const strippedBangs = bangs.filter(({ u }) => {
