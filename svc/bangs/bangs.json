@@ -1,4 +1,4 @@
-// Generated at 2025-05-17T14:38:28.285Z
+// Generated at 2025-05-20T08:21:54.178Z
 //
 // MIT License
 //
@@ -100,7 +100,7 @@
   "u": "https://www.urbandictionary.com/define.php?term={searchTerms}"
  },
  {
-  "s": "English Wikipedia",
+  "s": "Wikipedia",
   "t": "w",
   "u": "https://en.wikipedia.org/w/index.php?search={searchTerms}"
  },
@@ -2319,7 +2319,7 @@
  {
   "s": "Wikipedia",
   "t": "we",
-  "u": "https://en.wikipedia.org/wiki/{searchTerms}"
+  "u": "https://en.wikipedia.org/w/index.php?search={searchTerms}"
  },
  {
   "s": "fr.wikipedia.org",
@@ -2339,7 +2339,7 @@
  {
   "s": "Wikipedia",
   "t": "wi",
-  "u": "https://en.wikipedia.org/wiki/Special:Search?search={searchTerms}"
+  "u": "https://en.wikipedia.org/w/index.php?search={searchTerms}"
  },
  {
   "s": "Wikipedia in Japanese",
@@ -2347,7 +2347,7 @@
   "u": "https://ja.wikipedia.org/wiki/{searchTerms}"
  },
  {
-  "s": "wikipedia",
+  "s": "Wikipedia",
   "t": "wk",
   "u": "https://en.wikipedia.org/w/index.php?search={searchTerms}"
  },
@@ -3550,6 +3550,11 @@
   "s": "Books-A-Million",
   "t": "bam",
   "u": "http://www.booksamillion.com/search?query={searchTerms}"
+ },
+ {
+  "s": "bavarikon",
+  "t": "bav",
+  "u": "https://bavarikon.de/search?terms={searchTerms}"
  },
  {
   "s": "Bax-shop",
@@ -5127,9 +5132,9 @@
   "u": "https://www.merriam-webster.com/dictionary/{searchTerms}"
  },
  {
-  "s": "Deutsche National Bibliothek",
+  "s": "Deutsche Nationalbibliothek",
   "t": "dnb",
-  "u": "https://portal.dnb.de/opac.htm?query={searchTerms}&method=simpleSearch"
+  "u": "https://portal.dnb.de/opac/simpleSearch?query={searchTerms}"
  },
  {
   "s": "D&D Beyond",
@@ -9017,6 +9022,11 @@
   "u": "https://mangadex.org/search?q={searchTerms}"
  },
  {
+  "s": "Münchener DigitalisierungsZentrum",
+  "t": "mdz",
+  "u": "https://digitale-sammlungen.de/search?query={searchTerms}"
+ },
+ {
   "s": "Mountain Equipment Co-op",
   "t": "mec",
   "u": "https://www.mec.ca/en/search?text={searchTerms}"
@@ -9340,6 +9350,11 @@
   "s": "Meta Stack Overflow",
   "t": "mso",
   "u": "https://meta.stackoverflow.com/search?q={searchTerms}"
+ },
+ {
+  "s": "Microsoft Store",
+  "t": "mss",
+  "u": "https://apps.microsoft.com/search?query={searchTerms}"
  },
  {
   "s": "Microsoft/Bing Translator URL",
@@ -13483,7 +13498,7 @@
   "u": "https://de.wikipedia.org/w/index.php?search={searchTerms}"
  },
  {
-  "s": "wikipedia.org Band Discography",
+  "s": "Wikipedia Band Discography",
   "t": "wdg",
   "u": "https://en.wikipedia.org/w/index.php?title=Special:Search&search={searchTerms}+discography"
  },
@@ -13518,7 +13533,7 @@
   "u": "https://el.wikipedia.org/w/index.php?search={searchTerms}"
  },
  {
-  "s": "English Wikipedia",
+  "s": "Wikipedia",
   "t": "wen",
   "u": "https://en.wikipedia.org/w/index.php?search={searchTerms}"
  },
@@ -17063,6 +17078,11 @@
   "u": "http://www.ehow.com/search.html?s={searchTerms}"
  },
  {
+  "s": "European Holocaust Research Infrastructure",
+  "t": "ehri",
+  "u": "https://portal.ehri-project.eu/search?q={searchTerms}"
+ },
+ {
   "s": "GitHub",
   "t": "eips",
   "u": "https://github.com/ethereum/EIPs/issues?utf8=%E2%9C%93&q={searchTerms}"
@@ -17416,6 +17436,11 @@
   "s": "https://www.etymonline.com",
   "t": "etym",
   "u": "https://www.etymonline.com/search?q={searchTerms}"
+ },
+ {
+  "s": "European Vulnerability Database",
+  "t": "euvd",
+  "u": "https://euvd.enisa.europa.eu/search?text={searchTerms}"
  },
  {
   "s": "Everipedia",
@@ -19005,6 +19030,11 @@
   "u": "https://hackage.haskell.org/packages/search?terms={searchTerms}"
  },
  {
+  "s": "historicum",
+  "t": "hcum",
+  "u": "https://historicum.net/historicumsearch/Blender/Results?lookfor={searchTerms}"
+ },
+ {
   "s": "How did you contribute to OpenStreetMap?",
   "t": "hdyc",
   "u": "https://hdyc.neis-one.org/?{searchTerms}"
@@ -20048,7 +20078,7 @@
  {
   "s": "Lebendiges Museum Online",
   "t": "lemo",
-  "u": "https://www.hdg.de/lemo/search/?q={searchTerms}"
+  "u": "https://dhm.de/lemo/search?q={searchTerms}"
  },
  {
   "s": "LEO Dictionary Chinese",
@@ -24251,11 +24281,6 @@
   "u": "https://www.vudu.com/content/movies/search?searchString={searchTerms}"
  },
  {
-  "s": "Wikipedia in Spanish",
-  "t": "w-es",
-  "u": "https://en.wikipedia.org/wiki/Special:Search?search={searchTerms}"
- },
- {
   "s": "Armenian Wikipedia (HY)",
   "t": "w-hy",
   "u": "https://hy.wikipedia.org/w/index.php?search={searchTerms}"
@@ -24271,9 +24296,9 @@
   "u": "https://de.wikipedia.org/w/index.php?search={searchTerms}"
  },
  {
-  "s": "Wikipedia (English)",
+  "s": "Wikipedia",
   "t": "w.en",
-  "u": "https://en.wikipedia.org/wiki/Special:Search?search={searchTerms}"
+  "u": "https://en.wikipedia.org/w/index.php?search={searchTerms}"
  },
  {
   "s": "Russian Wikipedia",
@@ -24526,7 +24551,7 @@
   "u": "https://www.whoishostingthis.com/?q={searchTerms}"
  },
  {
-  "s": "English Wikipedia",
+  "s": "Wikipedia",
   "t": "wiki",
   "u": "https://en.wikipedia.org/w/index.php?search={searchTerms}"
  },
@@ -27229,6 +27254,11 @@
   "s": "Discovery Wiki",
   "t": "disco",
   "u": "https://discoverygc.com/wiki/index.php?title=Special:Search&search={searchTerms}&go=Go"
+ },
+ {
+  "s": "Discu.eu",
+  "t": "discu",
+  "u": "https://discu.eu/?q={searchTerms}"
  },
  {
   "s": "Divii",
@@ -35148,7 +35178,7 @@
   "u": "https://www.ncbi.nlm.nih.gov/sites/gquery?term={searchTerms}"
  },
  {
-  "s": "English Wikipedia",
+  "s": "Wikipedia",
   "t": "enwiki",
   "u": "https://en.wikipedia.org/w/index.php?search={searchTerms}"
  },
@@ -37649,11 +37679,6 @@
   "u": "https://mobcup.net/search?q={searchTerms}"
  },
  {
-  "s": "Wikipedia",
-  "t": "module",
-  "u": "https://en.wikipedia.org/wiki/Module:{searchTerms}"
- },
- {
   "s": "Moglix",
   "t": "moglix",
   "u": "https://www.moglix.com/search?controller=search&orderby=position&orderway=desc&search_query={searchTerms}&submit_search=Search"
@@ -37736,7 +37761,7 @@
  {
   "s": "Microsoft Store",
   "t": "mstore",
-  "u": "https://www.microsoft.com/en-us/search?q={searchTerms}"
+  "u": "https://apps.microsoft.com/search?query={searchTerms}"
  },
  {
   "s": "Malay Wikipedia",
@@ -40704,7 +40729,7 @@
   "u": "https://el.wikipedia.org/w/index.php?search={searchTerms}"
  },
  {
-  "s": "English Wikipedia",
+  "s": "Wikipedia",
   "t": "wikien",
   "u": "https://en.wikipedia.org/w/index.php?search={searchTerms}"
  },
@@ -48780,6 +48805,11 @@
   "u": "https://web.archive.org/web/*/{searchTerms}"
  },
  {
+  "s": "Archivportal-D",
+  "t": "archivpd",
+  "u": "https://archivportal-d.de/objekte?query={searchTerms}"
+ },
+ {
   "s": "Arch Linux Wiki",
   "t": "archwiki",
   "u": "https://wiki.archlinux.org/index.php?search={searchTerms}&title=Special:Search&go=Go"
@@ -50773,6 +50803,11 @@
   "s": "Hot Topic",
   "t": "hottopic",
   "u": "https://www.hottopic.com/search?q={searchTerms}"
+ },
+ {
+  "s": "H-Soz-Kult",
+  "t": "hsozkult",
+  "u": "https://www.hsozkult.de/searching/page?q={searchTerms}"
  },
  {
   "s": "Html2Txt",
@@ -53180,11 +53215,6 @@
   "u": "https://www.tematimi.com/ara&search={searchTerms}"
  },
  {
-  "s": "Wikipedia Templates",
-  "t": "template",
-  "u": "https://en.wikipedia.org/wiki/Template:{searchTerms}"
- },
- {
   "s": "https://temp-mail.org/",
   "t": "tempmail",
   "u": "https://temp-mail.org/{searchTerms}/"
@@ -53715,9 +53745,9 @@
   "u": "https://www.wikiwand.com/en/{searchTerms}"
  },
  {
-  "s": "Windows Store",
+  "s": "Microsoft Store",
   "t": "winstore",
-  "u": "https://windows.microsoft.com/en-us/windows/search#q={searchTerms}&s=Store"
+  "u": "https://apps.microsoft.com/search?query={searchTerms}"
  },
  {
   "s": "The Minds Journal",
@@ -54228,6 +54258,11 @@
   "s": "Battle.Net",
   "t": "battlenet",
   "u": "https://eu.battle.net/en/search?q={searchTerms}"
+ },
+ {
+  "s": "bavarikon",
+  "t": "bavarikon",
+  "u": "https://bavarikon.de/search?terms={searchTerms}"
  },
  {
   "s": "Beauty MNL",
@@ -54935,9 +54970,9 @@
   "u": "https://www.eurogamer.net/search.php?q={searchTerms}"
  },
  {
-  "s": "Europeana.eu",
+  "s": "Europeana",
   "t": "europeana",
-  "u": "https://europeana.eu/portal/search.html?query={searchTerms}"
+  "u": "https://europeana.eu/search?query={searchTerms}"
  },
  {
   "s": "Europe PMC",
@@ -57790,7 +57825,7 @@
   "u": "http://www.wikimapia.org/#search={searchTerms}"
  },
  {
-  "s": "English Wikipedia",
+  "s": "Wikipedia",
   "t": "wikipedia",
   "u": "https://en.wikipedia.org/w/index.php?search={searchTerms}"
  },
@@ -59178,6 +59213,11 @@
   "s": "HeatSpring",
   "t": "heatspring",
   "u": "https://www.heatspring.com/app/courses/?query={searchTerms}"
+ },
+ {
+  "s": "historicum",
+  "t": "historicum",
+  "u": "https://historicum.net/historicumsearch/Blender/Results?lookfor={searchTerms}"
  },
  {
   "s": "Historious",
@@ -60733,6 +60773,11 @@
   "s": "Wikilengua del español",
   "t": "wikilengua",
   "u": "https://www.wikilengua.org/index.php/Especial:Buscar?search={searchTerms}&fulltext=Buscar"
+ },
+ {
+  "s": "Wikipedia Modules",
+  "t": "wikimodule",
+  "u": "https://en.wikipedia.org/wiki/Module:{searchTerms}"
  },
  {
   "s": "WikiRhymer",
@@ -62632,7 +62677,7 @@
  {
   "s": "Wikispecies",
   "t": "wikispecies",
-  "u": "https://en.wikipedia.org/wiki/Special:Search?search={searchTerms}"
+  "u": "https://species.wikimedia.org/w/index.php?search={searchTerms}"
  },
  {
   "s": "Wikiversity",
@@ -63012,7 +63057,7 @@
  {
   "s": "Wikipedia",
   "t": "encyclopedia",
-  "u": "https://en.wikipedia.org/wiki/Special:Search?search={searchTerms}"
+  "u": "https://en.wikipedia.org/w/index.php?search={searchTerms}"
  },
  {
   "s": "endless-sphere",
@@ -63928,6 +63973,11 @@
   "s": "wikipaintings",
   "t": "wikipainting",
   "u": "https://www.wikipaintings.org/en/search/{searchTerms}/1"
+ },
+ {
+  "s": "Wikipedia Templates",
+  "t": "wikitemplate",
+  "u": "https://en.wikipedia.org/wiki/Template:{searchTerms}"
  },
  {
   "s": "Wikivoyage (Deutsch)",
@@ -64988,6 +65038,11 @@
   "s": "Merriam-Webster",
   "t": "merriamwebster",
   "u": "https://www.merriam-webster.com/dictionary/{searchTerms}"
+ },
+ {
+  "s": "Microsoft Store",
+  "t": "microsoftstore",
+  "u": "https://apps.microsoft.com/search?query={searchTerms}"
  },
  {
   "s": "Minecraft Seeds",
