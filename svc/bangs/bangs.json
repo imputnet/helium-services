@@ -1,4 +1,4 @@
-// Generated at 2025-05-20T08:21:54.178Z
+// Generated at 2025-05-23T09:31:15.890Z
 //
 // MIT License
 //
@@ -15119,7 +15119,7 @@
  },
  {
   "s": "Amazon Prime Now",
-  "t": "aNOW",
+  "t": "anow",
   "u": "https://primenow.amazon.com/search?k={searchTerms}"
  },
  {
@@ -25467,7 +25467,7 @@
  },
  {
   "s": "Βικιπαίδεια",
-  "t": "Βικι",
+  "t": "βικι",
   "u": "https://el.m.wikipedia.org/wiki/{searchTerms}"
  },
  {
@@ -29757,7 +29757,7 @@
  },
  {
   "s": "Lazada Malaysia",
-  "t": "LzdMy",
+  "t": "lzdmy",
   "u": "https://www.lazada.com.my/catalog/?q={searchTerms}"
  },
  {
@@ -33823,7 +33823,7 @@
  },
  {
   "s": "Bing UK",
-  "t": "Binguk",
+  "t": "binguk",
   "u": "https://bing.co.uk/?q={searchTerms}"
  },
  {
@@ -34864,7 +34864,7 @@
  },
  {
   "s": "Discord Servers",
-  "t": "DscSrv",
+  "t": "dscsrv",
   "u": "https://discordservers.com/?term={searchTerms}"
  },
  {
@@ -38430,7 +38430,7 @@
  },
  {
   "s": "Perlentaucher",
-  "t": "Perlen",
+  "t": "perlen",
   "u": "https://www.perlentaucher.de/nsuche?q={searchTerms}"
  },
  {
@@ -41665,7 +41665,7 @@
  },
  {
   "s": "Λεξικό",
-  "t": "Λεξικό",
+  "t": "λεξικό",
   "u": "https://el.m.wiktionary.org/wiki/{searchTerms}"
  },
  {
@@ -42145,12 +42145,12 @@
  },
  {
   "s": "XE (AUD2EUR)",
-  "t": "AUD2EUR",
+  "t": "aud2eur",
   "u": "https://www.xe.com/currencyconverter/convert/?Amount={searchTerms}&From=AUD&To=EUR"
  },
  {
   "s": "XE (AUD2GBP)",
-  "t": "AUD2GDP",
+  "t": "aud2gdp",
   "u": "https://www.xe.com/currencyconverter/convert/?Amount={searchTerms}&From=AUD&To=GBP"
  },
  {
@@ -42871,7 +42871,7 @@
  },
  {
   "s": "Colorado State University library",
-  "t": "Cololib",
+  "t": "cololib",
   "u": "https://colostate-primo.hosted.exlibrisgroup.com/primo-explore/search?vid=01COLSU&lang=en_US&primoQueryTemp=d&search_field=any&search_scope=Everything&query=any,contains,{searchTerms}"
  },
  {
@@ -42931,7 +42931,7 @@
  },
  {
   "s": "Coolapk",
-  "t": "Coolapk",
+  "t": "coolapk",
   "u": "https://www.coolapk.com/search?q={searchTerms}"
  },
  {
@@ -44401,12 +44401,12 @@
  },
  {
   "s": "Detect language to Chinese",
-  "t": "gtzh-CN",
+  "t": "gtzh-cn",
   "u": "https://translate.google.com/#auto/zh-CN/{searchTerms}"
  },
  {
   "s": "Detect language to traditional Chinese",
-  "t": "gtzh-TW",
+  "t": "gtzh-tw",
   "u": "https://translate.google.com/#auto/zh-TW/{searchTerms}"
  },
  {
@@ -58146,7 +58146,7 @@
  },
  {
   "s": "Pipl - Profile Search enguine",
-  "t": "BangPeople",
+  "t": "bangpeople",
   "u": "https://pipl.com/search/?q={searchTerms}"
  },
  {
@@ -59361,7 +59361,7 @@
  },
  {
   "s": "KarmaPlace",
-  "t": "KarmaPlace",
+  "t": "karmaplace",
   "u": "https://www.karmaplace.com/catalogsearch/result/?q={searchTerms}"
  },
  {
@@ -61096,7 +61096,7 @@
  },
  {
   "s": "CajunLyrics",
-  "t": "CajunLyrics",
+  "t": "cajunlyrics",
   "u": "https://www.cajunlyrics.com/?page=search&word={searchTerms}"
  },
  {

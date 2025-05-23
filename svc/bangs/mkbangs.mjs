@@ -39,6 +39,8 @@ const transform = ({ bangs, extras, ...rest }) => {
             throw `malformed url for ${t}: ${u}`
         }
 
+        t = t.toLowerCase();
+
         if (seen.has(t)) {
             throw `duplicate bang key: !${t}`;
         }
