@@ -1,4 +1,4 @@
-// Generated at 2025-05-23T09:31:15.890Z
+// Generated at 2025-05-31T18:39:06.028Z
 //
 // MIT License
 //
@@ -45410,9 +45410,10 @@
   "u": "https://www.mironet.cz/Productlist/showSearch?EXPS={searchTerms}"
  },
  {
-  "s": "Mistral Chat",
+  "s": "Le Chat",
   "t": "mistral",
-  "u": "https://chat.mistral.ai/chat?q={searchTerms}"
+  "u": "https://chat.mistral.ai/chat?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "Mixergy",
