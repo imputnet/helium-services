@@ -1,4 +1,4 @@
-// Generated at 2025-05-31T18:39:06.028Z
+// Generated at 2025-06-02T15:28:18.313Z
 //
 // MIT License
 //
@@ -325,9 +325,9 @@
   "u": "https://anilist.co/search/anime?search={searchTerms}"
  },
  {
-  "s": "Amazon.com",
+  "s": "Apple Maps",
   "t": "am",
-  "u": "https://www.amazon.com/s?k={searchTerms}"
+  "u": "https://maps.apple.com/?q={searchTerms}"
  },
  {
   "s": "AniList",
@@ -2842,9 +2842,9 @@
   "u": "https://abcnotation.com/searchTunes?q={searchTerms}"
  },
  {
-  "s": "Abe's Market",
+  "s": "Amazon Belgium",
   "t": "abe",
-  "u": "https://www.abesmarket.com/catalogsearch/result/?cat=5&order=relevance&dir=desc&q={searchTerms}"
+  "u": "https://www.amazon.com.be/s?k={searchTerms}"
  },
  {
   "s": "ABN Lookup",
@@ -26861,9 +26861,9 @@
   "u": "http://crawl.chaosforge.org/index.php?title=Special:Search&search={searchTerms}&go=Go"
  },
  {
-  "s": "Chromium bugs",
+  "s": "Chromium Issues",
   "t": "crbug",
-  "u": "https://bugs.chromium.org/p/chromium/issues/list?q={searchTerms}"
+  "u": "https://issues.chromium.org/issues?q={searchTerms}"
  },
  {
   "s": "CloudRetails",
@@ -34406,6 +34406,11 @@
   "s": "The Rust community's crate host",
   "t": "crates",
   "u": "https://crates.io/search?q={searchTerms}"
+ },
+ {
+  "s": "Chromium Code",
+  "t": "crcode",
+  "u": "https://source.chromium.org/search?q={searchTerms}&ss=chromium/chromium/src"
  },
  {
   "s": "CRISCO Dictionnaire Electronique des Synonymes",
@@ -43020,6 +43025,11 @@
   "u": "https://crh.wikipedia.org/w/index.php?search={searchTerms}"
  },
  {
+  "s": "Chromium Issues",
+  "t": "crissue",
+  "u": "https://issues.chromium.org/issues?q={searchTerms}"
+ },
+ {
   "s": "Critiki",
   "t": "critiki",
   "u": "https://critiki.com/search/?t={searchTerms}"
@@ -45584,6 +45594,11 @@
   "s": "MyGofer",
   "t": "mygofer",
   "u": "https://www.mygofer.com/search={searchTerms}"
+ },
+ {
+  "s": "MyNixOS",
+  "t": "mynixos",
+  "u": "https://mynixos.com/search?q={searchTerms}"
  },
  {
   "s": "myshows.ru",
@@ -49316,7 +49331,7 @@
   "u": "https://chordify.net/?search={searchTerms}"
  },
  {
-  "s": "Chromium Code Search",
+  "s": "Chromium Code",
   "t": "chromium",
   "u": "https://source.chromium.org/search?q={searchTerms}&ss=chromium/chromium/src"
  },
