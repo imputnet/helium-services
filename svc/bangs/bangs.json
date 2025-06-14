@@ -1,4 +1,4 @@
-// Generated at 2025-06-02T15:28:18.313Z
+// Generated at 2025-06-14T20:22:32.451Z
 //
 // MIT License
 //
@@ -1492,7 +1492,7 @@
  {
   "s": "Nasjonalbiblioteket",
   "t": "nb",
-  "u": "https://www.nb.no/nbsok/search?page=0&menuOpen=false&instant=true&action=search&currentHit=-1&searchString={searchTerms}"
+  "u": "https://www.nb.no/search?q={searchTerms}"
  },
  {
   "s": "Namecheap",
@@ -1632,7 +1632,7 @@
  {
   "s": "openSUSE",
   "t": "os",
-  "u": "https://software.opensuse.org/search?utf8=%E2%9C%93&q={searchTerms}&search_devel=false&search_unsupported=false&baseproject=openSUSE:13.1"
+  "u": "https://software.opensuse.org/search?q={searchTerms}"
  },
  {
   "s": "Eesti Õigekeelsussõnaraamat",
@@ -8364,7 +8364,7 @@
  {
   "s": "Kagi Translate (Proofread)",
   "t": "kpr",
-  "u": "https://translate.kagi.com/?text={searchTerms}&from=Automatic&to=Proofread"
+  "u": "https://translate.kagi.com/proofread?text={searchTerms}&from=auto"
  },
  {
   "s": "Kitsap Regional Library",
@@ -16450,7 +16450,7 @@
  {
   "s": "Deichmanske Biblotek",
   "t": "deic",
-  "u": "https://sok.deichman.no/search?query={searchTerms}"
+  "u": "https://deichman.no/sok/{searchTerms}"
  },
  {
   "s": "Dict CC DE <> IT",
@@ -21013,7 +21013,7 @@
  {
   "s": "NDLA",
   "t": "ndla",
-  "u": "https://ndla.no/en/search/apachesolr_search/{searchTerms}?language[]=und&filters=1/"
+  "u": "https://ndla.no/search?query={searchTerms}"
  },
  {
   "s": "Notre Dame Philosophical Reviews",
@@ -29516,6 +29516,11 @@
   "u": "https://librewiki.net/wiki/Special:Search?search={searchTerms}&go=Go"
  },
  {
+  "s": "Libro.fm",
+  "t": "libro",
+  "u": "https://libro.fm/search?utf8=%E2%9C%93&q={searchTerms}"
+ },
+ {
   "s": "https://lib.rs/",
   "t": "librs",
   "u": "https://lib.rs/search?q={searchTerms}"
@@ -30318,7 +30323,7 @@
  {
   "s": "Norid",
   "t": "norid",
-  "u": "https://www.norid.no/index.html?charset=UTF-8&page=index&sok=Søk&query={searchTerms}"
+  "u": "https://www.norid.no/?s={searchTerms}"
  },
  {
   "s": "Bokmålsordboka og Nynorskordboka",
@@ -38621,7 +38626,7 @@
  {
   "s": "Posten",
   "t": "posten",
-  "u": "https://sporing.posten.no/sporing.html?lang=no&q={searchTerms}&submit="
+  "u": "https://sporing.posten.no/sporing.html/{searchTerms}"
  },
  {
   "s": "PostNL",
@@ -41846,7 +41851,7 @@
  {
   "s": "alesund kommune",
   "t": "alesund",
-  "u": "https://www.alesund.kommune.no/component/finder/search?q={searchTerms}&Itemid=406"
+  "u": "https://alesund.kommune.no/sok.aspx?MId1=8&searchTerm={searchTerms}"
  },
  {
   "s": "Alexalt",
@@ -44692,7 +44697,7 @@
  {
   "s": "Innsida NTNU",
   "t": "innsida",
-  "u": "https://innsida.ntnu.no/sok?site=innsida&query={searchTerms}&category=all"
+  "u": "https://innsida.ntnu.no/sok/?q={searchTerms}"
  },
  {
   "s": "lesinrocks.com",
@@ -45257,7 +45262,7 @@
  {
   "s": "MatPrat",
   "t": "matprat",
-  "u": "https://www.matprat.no/sok/#1/all/{searchTerms}/"
+  "u": "https://www.matprat.no/sok?searchFor={searchTerms}"
  },
  {
   "s": "MaxSpar",
@@ -53543,7 +53548,7 @@
  {
   "s": "VårtOslo",
   "t": "vartoslo",
-  "u": "https://www.vartoslo.no/?s={searchTerms}"
+  "u": "https://www.vartoslo.no/cse?q={searchTerms}"
  },
  {
   "s": "Vecteezy",
