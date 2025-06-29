@@ -1,4 +1,4 @@
-// Generated at 2025-06-14T20:22:32.451Z
+// Generated at 2025-06-29T09:37:04.512Z
 //
 // MIT License
 //
@@ -14938,6 +14938,11 @@
   "u": "https://www.adorama.com/l/?searchinfo={searchTerms}"
  },
  {
+  "s": "ADS-B Exchange",
+  "t": "adsb",
+  "u": "https://www.adsbexchange.com/?icao={searchTerms}"
+ },
+ {
   "s": "Autodesk Community",
   "t": "adsk",
   "u": "https://forums.autodesk.com/t5/forums/searchpage/tab/message?q={searchTerms}"
@@ -21129,6 +21134,11 @@
   "s": "Natural Language ToolKit",
   "t": "nltk",
   "u": "https://www.nltk.org/search.html?q={searchTerms}"
+ },
+ {
+  "s": "Llyfrgell Genedlaethol Cymru = The National Library of Wales",
+  "t": "nlwc",
+  "u": "https://discover.library.wales/discovery/search?query=any,contains,{searchTerms}&tab=In_The_Library&search_scope=In_The_Library&vid=44WHELF_NLW:44WHELF_NLW_NUI&offset=0"
  },
  {
   "s": "Dutch Wikipedia",
@@ -38619,6 +38629,11 @@
   "u": "https://www.post.at/sendungsverfolgung.php/details?pnum1={searchTerms}"
  },
  {
+  "s": "Swiss Post",
+  "t": "postch",
+  "u": "https://www.post.ch/EasyTrack/submitParcelData.do?formattedParcelCodes={searchTerms}"
+ },
+ {
   "s": "Postnord DK",
   "t": "postdk",
   "u": "https://www.postnord.dk/da/Sider/TrackTrace.aspx?search={searchTerms}"
@@ -50984,6 +50999,11 @@
   "s": "J! Archive",
   "t": "jeopardy",
   "u": "https://www.j-archive.com/search.php?search={searchTerms}"
+ },
+ {
+  "s": "JetPhotos",
+  "t": "jetphoto",
+  "u": "https://www.jetphotos.com/photo/keyword/{searchTerms}"
  },
  {
   "s": "Joe Fresh",
