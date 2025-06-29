@@ -104,6 +104,7 @@ http {
 
         location = /bangs.json {
             add_header Cache-Control "public, max-age=86400, stale-if-error=604800";
+            add_header Access-Control-Allow-Origin "https://bangs.helium.computer";
             root /dev/shm/bangs;
         }
 
