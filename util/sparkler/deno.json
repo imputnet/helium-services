@@ -1,0 +1,14 @@
+{
+    "tasks": {
+        "dev": "deno run --watch main.ts"
+    },
+    "imports": {
+        "@noble/curves": "jsr:@noble/curves@^1.9.0",
+        "@std/assert": "jsr:@std/assert@1"
+    },
+    "fmt": {
+        "indentWidth": 4,
+        "singleQuote": true,
+        "lineWidth": 100
+    }
+}

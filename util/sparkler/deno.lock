@@ -1,0 +1,59 @@
+{
+  "version": "4",
+  "specifiers": {
+    "jsr:@libs/xml@*": "6.0.4",
+    "jsr:@noble/curves@*": "1.9.0",
+    "jsr:@noble/curves@^1.9.0": "1.9.0",
+    "jsr:@noble/hashes@1.8.0": "1.8.0",
+    "jsr:@std/assert@1": "1.0.13",
+    "jsr:@std/encoding@*": "1.0.7",
+    "jsr:@std/fs@*": "1.0.19",
+    "jsr:@std/internal@^1.0.6": "1.0.6",
+    "jsr:@std/internal@^1.0.9": "1.0.9",
+    "jsr:@std/path@*": "1.1.1"
+  },
+  "jsr": {
+    "@libs/xml@6.0.4": {
+      "integrity": "c896f17016dbf5f2d62496e0bd6cd7db145c05987d0e45d4dd2c87785a60f528"
+    },
+    "@noble/curves@1.9.0": {
+      "integrity": "efa55b3375b755706462a083060ee91e1f79973568cb670f02e885538ed1661b",
+      "dependencies": [
+        "jsr:@noble/hashes"
+      ]
+    },
+    "@noble/hashes@1.8.0": {
+      "integrity": "b52a2fcb4d02f8d8137871564a31f1ee9e2b0d15eedabbf32d2f7333f0abc939"
+    },
+    "@std/assert@1.0.13": {
+      "integrity": "ae0d31e41919b12c656c742b22522c32fb26ed0cba32975cb0de2a273cb68b29",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.6"
+      ]
+    },
+    "@std/encoding@1.0.7": {
+      "integrity": "f631247c1698fef289f2de9e2a33d571e46133b38d042905e3eac3715030a82d"
+    },
+    "@std/fs@1.0.19": {
+      "integrity": "051968c2b1eae4d2ea9f79a08a3845740ef6af10356aff43d3e2ef11ed09fb06"
+    },
+    "@std/internal@1.0.6": {
+      "integrity": "9533b128f230f73bd209408bb07a4b12f8d4255ab2a4d22a1fd6d87304aca9a4"
+    },
+    "@std/internal@1.0.9": {
+      "integrity": "bdfb97f83e4db7a13e8faab26fb1958d1b80cc64366501af78a0aee151696eb8"
+    },
+    "@std/path@1.1.1": {
+      "integrity": "fe00026bd3a7e6a27f73709b83c607798be40e20c81dde655ce34052fd82ec76",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.9"
+      ]
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@noble/curves@^1.9.0",
+      "jsr:@std/assert@1"
+    ]
+  }
+}
