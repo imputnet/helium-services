@@ -12,6 +12,7 @@ export type DeltaEnclosure = Enclosure & {
 export type AppcastRelease = {
     title: string;
     pubDate: string;
+    'sparkle:channel'?: string;
     'sparkle:version': string;
     'sparkle:shortVersionString': string;
     'sparkle:minimumSystemVersion': string;

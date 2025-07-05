@@ -45,6 +45,10 @@ const toAppcastRelease = async (
         'enclosure': await toEnclosure(dmg),
     };
 
+    if (release.channel) {
+        appcastRelease['sparkle:channel'] = release.channel;
+    }
+
     for (const [deltaFrom, arches] of Object.entries(release.deltas)) {
         const delta = arches[arch];
         if (!delta) {
