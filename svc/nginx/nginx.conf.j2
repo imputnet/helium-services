@@ -93,6 +93,10 @@ http {
         add_header Strict-Transport-Security "max-age=63072000" always;
         add_header Alt-Svc 'h3=":443"; ma=86400' always;
 
+        proxy_ssl_verify on;
+        proxy_ssl_server_name on;
+        proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
+
         location = / {
             return 302 https://helium.computer;
         }
