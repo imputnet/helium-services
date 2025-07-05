@@ -112,6 +112,30 @@ http {
             root /dev/shm/bangs;
         }
 
+        # TODO: remove this eventually
+        location = /updates/mac-arm64/appcast.xml {
+            proxy_pass https://updates.helium.computer/mac/appcast-arm64.xml;
+        }
+
+        # TODO: remove this eventually
+        location /updates/mac-arm64/ {
+            proxy_pass https://updates.helium.computer/mac/;
+        }
+
+        # TODO: remove this eventually
+        location = /updates/mac-x86_64/appcast.xml {
+            proxy_pass https://updates.helium.computer/mac/appcast-x86_64.xml;
+        }
+
+        # TODO: remove this eventually
+        location /updates/mac-x86_64/ {
+            proxy_pass https://updates.helium.computer/mac/;
+        }
+
+        location /updates/mac {
+            proxy_pass https://updates.helium.computer/mac;
+        }
+
         location /dict {
             gzip_static always;
             root /dev/shm/dictionaries;
@@ -134,7 +158,6 @@ http {
             proxy_cache ubo;
 
             proxy_intercept_errors on;
-            proxy_ssl_server_name on;
             proxy_method GET;
 
             proxy_pass_request_body off;
