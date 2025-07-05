@@ -72,9 +72,10 @@ export const makeAppcast = async (arch: CPUArchitecture) => {
     const releases = await getReleases();
     const appcast: Appcast = {
         '@version': '1.0',
+        '@standalone': 'yes',
         rss: {
             '@version': '2.0',
-            'xmlns:sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle',
+            '@xmlns:sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle',
             channel: {
                 title: 'Helium',
                 item: (await Promise.all(

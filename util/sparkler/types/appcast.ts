@@ -22,9 +22,10 @@ export type AppcastRelease = {
 
 export type Appcast = {
     '@version': '1.0';
+    '@standalone': 'yes';
     rss: {
         '@version': '2.0';
-        'xmlns:sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle';
+        '@xmlns:sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle';
         channel: {
             title: string;
             item: AppcastRelease[];
