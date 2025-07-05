@@ -1,8 +1,7 @@
 FROM alpine:3.21.3@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c AS prep
 ARG SERVICES_HOSTNAME
 
-RUN apk add --no-cache jinja2-cli openssl
-RUN openssl dhparam -out /dhparam.pem 4096
+RUN apk add --no-cache jinja2-cli
 
 COPY ./nginx/*.j2 /
 COPY ./nginx/template.sh /
@@ -16,8 +15,8 @@ ARG SERVICES_HOSTNAME
 ENV SERVICES_HOSTNAME "$SERVICES_HOSTNAME"
 
 RUN apk add --no-cache inotify-tools curl
+RUN curl https://ssl-config.mozilla.org/ffdhe4096.txt -o /etc/nginx/dhparam.pem
 
-COPY --from=prep /dhparam.pem /etc/nginx/dhparam.pem
 COPY --from=prep /*.conf /etc/nginx/
 COPY --from=prep /assets.json /usr/share/ublock/ubo/
 COPY --from=prep /update.xml /usr/share/ublock/ubo/
