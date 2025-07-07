@@ -106,7 +106,7 @@ const getDeltasFromRelease = (release: GithubRelease, version: string) => {
             machine_url: asset.url,
             user_facing_url: asset.browser_download_url,
             size: asset.size,
-            digest: asset.digest,
+            digest: asset.digest.split('sha256:')[1],
         };
     }
 
