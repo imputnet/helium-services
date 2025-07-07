@@ -21,6 +21,8 @@ if (await exists(sigFile)) {
     Object.assign(sigCache, JSON.parse(await Deno.readTextFile(sigFile)));
 }
 
+const write = () => Deno.writeTextFile(sigFile, JSON.stringify(sigCache, null, 4));
+
 export const signAndVerifyAsset = async (asset: Asset) => {
     if (sigCache[asset.name]) {
         return;
@@ -30,7 +32,16 @@ export const signAndVerifyAsset = async (asset: Asset) => {
 
     const signature = ed25519.sign(await read(asset), SIGNING_KEY);
     sigCache[asset.name] = encodeBase64(signature);
-    await Deno.writeTextFile(sigFile, JSON.stringify(sigCache, null, 4));
+    await write();
+};
+
+export const removeSignatureForFile = async (filename: string) => {
+    if (!sigCache[filename]) {
+        return;
+    }
+
+    delete sigCache[filename];
+    await write();
 };
 
 export const getSignatureFor = async (asset: Asset) => {
