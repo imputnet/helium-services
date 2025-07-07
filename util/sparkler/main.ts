@@ -20,6 +20,7 @@ const main = async () => {
         );
     }
 
+    await assets.cleanup();
     console.log('[/] done');
 };
 
