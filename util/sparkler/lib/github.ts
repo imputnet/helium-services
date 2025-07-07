@@ -4,7 +4,7 @@ import { sleep } from './util.ts';
 import { Asset, CPUArchitecture } from '../types/assets.ts';
 import { DownloadableMap, GithubRelease, Release, Version } from '../types/github.ts';
 
-const OLD_VERSION_THRESHOLD_DAYS = 60;
+const OLD_VERSION_THRESHOLD_DAYS = 30;
 const REFRESH_INTERVAL_MSECS = 1000 * 60 * 60; /* 1 hour */
 
 const getGithubReleases = async (page = 1) => {
