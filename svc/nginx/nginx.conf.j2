@@ -114,6 +114,8 @@ http {
 
         location /updates/mac {
             proxy_pass https://updates.helium.computer/mac;
+            sub_filter "https://updates.helium.computer/" "https://{{ services_hostname }}/updates/";
+            sub_filter_once off;
         }
 
         location /dict {

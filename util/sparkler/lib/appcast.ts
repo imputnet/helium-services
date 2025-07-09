@@ -12,7 +12,7 @@ const MINIMUM_SYSTEM_VERSION = '11.0';
 
 const getUrlForAsset = (asset: Asset) => {
     if (env.shouldServeAssets) {
-        return `assets/${asset.name}`;
+        return (env.urlPrefix ?? '') + `assets/${asset.name}`;
     }
 
     return asset.user_facing_url;
