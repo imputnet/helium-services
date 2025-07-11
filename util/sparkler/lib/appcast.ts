@@ -77,7 +77,7 @@ export const makeAppcast = async (arch: CPUArchitecture) => {
             '@version': '2.0',
             '@xmlns:sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle',
             channel: {
-                title: 'Helium',
+                title: `Helium (${arch})`,
                 item: (await Promise.all(
                     releases.map((release) => toAppcastRelease(release, arch)),
                 )).filter((r) => r !== undefined),
