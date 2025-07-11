@@ -1,4 +1,4 @@
-// Generated at 2025-06-29T09:37:04.512Z
+// Generated at 2025-07-11T10:13:03.773Z
 //
 // MIT License
 //
@@ -18427,6 +18427,11 @@
   "s": "GRC Port Authority",
   "t": "grcp",
   "u": "https://www.grc.com/port_{searchTerms}.htm"
+ },
+ {
+  "s": "grep.app",
+  "t": "grep",
+  "u": "https://grep.app/search?q={searchTerms}"
  },
  {
   "s": "Grok",
@@ -41314,6 +41319,11 @@
   "u": "https://www.winehq.org/search?q={searchTerms}"
  },
  {
+  "s": "winget.run",
+  "t": "winget",
+  "u": "https://winget.run/search?query={searchTerms}"
+ },
+ {
   "s": "wissen.de",
   "t": "wissen",
   "u": "https://www.wissen.de/wissensserver/search?keyword={searchTerms}"
@@ -42071,7 +42081,7 @@
  {
   "s": "ArchLinux User Repository",
   "t": "archaur",
-  "u": "https://aur.archlinux.org/packages.php?O=0&K={searchTerms}&do_Search=Go"
+  "u": "https://aur.archlinux.org/packages?O=0&K={searchTerms}"
  },
  {
   "s": "Internet",
