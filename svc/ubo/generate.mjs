@@ -50,7 +50,9 @@ const transform = async (assets) => {
 
     for (const [ id, asset ] of Object.entries(assets)) {
         const allUrls = [asset.contentURL, asset.cdnURLs].flat();
+
         delete asset.cdnURLs;
+        delete asset.patchURLs;
 
         if (id === 'assets.json') {
             asset.contentURL = `https://{{ services_hostname }}/ubo/assets.json`;
@@ -67,7 +69,6 @@ const transform = async (assets) => {
         const filename = id.includes('.') ? id : `${id}.txt`;
         const proxyURL = `https://{{ services_hostname }}/ubo/lists/${filename}`;
 
-        delete asset.cdnURLs;
         asset.contentURL = [
             proxyURL,
             ...locals,
