@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const VERSION = '1.63.2';
-const FILE_CHECKSUM = '27f60b2250e42f5bdf22fd2911d1f61542980645bffcc3cd0620256bbb56cb1b';
+const VERSION = '1.65.0';
+const FILE_CHECKSUM = '5f35d1c6cf09d7231069b8cb15a577face574c89f8691585ae961c1495b31d1e';
 
 const originalAssetURL = `https://raw.githubusercontent.com/gorhill/uBlock/refs/tags/${VERSION}/assets/assets.json`;
 const crxURL = `https://github.com/imputnet/ublock-origin-crx/releases/download/${VERSION}/uBlock0_${VERSION}.crx`;

@@ -1,2 +1,2 @@
-https://github.com/imputnet/ublock-origin-crx/releases/download/1.63.2/uBlock0_1.63.2.crx
-05cd96f3e5d288a5709d45628aa273566b6ea2230077c0d31f807ad4eb8c8c4c /usr/share/ublock/ubo/ublock.crx
+https://github.com/imputnet/ublock-origin-crx/releases/download/1.65.0/uBlock0_1.65.0.crx
+0d21cfa47f017deba2283e787643d0a8a016865e77d2d07d62aad8fcb58e5ecf /usr/share/ublock/ubo/ublock.crx
