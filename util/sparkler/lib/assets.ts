@@ -84,7 +84,7 @@ export const verify = async (asset: Asset) => {
         await read(asset),
     );
 
-    if (!beq(decodeHex(asset.digest), actualDigest)) {
+    if (!beq(decodeHex(asset.digest).buffer, actualDigest)) {
         throw new Error(
             `digest for ${asset.name} is not matching: ${
                 encodeHex(actualDigest)
