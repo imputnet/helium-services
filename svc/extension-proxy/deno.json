@@ -10,6 +10,7 @@
     "fmt": {
         "indentWidth": 4,
         "singleQuote": true,
-        "lineWidth": 100
+        "lineWidth": 100,
+        "trailingCommas": "onlyMultiLine"
     }
 }
