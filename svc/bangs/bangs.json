@@ -1,4 +1,4 @@
-// Generated at 2025-07-11T10:13:03.773Z
+// Generated at 2025-07-22T15:51:20.224Z
 //
 // MIT License
 //
@@ -282,7 +282,7 @@
  {
   "s": "Allociné",
   "t": "ac",
-  "u": "https://www.allocine.fr/recherche/?q={searchTerms}"
+  "u": "https://www.allocine.fr/rechercher/?q={searchTerms}"
  },
  {
   "s": "Ask Different",
@@ -1537,7 +1537,7 @@
  {
   "s": "Nexus Mods",
   "t": "nm",
-  "u": "https://www.nexusmods.com/search/?gsearch={searchTerms}&gsearchtype=mods"
+  "u": "https://www.nexusmods.com/search?keyword={searchTerms}"
  },
  {
   "s": "Natural News",
@@ -15020,7 +15020,7 @@
  {
   "s": "Allociné",
   "t": "allo",
-  "u": "https://www.allocine.fr/recherche/?q={searchTerms}"
+  "u": "https://www.allocine.fr/rechercher/?q={searchTerms}"
  },
  {
   "s": "Alternative To",
@@ -20006,6 +20006,11 @@
   "u": "https://www.live365.com/cgi-bin/directory.cgi?searchdesc={searchTerms}"
  },
  {
+  "s": "Laby",
+  "t": "laby",
+  "u": "https://laby.net/@{searchTerms}"
+ },
+ {
   "s": "LAEC.fr – Le programme de Jean-Luc Mélenchon en ligne – L'Avenir En Commun",
   "t": "laec",
   "u": "https://laec.fr/recherche?termes={searchTerms}"
@@ -23599,6 +23604,11 @@
   "s": "The Cutting Room Floor",
   "t": "tcrf",
   "u": "https://tcrf.net/index.php?search={searchTerms}"
+ },
+ {
+  "s": "Temu",
+  "t": "temu",
+  "u": "https://www.temu.com/search_result.html?search_key={searchTerms}"
  },
  {
   "s": "Tennis abstract",
@@ -32099,7 +32109,7 @@
  {
   "s": "Terms of Service; Didn't Read",
   "t": "tosdr",
-  "u": "https://tosdr.org/#search={searchTerms}"
+  "u": "https://tosdr.org/search/{searchTerms}"
  },
  {
   "s": "Touts",
@@ -34421,6 +34431,11 @@
   "s": "cppreference.com",
   "t": "cppref",
   "u": "https://en.cppreference.com/mwiki/index.php?title=Special:Search&search={searchTerms}"
+ },
+ {
+  "s": "Crafty",
+  "t": "crafty",
+  "u": "https://crafty.gg/players?search={searchTerms}"
  },
  {
   "s": "The Rust community's crate host",
@@ -37499,7 +37514,7 @@
   "u": "https://www.curseforge.com/minecraft/mc-mods/search?search={searchTerms}"
  },
  {
-  "s": "Minecraft Name History",
+  "s": "NameMC",
   "t": "mcname",
   "u": "https://namemc.com/search?q={searchTerms}"
  },
@@ -37856,7 +37871,7 @@
  {
   "s": "NameMC",
   "t": "namemc",
-  "u": "https://de.namemc.com/search?q={searchTerms}"
+  "u": "https://namemc.com/search?q={searchTerms}"
  },
  {
   "s": "opgg",
@@ -48668,12 +48683,12 @@
  {
   "s": "Allocine.com",
   "t": "allocine",
-  "u": "https://www.allocine.fr/recherche/?q={searchTerms}"
+  "u": "https://www.allocine.fr/rechercher/?q={searchTerms}"
  },
  {
   "s": "Allociné",
   "t": "allociné",
-  "u": "https://www.allocine.fr/recherche/?q={searchTerms}"
+  "u": "https://www.allocine.fr/rechercher/?q={searchTerms}"
  },
  {
   "s": "AllSides",
