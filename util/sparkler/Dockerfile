@@ -1,4 +1,4 @@
-FROM denoland/deno:alpine-2.2.3@sha256:ac7d8517efbb1e15eb92584e2a0f99f9172761f265f1900dafabf140e918b45f AS base
+FROM denoland/deno:alpine-2.4.2@sha256:67a912a84fee096e71b583524aec3a01add461eebccf41a8f190947b6e3c784d AS base
 USER deno
 
 FROM base AS builder
