@@ -2,13 +2,12 @@ import { stringify } from 'jsr:@libs/xml';
 
 import { getReleases } from './github.ts';
 import { getSignatureFor } from './eddsa.ts';
+import { getMinimumSystemVersionFor } from './dmg.ts';
 
 import { Asset, CPUArchitecture } from '../types/assets.ts';
 import { Appcast, AppcastRelease, Enclosure } from '../types/appcast.ts';
 import { Release } from '../types/github.ts';
 import { env } from './env.ts';
-
-const MINIMUM_SYSTEM_VERSION = '11.0';
 
 const getUrlForAsset = (asset: Asset) => {
     if (env.shouldServeAssets) {
@@ -36,12 +35,19 @@ const toAppcastRelease = async (
         return;
     }
 
+    let minimumSystemVersion = '10.0';
+    try {
+        minimumSystemVersion = await getMinimumSystemVersionFor(dmg);
+    } catch {
+        console.warn(`[!] could not get minimum OS version for {dmg.name}, falling back to 10.0`);
+    }
+
     const appcastRelease: AppcastRelease = {
         title: release.version,
         pubDate: new Date(release.published_at).toUTCString(),
         'sparkle:version': release.version,
         'sparkle:shortVersionString': release.version,
-        'sparkle:minimumSystemVersion': MINIMUM_SYSTEM_VERSION,
+        'sparkle:minimumSystemVersion': minimumSystemVersion,
         'enclosure': await toEnclosure(dmg),
     };
 
