@@ -1,4 +1,4 @@
-import { stringify, parse } from 'jsr:@libs/xml';
+import { parse, stringify } from 'jsr:@libs/xml';
 
 import { getMinimumVersion, getSignature } from './cache.ts';
 import { getReleases } from './github.ts';
@@ -103,19 +103,15 @@ export const getSignaturesAndVersions = async (appcastPath: string) => {
     const text = await Deno.readTextFile(appcastPath);
     const data = parse(text) as unknown as Appcast;
 
-    return data.rss.channel.item.flatMap((item) => {
-        return [
-            {
-                filename: basename(item.enclosure['@url']),
-                signature: item.enclosure['@sparkle:edSignature'],
-                minVersion: item['sparkle:minimumSystemVersion'],
-            },
-            ...(item['sparkle:deltas']?.enclosure ?? []).map((delta) => {
-                return {
-                    filename: basename(delta['@url']),
-                    signature: delta['@sparkle:edSignature'],
-                };
-            }),
-        ];
-    });
+    return data.rss.channel.item.flatMap((item) => [
+        {
+            filename: basename(item.enclosure['@url']),
+            signature: item.enclosure['@sparkle:edSignature'],
+            minVersion: item['sparkle:minimumSystemVersion'],
+        },
+        ...(item['sparkle:deltas']?.enclosure ?? []).map((delta) => ({
+            filename: basename(delta['@url']),
+            signature: delta['@sparkle:edSignature'],
+        })),
+    ]);
 };
