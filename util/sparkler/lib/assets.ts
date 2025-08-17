@@ -5,7 +5,6 @@ import { decodeHex, encodeHex } from 'jsr:@std/encoding/hex';
 import { beq, sleep } from './util.ts';
 import { env, headers } from './env.ts';
 import { getReleases } from './github.ts';
-import { removeSignatureForFile, signAndVerifyAsset } from './eddsa.ts';
 
 import { Asset } from '../types/assets.ts';
 
@@ -70,7 +69,6 @@ export const cleanup = async () => {
     for (const file of existingFiles) {
         console.log(`[c] removing ${file}`);
         await Deno.remove(path.join(env.assetDirectory, file));
-        await removeSignatureForFile(file);
     }
 };
 
@@ -95,7 +93,6 @@ export const verify = async (asset: Asset) => {
 
 export const ensureAssetsReady = async () => {
     const releases = await getReleases();
-    const signatures: Promise<void>[] = [];
     const downloadables = releases
         .flatMap((r) => [...Object.values(r.deltas), r.downloads])
         .flatMap((d) => Object.values(d))
@@ -106,8 +103,5 @@ export const ensureAssetsReady = async () => {
             console.log(`[r] missing asset ${asset.name}, downloading...`);
             await downloadAsset(asset);
         }
-        signatures.push(signAndVerifyAsset(asset));
     }
-
-    await Promise.all(signatures);
 };

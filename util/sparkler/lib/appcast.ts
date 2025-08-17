@@ -1,13 +1,14 @@
-import { stringify } from 'jsr:@libs/xml';
+import { stringify, parse } from 'jsr:@libs/xml';
 
+import { getMinimumVersion, getSignature } from './cache.ts';
 import { getReleases } from './github.ts';
-import { getSignatureFor } from './eddsa.ts';
-import { getMinimumSystemVersionFor } from './dmg.ts';
-
-import { Asset, CPUArchitecture } from '../types/assets.ts';
-import { Appcast, AppcastRelease, Enclosure } from '../types/appcast.ts';
-import { Release } from '../types/github.ts';
 import { env } from './env.ts';
+
+import { Appcast, AppcastRelease, Enclosure } from '../types/appcast.ts';
+import { Asset, CPUArchitecture } from '../types/assets.ts';
+import { Release } from '../types/github.ts';
+import { exists } from 'jsr:@std/fs/exists';
+import { basename } from 'jsr:@std/path';
 
 const getUrlForAsset = (asset: Asset) => {
     if (env.shouldServeAssets) {
@@ -21,7 +22,7 @@ const toEnclosure = async (asset: Asset): Promise<Enclosure> => {
     return {
         '@url': getUrlForAsset(asset),
         '@length': asset.size,
-        '@sparkle:edSignature': await getSignatureFor(asset),
+        '@sparkle:edSignature': await getSignature(asset),
         '@type': 'application/octet-stream',
     };
 };
@@ -37,7 +38,7 @@ const toAppcastRelease = async (
 
     let minimumSystemVersion = '10.0';
     try {
-        minimumSystemVersion = await getMinimumSystemVersionFor(dmg);
+        minimumSystemVersion = await getMinimumVersion(dmg);
     } catch {
         console.warn(`[!] could not get minimum OS version for ${dmg.name}, falling back to 10.0`);
     }
@@ -92,4 +93,29 @@ export const makeAppcast = async (arch: CPUArchitecture) => {
     };
 
     return stringify(appcast);
+};
+
+export const getSignaturesAndVersions = async (appcastPath: string) => {
+    if (!await exists(appcastPath)) {
+        return [];
+    }
+
+    const text = await Deno.readTextFile(appcastPath);
+    const data = parse(text) as unknown as Appcast;
+
+    return data.rss.channel.item.flatMap((item) => {
+        return [
+            {
+                filename: basename(item.enclosure['@url']),
+                signature: item.enclosure['@sparkle:edSignature'],
+                minVersion: item['sparkle:minimumSystemVersion'],
+            },
+            ...(item['sparkle:deltas']?.enclosure ?? []).map((delta) => {
+                return {
+                    filename: basename(delta['@url']),
+                    signature: delta['@sparkle:edSignature'],
+                };
+            }),
+        ];
+    });
 };
