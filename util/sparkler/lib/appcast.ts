@@ -103,7 +103,7 @@ export const getSignaturesAndVersions = async (appcastPath: string) => {
     const text = await Deno.readTextFile(appcastPath);
     const data = parse(text) as unknown as Appcast;
 
-    return data.rss.channel.item.flatMap((item) => [
+    return (data.rss.channel.item ?? []).flatMap((item) => [
         {
             filename: basename(item.enclosure['@url']),
             signature: item.enclosure['@sparkle:edSignature'],
