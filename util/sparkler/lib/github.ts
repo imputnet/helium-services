@@ -41,6 +41,7 @@ const getAllGithubReleases = async () => {
     do {
         temp = await getGithubReleases(++page);
 
+        const beforeFilter = temp.length;
         const latestRelease = (releases[0] || temp[0])?.published_at;
         if (latestRelease) {
             temp = temp.filter((r) => {
@@ -51,6 +52,7 @@ const getAllGithubReleases = async () => {
         }
 
         releases.push(...temp);
+        if (temp.length < beforeFilter) break;
     } while (temp.length > 0);
 
     return releases;
