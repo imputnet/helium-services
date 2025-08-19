@@ -1,4 +1,4 @@
-// Generated at 2025-07-22T15:51:20.224Z
+// Generated at 2025-08-19T08:10:56.510Z
 //
 // MIT License
 //
@@ -57,7 +57,7 @@
  {
   "s": "Google",
   "t": "g",
-  "u": "https://google.com/search?q={searchTerms}"
+  "u": "https://www.google.com/search?q={searchTerms}"
  },
  {
   "s": "Hoogle",
@@ -135,7 +135,7 @@
   "u": "https://www.labirint.ru/search/{searchTerms}"
  },
  {
-  "s": "google.com",
+  "s": "Google",
   "t": "п",
   "u": "https://www.google.com/search?q={searchTerms}"
  },
@@ -810,11 +810,6 @@
   "u": "https://filehippo.com/search?q={searchTerms}"
  },
  {
-  "s": "finanzen.net",
-  "t": "fi",
-  "u": "https://www.finanzen.net/suchergebnis.asp?strSuchString={searchTerms}"
- },
- {
   "s": "Funnyjunk",
   "t": "fj",
   "u": "https://funnyjunk.com/search/?q={searchTerms}"
@@ -870,11 +865,6 @@
   "u": "https://www.forgottenweapons.com/?s={searchTerms}"
  },
  {
-  "s": "Google Plus",
-  "t": "g+",
-  "u": "https://plus.google.com/u/0/s/{searchTerms}"
- },
- {
   "s": "Google Australia",
   "t": "ga",
   "u": "https://www.google.com.au/search?q={searchTerms}"
@@ -907,7 +897,7 @@
  {
   "s": "GitHub",
   "t": "gh",
-  "u": "https://github.com/search?utf8=%E2%9C%93&q={searchTerms}"
+  "u": "https://github.com/search?q={searchTerms}"
  },
  {
   "s": "Google Images",
@@ -982,7 +972,7 @@
  {
   "s": "Google",
   "t": "gy",
-  "u": "https://google.com/search?q={searchTerms}&tbs=qdr:y"
+  "u": "https://www.google.com/search?q={searchTerms}&tbs=qdr:y"
  },
  {
   "s": "GeekZone",
@@ -1855,9 +1845,9 @@
   "u": "https://www.reasonablefaith.org/search/results?q={searchTerms}"
  },
  {
-  "s": "Rap Genius",
+  "s": "Genius",
   "t": "rg",
-  "u": "https://rapgenius.com/search?q={searchTerms}"
+  "u": "https://genius.com/search?q={searchTerms}"
  },
  {
   "s": "Robin Hood",
@@ -3899,7 +3889,7 @@
  {
   "s": "Binding of Isaac: Rebirth Wiki",
   "t": "boi",
-  "u": "https://bindingofisaacrebirth.gamepedia.com/index.php?search={searchTerms}"
+  "u": "https://bindingofisaacrebirth.wiki.gg/index.php?search={searchTerms}"
  },
  {
   "s": "bol.com",
@@ -4829,7 +4819,7 @@
  {
   "s": "Dead by Daylight Wiki",
   "t": "dbd",
-  "u": "https://deadbydaylight.gamepedia.com/index.php?search={searchTerms}&title=Special:Search&go=Go"
+  "u": "https://deadbydaylight.wiki.gg/index.php?search={searchTerms}"
  },
  {
   "s": "Databaze knih",
@@ -5849,7 +5839,7 @@
  {
   "s": "Enter the Gungeon Wiki",
   "t": "etg",
-  "u": "https://enterthegungeon.gamepedia.com/index.php?search={searchTerms}"
+  "u": "https://enterthegungeon.wiki.gg/index.php?search={searchTerms}"
  },
  {
   "s": "EtherScan",
@@ -6719,7 +6709,7 @@
  {
   "s": "GitHub Code",
   "t": "ghc",
-  "u": "https://github.com/search?utf8=%E2%9C%93&q={searchTerms}&type=Code"
+  "u": "https://github.com/search?q={searchTerms}&type=Code"
  },
  {
   "s": "Google HK",
@@ -6742,12 +6732,12 @@
   "u": "https://github.com/search?q=is:private+{searchTerms}"
  },
  {
-  "s": "Github Repo",
+  "s": "GitHub Repo",
   "t": "ghr",
   "u": "https://github.com/{searchTerms}"
  },
  {
-  "s": "Github - Trending",
+  "s": "GitHub Trending",
   "t": "ght",
   "u": "https://github.com/trending/{searchTerms}"
  },
@@ -6822,9 +6812,9 @@
   "u": "https://www.google.com/search?site=imghp&tbm=isch&q={searchTerms}"
  },
  {
-  "s": "Github",
+  "s": "GitHub",
   "t": "git",
-  "u": "https://github.com/search?utf8=%E2%9C%93&q={searchTerms}"
+  "u": "https://github.com/search?q={searchTerms}"
  },
  {
   "s": "Google JP",
@@ -6934,7 +6924,7 @@
  {
   "s": "Google News Spain",
   "t": "gns",
-  "u": "https://google.com/search?q={searchTerms}&hl=es&prmd=niv&source=lnms&tbm=nws&sa="
+  "u": "https://www.google.com/search?q={searchTerms}&hl=es&prmd=niv&source=lnms&tbm=nws&sa="
  },
  {
   "s": "Generation Nouvelles Technologies",
@@ -7030,11 +7020,6 @@
   "s": "Google PL",
   "t": "gpl",
   "u": "https://www.google.pl/search?q={searchTerms}&meta=&aq=f&aqi=g10&aql=&gs_rfai="
- },
- {
-  "s": "Google Play Music",
-  "t": "gpm",
-  "u": "https://play.google.com/music/listen#/sr/{searchTerms}"
  },
  {
   "s": "Gentoo Portage Overlays",
@@ -7139,7 +7124,7 @@
  {
   "s": "Google over StackOverflow",
   "t": "gso",
-  "u": "https://google.com/search?q=+[inurl:http://stackoverflow.com]+{searchTerms}"
+  "u": "https://www.google.com/search?q=+[inurl:http://stackoverflow.com]+{searchTerms}"
  },
  {
   "s": "GegenStandpunkt Verlage",
@@ -10139,7 +10124,7 @@
  {
   "s": "Oxygen Not Included Wiki",
   "t": "oni",
-  "u": "https://oxygennotincluded.gamepedia.com/index.php?search={searchTerms}"
+  "u": "https://oxygennotincluded.wiki.gg/index.php?search={searchTerms}"
  },
  {
   "s": "Oblivion NexusMods",
@@ -11043,7 +11028,7 @@
   "u": "https://rgb.to/ral/{searchTerms}"
  },
  {
-  "s": "rapgenius",
+  "s": "Genius",
   "t": "rap",
   "u": "https://genius.com/search?q={searchTerms}"
  },
@@ -15435,7 +15420,7 @@
  {
   "s": "British Board of Film Classification",
   "t": "bbfc",
-  "u": "https://www.bbfc.co.uk/search/releases/{searchTerms}"
+  "u": "https://www.bbfc.co.uk/search?q={searchTerms}"
  },
  {
   "s": "Babylon.js documentation",
@@ -15555,7 +15540,7 @@
  {
   "s": "bilibili",
   "t": "bili",
-  "u": "https://www.bilibili.com/search?keyword={searchTerms}:"
+  "u": "https://www.bilibili.com/search?keyword={searchTerms}"
  },
  {
   "s": "Bing",
@@ -17088,9 +17073,9 @@
   "u": "https://portal.ehri-project.eu/search?q={searchTerms}"
  },
  {
-  "s": "GitHub",
+  "s": "EIPs GitHub Issues",
   "t": "eips",
-  "u": "https://github.com/ethereum/EIPs/issues?utf8=%E2%9C%93&q={searchTerms}"
+  "u": "https://github.com/ethereum/EIPs/issues?q={searchTerms}"
  },
  {
   "s": "Ejoy",
@@ -17871,7 +17856,7 @@
  {
   "s": "Google Search 100 Results",
   "t": "g100",
-  "u": "https://google.com/search?q={searchTerms}&tbo=1&num=100"
+  "u": "https://www.google.com/search?q={searchTerms}&tbo=1&num=100"
  },
  {
   "s": "G Adventures",
@@ -17899,7 +17884,7 @@
   "u": "http://www.game.co.uk/webapp/wcs/stores/servlet/AjaxCatalogSearch?storeId=10151&catalogId=10201&langId=44&pageSize=&beginIndex=0&sType=SimpleSearch&resultCatEntryType=2&showResultsPage=true&pageView=image&predictiveSearchURL=&searchTerm={searchTerms}&searchBtn=z"
  },
  {
-  "s": "Google Store",
+  "s": "Google Play Store",
   "t": "gapp",
   "u": "https://play.google.com/store/search?q={searchTerms}"
  },
@@ -18046,7 +18031,7 @@
  {
   "s": "Google Images (Animated)",
   "t": "ggif",
-  "u": "https://google.com/search?q={searchTerms}&site=webhp&tbm=isch&tbs=itp:animated"
+  "u": "https://www.google.com/search?q={searchTerms}&site=webhp&tbm=isch&tbs=itp:animated"
  },
  {
   "s": "Geizhals Österreich",
@@ -18059,12 +18044,12 @@
   "u": "https://geizhals.de/?fs={searchTerms}"
  },
  {
-  "s": "GitHub JavaScript Code Search",
+  "s": "GitHub JavaScript Code",
   "t": "ghjs",
   "u": "https://github.com/search?l=JavaScript&o=desc&q={searchTerms}&s=indexed&type=Code"
  },
  {
-  "s": "Github User",
+  "s": "GitHub User",
   "t": "ghus",
   "u": "https://github.com/{searchTerms}/"
  },
@@ -18104,7 +18089,7 @@
   "u": "https://www.google.com/search?tbm=isch&q={searchTerms}&tbs=imgo:1"
  },
  {
-  "s": "Github Gists",
+  "s": "GitHub Gists",
   "t": "gist",
   "u": "https://gist.github.com/search?q={searchTerms}"
  },
@@ -18359,7 +18344,7 @@
   "u": "https://m.banggood.com/search/{searchTerms}.html"
  },
  {
-  "s": "unencrypted google search",
+  "s": "Google",
   "t": "goog",
   "u": "https://www.google.com/?q={searchTerms}"
  },
@@ -18468,11 +18453,6 @@
   "s": "GSM Arena",
   "t": "gsma",
   "u": "https://www.gsmarena.com/results.php3?sName={searchTerms}"
- },
- {
-  "s": "Google with SSL",
-  "t": "gssl",
-  "u": "https://google.com/search?q={searchTerms}"
  },
  {
   "s": "Google Shopping UK",
@@ -25233,7 +25213,7 @@
  {
   "s": "Wynncraft Wiki",
   "t": "wynn",
-  "u": "https://wynncraft.gamepedia.com/index.php?search={searchTerms}"
+  "u": "https://wynncraft.wiki.gg/index.php?search={searchTerms}"
  },
  {
   "s": "Moroccan Amazigh Wikipedia",
@@ -28318,7 +28298,7 @@
  {
   "s": "Google Past Hour Search",
   "t": "ghour",
-  "u": "https://google.com/search?q={searchTerms}&tbs=qdr:h"
+  "u": "https://www.google.com/search?q={searchTerms}&tbs=qdr:h"
  },
  {
   "s": "Glosbe",
@@ -28456,11 +28436,6 @@
   "u": "https://play.google.com/store/search?q={searchTerms}"
  },
  {
-  "s": "Google Plus",
-  "t": "gplus",
-  "u": "https://plus.google.com/s/{searchTerms}"
- },
- {
   "s": "en Guayaquil",
   "t": "gquil",
   "u": "https://enguayaquil.com/?s={searchTerms}"
@@ -28548,7 +28523,7 @@
  {
   "s": "Google Search Verbatim 100 Results",
   "t": "gv100",
-  "u": "https://google.com/search?q={searchTerms}&tbo=1&num=100&tbs=li:1"
+  "u": "https://www.google.com/search?q={searchTerms}&tbo=1&num=100&tbs=li:1"
  },
  {
   "s": "Google Docs Viewer",
@@ -29058,7 +29033,7 @@
  {
   "s": "The Binding of Isaac Rebirth Wiki",
   "t": "isaac",
-  "u": "https://bindingofisaacrebirth.gamepedia.com/index.php?search={searchTerms}"
+  "u": "https://bindingofisaacrebirth.wiki.gg/index.php?search={searchTerms}"
  },
  {
   "s": "ISACA.org",
@@ -29368,7 +29343,7 @@
  {
   "s": "Kielitoimiston sanakirja",
   "t": "kotus",
-  "u": "https://www.kielitoimistonsanakirja.fi/netmot.exe?page=results&UI=fi80&Opt=8&dic=1&SearchWord={searchTerms}&SearchMode=1"
+  "u": "https://www.kielitoimistonsanakirja.fi/#/{searchTerms}?searchMode=all"
  },
  {
   "s": "Naver Korean Dictionary",
@@ -29923,7 +29898,7 @@
  {
   "s": "Super Mario Wiki",
   "t": "mario",
-  "u": "https://www.mariowiki.com/{searchTerms}"
+  "u": "https://www.mariowiki.com/index.php?title=Special:Search&search={searchTerms}&go=Go"
  },
  {
   "s": "Markt.de",
@@ -34615,7 +34590,7 @@
  {
   "s": "Official Darkest Dungeon Wiki",
   "t": "ddwiki",
-  "u": "https://darkestdungeon.gamepedia.com/index.php?search={searchTerms}"
+  "u": "https://darkestdungeon.wiki.gg/index.php?search={searchTerms}"
  },
  {
   "s": "Deakin University Library",
@@ -35650,7 +35625,7 @@
  {
   "s": "Google Search 100 English Results",
   "t": "g100en",
-  "u": "https://google.com/search?q={searchTerms}&tbo=1&num=100&lr=lang_en"
+  "u": "https://www.google.com/search?q={searchTerms}&tbo=1&num=100&lr=lang_en"
  },
  {
   "s": "G2play",
@@ -35665,7 +35640,7 @@
  {
   "s": "Ansible Galaxy",
   "t": "galaxy",
-  "u": "https://galaxy.ansible.com/search?keywords={searchTerms}"
+  "u": "https://galaxy.ansible.com/ui/search/?keywords={searchTerms}"
  },
  {
   "s": "Game South Africa",
@@ -35738,7 +35713,7 @@
   "u": "https://gender.wikia.com/search?query={searchTerms}"
  },
  {
-  "s": "genius.com",
+  "s": "Genius",
   "t": "genius",
   "u": "https://genius.com/search?q={searchTerms}"
  },
@@ -35788,9 +35763,9 @@
   "u": "https://www.ghacks.net/?s={searchTerms}"
  },
  {
-  "s": "Github (code search)",
+  "s": "GitHub Code",
   "t": "ghcode",
-  "u": "https://github.com/search?utf8=%E2%9C%93&q={searchTerms}&type=Code"
+  "u": "https://github.com/search?q={searchTerms}&type=Code"
  },
  {
   "s": "GitHub Repo",
@@ -35798,7 +35773,7 @@
   "u": "https://github.com/{searchTerms}"
  },
  {
-  "s": "GitHub",
+  "s": "GitHub User Search",
   "t": "ghuser",
   "u": "https://github.com/search?type=Users&q={searchTerms}"
  },
@@ -35818,9 +35793,9 @@
   "u": "https://www.google.com/images?safe=off&q={searchTerms}"
  },
  {
-  "s": "GitHub.com",
+  "s": "GitHub",
   "t": "github",
-  "u": "https://github.com/search?q={searchTerms}&type=Everything&repo=&langOverride=&start_value=1"
+  "u": "https://github.com/search?q={searchTerms}"
  },
  {
   "s": "GitLab",
@@ -35941,16 +35916,6 @@
   "s": "Gamepedia Help Wiki",
   "t": "gphelp",
   "u": "https://help.gamepedia.com/index.php?search={searchTerms}"
- },
- {
-  "s": "Google Play Music",
-  "t": "gplaym",
-  "u": "https://play.google.com/store/search?q={searchTerms}&c=music"
- },
- {
-  "s": "Google Plus",
-  "t": "gplusp",
-  "u": "https://www.google.com/search?tbs=prfl:e&q={searchTerms}"
  },
  {
   "s": "GPSies.de",
@@ -42024,9 +41989,9 @@
   "u": "http://anoik.is/systems/{searchTerms}"
  },
  {
-  "s": "docs.ansible.com",
+  "s": "Ansible Docs",
   "t": "ansible",
-  "u": "https://docs.ansible.com/ansible/latest/#stq={searchTerms}&stp=1"
+  "u": "https://docs.ansible.com/ansible/latest/search.html?q={searchTerms}"
  },
  {
   "s": "Answers.com",
@@ -42131,7 +42096,7 @@
  {
   "s": "Ark official Wiki",
   "t": "arkwiki",
-  "u": "https://ark.gamepedia.com/index.php?search={searchTerms}"
+  "u": "https://ark.wiki.gg/index.php?search={searchTerms}"
  },
  {
   "s": "Azure Quickstart Templates",
@@ -43592,7 +43557,7 @@
  {
   "s": "Eco Wiki",
   "t": "ecowiki",
-  "u": "https://eco.gamepedia.com/index.php?search={searchTerms}&title=Special:Search"
+  "u": "https://wiki.play.eco/index.php?search={searchTerms}&title=Special:Search"
  },
  {
   "s": "edutalk.id",
@@ -43802,7 +43767,7 @@
  {
   "s": "Examine",
   "t": "examine",
-  "u": "https://examine.com/search.php?q={searchTerms}"
+  "u": "https://examine.com/search/?q={searchTerms}"
  },
  {
   "s": "Exist.ua",
@@ -44037,7 +44002,7 @@
  {
   "s": "Unofficial Feed The Beast Wiki",
   "t": "ftbwiki",
-  "u": "https://ftb.gamepedia.com/index.php?title=Special:Search&search={searchTerms}"
+  "u": "https://ftbwiki.org/index.php?title=Special:Search&search={searchTerms}"
  },
  {
   "s": "WTF Fun Fact",
@@ -44275,11 +44240,6 @@
   "u": "https://www.greenpeace.org/india/en/System-templates/Search-results/?all={searchTerms}"
  },
  {
-  "s": "Google Play Music",
-  "t": "gpmusic",
-  "u": "https://play.google.com/music/listen?u=0#/sr/{searchTerms}"
- },
- {
   "s": "GrabCAD",
   "t": "grabcad",
   "u": "https://grabcad.com/library?per_page=20&query={searchTerms}"
@@ -44310,9 +44270,9 @@
   "u": "https://marketplace.graylog.org/addons?search={searchTerms}"
  },
  {
-  "s": "Reddit Google search",
+  "s": "Reddit on Google",
   "t": "greddit",
-  "u": "https://google.com/search?q=site:reddit.com+{searchTerms}"
+  "u": "https://www.google.com/search?q=site:reddit.com+{searchTerms}"
  },
  {
   "s": "grepmed",
@@ -44482,7 +44442,7 @@
  {
   "s": "Google Search Verbatim 100 English Results",
   "t": "gv100en",
-  "u": "https://google.com/search?q={searchTerms}&tbo=1&num=100&tbs=li:1&lr=lang_en"
+  "u": "https://www.google.com/search?q={searchTerms}&tbo=1&num=100&tbs=li:1&lr=lang_en"
  },
  {
   "s": "Google Docs Viewer",
@@ -46196,7 +46156,7 @@
   "u": "https://www.poewiki.net/wiki/{searchTerms}"
  },
  {
-  "s": "Path of Exile Wiki",
+  "s": "Path of Exile Gamepedia",
   "t": "poewiki",
   "u": "https://pathofexile.gamepedia.com/index.php?title=Special:Search&profile=default&search={searchTerms}&fulltext=Search"
  },
@@ -46466,9 +46426,9 @@
   "u": "https://www.realtor.com/realestateandhomes-search/{searchTerms}"
  },
  {
-  "s": "Binding of Isaac Rebirth Gamepedia",
+  "s": "Binding of Isaac Rebirth Wiki",
   "t": "rebirth",
-  "u": "https://bindingofisaacrebirth.gamepedia.com/index.php?search={searchTerms}"
+  "u": "https://bindingofisaacrebirth.wiki.gg/index.php?search={searchTerms}"
  },
  {
   "s": "Reverso Context",
@@ -49008,7 +48968,7 @@
  {
   "s": "Baseball-Reference",
   "t": "baseball",
-  "u": "https://www.baseball-reference.com/pl/player_search.cgi?search={searchTerms}"
+  "u": "https://www.baseball-reference.com/search/search.fcgi?hint=&search={searchTerms}"
  },
  {
   "s": "Basketball Reference",
@@ -50496,7 +50456,7 @@
   "u": "https://www.google.com.au/#q={searchTerms}"
  },
  {
-  "s": "Google poland",
+  "s": "Google Poland",
   "t": "googlepl",
   "u": "https://www.google.pl/#q={searchTerms}"
  },
@@ -56846,11 +56806,6 @@
   "u": "https://www.planetkey.de/suche/?s={searchTerms}"
  },
  {
-  "s": "https://play.google.com/music/listen#/now",
-  "t": "playmusic",
-  "u": "https://play.google.com/music/listen#/sr/{searchTerms}"
- },
- {
   "s": "Play:Right",
   "t": "playright",
   "u": "https://www.playright.dk/playright/soeg?_submit=1&_soeg=0&soeg={searchTerms}"
@@ -56984,11 +56939,6 @@
   "s": "Rails-Dock",
   "t": "railsdock",
   "u": "https://apidock.com/rails/search?query={searchTerms}"
- },
- {
-  "s": "Rap Genius",
-  "t": "rapgenius",
-  "u": "https://rapgenius.com/search?q={searchTerms}"
  },
  {
   "s": "RedBubble",
@@ -58123,7 +58073,7 @@
  {
   "s": "Ansible Module Documentation",
   "t": "ansiblemod",
-  "u": "https://docs.ansible.com/ansible/{searchTerms}_module.html"
+  "u": "https://docs.ansible.com/ansible/latest/collections/ansible/builtin/{searchTerms}_module.html"
  },
  {
   "s": "Apollo Duck",
@@ -61501,9 +61451,9 @@
   "u": "https://www.reddit.com/r/GfycatDepot/search?q={searchTerms}&restrict_sr=on&sort=relevance&t=all"
  },
  {
-  "s": "Github Stars",
+  "s": "GitHub Stars",
   "t": "githubstars",
-  "u": "https://github.com/stars?utf8=%E2%9C%93&q={searchTerms}"
+  "u": "https://github.com/stars?q={searchTerms}"
  },
  {
   "s": "Google Books",
@@ -64873,7 +64823,7 @@
  {
   "s": "Ansible Galaxy",
   "t": "ansible-galaxy",
-  "u": "https://galaxy.ansible.com/list#/roles?page=1&page_size=10&autocomplete={searchTerms}"
+  "u": "https://galaxy.ansible.com/ui/search/?keywords={searchTerms}"
  },
  {
   "s": "answers.splunk.com",
