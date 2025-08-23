@@ -1,4 +1,4 @@
-// Generated at 2025-08-19T08:10:56.510Z
+// Generated at 2025-08-23T08:21:24.460Z
 //
 // MIT License
 //
@@ -8199,12 +8199,14 @@
  {
   "s": "Kagi Assistant",
   "t": "kaa",
-  "u": "https://kagi.com/assistant?q={searchTerms}"
+  "u": "https://kagi.com/assistant?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "Kagi Assistant",
   "t": "kag",
-  "u": "https://kagi.com/assistant?q={searchTerms}"
+  "u": "https://kagi.com/assistant?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "www.kamusiturki.com",
@@ -8275,6 +8277,12 @@
   "s": "Kfz-Kennzeichen",
   "t": "kfz",
   "u": "https://www.kfz-info.net/{searchTerms}-kfz-kennzeichen/"
+ },
+ {
+  "s": "Kagi Assistant",
+  "t": "kga",
+  "u": "https://kagi.com/assistant?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "Kiddle",
@@ -59383,7 +59391,8 @@
  {
   "s": "Kagi Assistant",
   "t": "kassistant",
-  "u": "https://kagi.com/assistant?q={searchTerms}"
+  "u": "https://kagi.com/assistant?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "KDE Community Wiki",

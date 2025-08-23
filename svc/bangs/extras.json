@@ -16,7 +16,8 @@
     },
     {
         "s": "Kagi Assistant",
-        "t": ["kaa", "kag", "kassistant"],
-        "u": "https://kagi.com/assistant?q={{{s}}}"
+        "t": ["kaa", "kag", "kga", "kassistant"],
+        "u": "https://kagi.com/assistant?q={{{s}}}",
+        "sc": "AI Chatbots"
     }
 ]
