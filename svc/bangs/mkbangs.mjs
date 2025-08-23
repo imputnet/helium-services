@@ -62,13 +62,13 @@ const transform = ({ bangs, extras, ...rest }) => {
         } catch {}
     }).map(handleBang);
 
-    const extraBangs = extras.map(bang => {
+    const extraBangs = extras.flatMap(bang => {
         if (Array.isArray(bang.t)) {
             return bang.t.map(t => ({ ...bang, t }));
         }
 
         return bang;
-    }).flat(1).map(handleBang);
+    }).map(handleBang);
 
     return { bangs: [ ...strippedBangs, ...extraBangs ], ...rest };
 }
