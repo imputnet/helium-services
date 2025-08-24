@@ -126,11 +126,6 @@ export const getReleases = async (): Promise<Release[]> => {
     const reformattedReleases: Release[] = [];
 
     for (const ghRelease of githubReleases) {
-        // pre-helium versioning releases
-        if (!ghRelease.tag_name.includes('-')) {
-            continue;
-        }
-
         const version = ghRelease.tag_name.split('-')[0];
         const release: Release = {
             version,
