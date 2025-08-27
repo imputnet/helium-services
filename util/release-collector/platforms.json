@@ -1,0 +1,14 @@
+{
+    "windows": {
+        "repository": "imputnet/helium-windows",
+        "architectures": ["x86_64", "arm64"]
+    },
+    "linux": {
+        "repository": "imputnet/helium-linux",
+        "architectures": ["x86_64", "arm64"]
+    },
+    "macos": {
+        "repository": "imputnet/helium-macos",
+        "architectures": ["x86_64", "arm64"]
+    }
+}
