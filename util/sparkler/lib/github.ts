@@ -126,6 +126,10 @@ export const getReleases = async (): Promise<Release[]> => {
     const reformattedReleases: Release[] = [];
 
     for (const ghRelease of githubReleases) {
+        if (ghRelease.draft) {
+            continue;
+        }
+
         const version = ghRelease.tag_name.split('-')[0];
         const release: Release = {
             version,

@@ -3,6 +3,7 @@ import { Asset, CPUArchitecture } from './assets.ts';
 export type GithubRelease = {
     tag_name: string;
     prerelease: boolean;
+    draft: boolean;
     published_at: string;
     assets: {
         url: string;
