@@ -11,7 +11,7 @@
     },
     {
         "s": "Kagi Translate",
-        "t": ["kt", "ktr", "kagit"],
+        "t": ["ktr", "kagit"],
         "u": "https://translate.kagi.com/?from=auto&to=en&text={{{s}}}"
     },
     {
