@@ -42,6 +42,7 @@ const EXPECTED_KEYS = {
     sc: 'string?', /* subcategory */
     fmt: 'string[]?', /* format flags */
     skip_tests: 'boolean?', /* undocumented */
+    x: 'string?', /* regex pattern */
 };
 
 const check_type = (val, type) => {
@@ -108,11 +109,24 @@ const transform = ({ bangs, extras, ...rest }) => {
         };
     };
 
-    const strippedBangs = bangs.filter(({ u }) => {
+    const strippedBangs = bangs.filter(({ t, u, x }) => {
+        if (x) {
+            console.error(`[!] skipping unsupported bang !${t} with url ${u}`);
+            return false;
+        }
+
         try {
             new URL(u);
             return true;
         } catch {}
+    }).flatMap(bang => {
+        // TODO: after enough time has passed, stop unrolling
+        // all `ts` into separate bangs, and instead just flatten
+        // any existing `t` into it
+        return [
+            bang,
+            ...(bang.ts ?? []).map(t => ({ ...bang, t }))
+        ];
     }).map(handleBang);
 
     const extraBangs = extras.flatMap(bang => {
@@ -120,7 +134,7 @@ const transform = ({ bangs, extras, ...rest }) => {
             return bang.t.map(t => ({ ...bang, t }));
         }
 
-        return bang;
+        return [ bang ];
     }).map(handleBang);
 
     return { bangs: [ ...strippedBangs, ...extraBangs ], ...rest };
