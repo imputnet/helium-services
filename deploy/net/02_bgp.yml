@@ -1,7 +1,7 @@
 ---
 - name: Configure BIRD
   hosts: servers
-  gather_facts: false
+  gather_facts: true
 
   tasks:
     - name: Set up BIRD configuration
