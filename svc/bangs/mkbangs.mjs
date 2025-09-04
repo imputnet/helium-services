@@ -31,6 +31,59 @@ const load = async () => {
     return { bangs, extras, license }
 }
 
+const EXPECTED_KEYS = {
+    s: 'string', /* name/site */
+    d: 'string', /* domain */
+    ad: 'string?', /* alt domain */
+    t: 'string', /* trigger */
+    ts: 'string[]?', /* extra `t`s */
+    u: 'string', /* full "template" URL */
+    c: 'string?', /* category */
+    sc: 'string?', /* subcategory */
+    fmt: 'string[]?', /* format flags */
+    skip_tests: 'boolean?', /* undocumented */
+};
+
+const check_type = (val, type) => {
+    if (type.endsWith('?')) {
+        if (val === undefined) {
+            return;
+        }
+
+        type = type.slice(0, -1);
+    }
+
+    if (type.endsWith('[]')) {
+        type = type.slice(0, -2);
+        try {
+            val.forEach(v => check_type(v, type));
+        } catch(e) {
+            throw e + '[]';
+        }
+
+        return;
+    }
+
+    if (typeof val !== type) {
+        throw `expected ${type}, but is actually ${typeof val}`
+    }
+}
+
+const validate = ({ bangs, ...rest }) => {
+    for (const bang of bangs) {
+        const unexpected = Object.keys(bang).filter(key => !EXPECTED_KEYS[key]);
+        if (unexpected.length) {
+            throw `unexpected keys in ${JSON.stringify(bang)}: ${unexpected.join(', ')}`
+        }
+
+        for (const [ key, type ] of Object.entries(EXPECTED_KEYS)) {
+            check_type(bang[key], type);
+        }
+    }
+
+    return { bangs, ...rest };
+}
+
 const transform = ({ bangs, extras, ...rest }) => {
     const seen = new Set();
     const handleBang = ({ s, t, u, sc }) => {
@@ -102,4 +155,13 @@ const sort = ({ bangs, ...rest }) => {
     return { bangs, ...rest }
 }
 
-load().then(transform).then(sort).then(print).then(console.log);
+load()
+    .then(validate)
+    .then(transform)
+    .then(sort)
+    .then(print)
+    .then(console.log)
+    .catch(err => {
+        console.error('Error occurred while making bangs.json:', err);
+        throw err;
+    })
