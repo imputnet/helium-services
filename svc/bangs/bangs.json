@@ -1,4 +1,4 @@
-// Generated at 2025-09-04T14:54:53.746Z
+// Generated at 2025-09-05T10:51:59.949Z
 //
 // MIT License
 //
@@ -1252,7 +1252,7 @@
  {
   "s": "Kagi Translate",
   "t": "kt",
-  "u": "https://translate.kagi.com/?text={searchTerms}"
+  "u": "https://translate.kagi.com/?from=auto&to=en&text={searchTerms}"
  },
  {
   "s": "Level 1",
@@ -2108,7 +2108,7 @@
  {
   "s": "Kagi Translate",
   "t": "tr",
-  "u": "https://translate.kagi.com/?text={searchTerms}"
+  "u": "https://translate.kagi.com/?from=auto&to=en&text={searchTerms}"
  },
  {
   "s": "TurboSquid",
@@ -3245,11 +3245,6 @@
   "s": "Arcade PreHacks",
   "t": "aph",
   "u": "https://ArcadePrehacks.com/{searchTerms}"
- },
- {
-  "s": "Kagi Knowledgebase - Search API",
-  "t": "api",
-  "u": "https://help.kagi.com/kagi/api/search.html#{searchTerms}"
  },
  {
   "s": "APK Downloader",
@@ -8390,11 +8385,6 @@
   "u": "https://kalliope.staatsbibliothek-berlin.de/de/search.html?q={searchTerms}"
  },
  {
-  "s": "Kagi Translate (Proofread)",
-  "t": "kpr",
-  "u": "https://translate.kagi.com/proofread?text={searchTerms}&from=auto"
- },
- {
   "s": "Kitsap Regional Library",
   "t": "krl",
   "u": "https://catalog.krl.org/polaris/search/searchresults.aspx?ctx=1.1033.0.0.9&type=Keyword&term={searchTerms}&by=KW&sort=RELEVANCE&limit=TOM=*&query=&page=0&searchid=1"
@@ -12084,11 +12074,6 @@
   "s": "Stuttgarter Zeitung",
   "t": "stz",
   "u": "https://www.stuttgarter-zeitung.de/suche?_charset_=UTF-8&searchText={searchTerms}"
- },
- {
-  "s": "Kagi Universal Summarizer",
-  "t": "sum",
-  "u": "https://kagi.com/summarizer?url={searchTerms}"
  },
  {
   "s": "Sunrise Sunset",
@@ -19093,11 +19078,6 @@
   "u": "https://www.helm.nu/Pages/Search.aspx?search={searchTerms}"
  },
  {
-  "s": "Kagi Knowledgebase",
-  "t": "help",
-  "u": "https://help.kagi.com/kagi?search={searchTerms}"
- },
- {
   "s": "HEMA",
   "t": "hema",
   "u": "https://www.hema.nl/search?q={searchTerms}&lang=nl_NL"
@@ -23437,21 +23417,6 @@
   "s": "Shared-Use Mobility Center (SUMC) Mobility on Demand Learning Center",
   "t": "sumc",
   "u": "https://learn.sharedusemobilitycenter.org/search/?keyword={searchTerms}"
- },
- {
-  "s": "Kagi Universal Summarizer (Key Moments)",
-  "t": "sumk",
-  "u": "https://kagi.com/summarizer?url={searchTerms}&summary=takeaway"
- },
- {
-  "s": "Kagi Universal Summarizer (Summary)",
-  "t": "summ",
-  "u": "https://kagi.com/summarizer?url={searchTerms}&summary=summary"
- },
- {
-  "s": "Kagi Universal Summarizer (Key Moments)",
-  "t": "sumt",
-  "u": "https://kagi.com/summarizer?url={searchTerms}&summary=takeaway"
  },
  {
   "s": "Susi",
@@ -30582,11 +30547,6 @@
   "s": "The O-Ring Store LLC",
   "t": "oring",
   "u": "https://www.theoringstore.com/index.php?main_page=advanced_search_result&search_in_description=1&keyword={searchTerms}"
- },
- {
-  "s": "Orion Knowledgebase",
-  "t": "orion",
-  "u": "https://help.kagi.com/orion?search={searchTerms}"
  },
  {
   "s": "Open Source Alternative",
@@ -39740,11 +39700,6 @@
   "s": "Sucuri",
   "t": "sucuri",
   "u": "https://sitecheck.sucuri.net/results/{searchTerms}"
- },
- {
-  "s": "Kagi Universal Summarizer (Key Moments)",
-  "t": "sumkey",
-  "u": "https://kagi.com/summarizer?url={searchTerms}&summary=takeaway"
  },
  {
   "s": "Sunnah.com",
@@ -57009,11 +56964,6 @@
   "u": "https://dictionary.reference.com/browse/{searchTerms}"
  },
  {
-  "s": "Kagi Translate (Proofread)",
-  "t": "proofread",
-  "u": "https://translate.kagi.com/proofread?text={searchTerms}&from=auto"
- },
- {
   "s": "ProofWiki",
   "t": "proofwiki",
   "u": "https://proofwiki.org/w/index.php?title=Special:Search&search={searchTerms}"
@@ -57464,16 +57414,6 @@
   "u": "http://www.reddit.com/r/{searchTerms}"
  },
  {
-  "s": "Kagi Universal Summarizer",
-  "t": "summarise",
-  "u": "https://kagi.com/summarizer?url={searchTerms}"
- },
- {
-  "s": "Kagi Universal Summarizer",
-  "t": "summarize",
-  "u": "https://kagi.com/summarizer?url={searchTerms}"
- },
- {
   "s": "SuperUser",
   "t": "superuser",
   "u": "https://superuser.com/search?q={searchTerms}"
@@ -57712,11 +57652,6 @@
   "s": "tracemyip",
   "t": "tracemyip",
   "u": "https://tools.tracemyip.org/lookup/{searchTerms}"
- },
- {
-  "s": "Kagi Translate",
-  "t": "translate",
-  "u": "https://translate.kagi.com/?text={searchTerms}"
  },
  {
   "s": "TrashWiki",
@@ -63963,16 +63898,6 @@
   "s": "StudioFutbol",
   "t": "studiofutbol",
   "u": "https://studiofutbol.com.ec/?submit=&s={searchTerms}"
- },
- {
-  "s": "Kagi Universal Summarizer (Key Moments)",
-  "t": "summarisekey",
-  "u": "https://kagi.com/summarizer?url={searchTerms}&summary=takeaway"
- },
- {
-  "s": "Kagi Universal Summarizer (Key Moments)",
-  "t": "summarizekey",
-  "u": "https://kagi.com/summarizer?url={searchTerms}&summary=takeaway"
  },
  {
   "s": "https://thetacticalguru.com/",

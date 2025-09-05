@@ -116,8 +116,8 @@ const transform = ({ bangs, extras, ...rest }) => {
         }
 
         try {
-            new URL(u);
-            return true;
+            const url = new URL(u);
+            return url.hostname !== 'kagi.com' && !url.hostname.endsWith('kagi.com');
         } catch {}
     }).flatMap(bang => {
         // TODO: after enough time has passed, stop unrolling
