@@ -42,6 +42,10 @@ const handleProxy = async (url: string, headers?: Headers, method = 'GET') => {
 };
 
 const handlePayloadProxy = async (request: Request) => {
+    if (request.method !== 'GET') {
+        throw { status: 405, text: 'method not allowed' };
+    }
+
     const originalURL = await ExtensionProxy.unwrap(request.url);
     return handleProxy(
         originalURL,
@@ -53,6 +57,10 @@ const handlePayloadProxy = async (request: Request) => {
 };
 
 const handleSnippetProxy = (request: Request) => {
+    if (!['GET', 'POST'].includes(request.method)) {
+        throw { status: 405, text: 'method not allowed' };
+    }
+
     const extensionId = new URL(request.url).searchParams.get('id');
 
     if (!extensionId || !RequestHandler.APP_ID_REGEX.test(extensionId)) {
