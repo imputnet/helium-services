@@ -46,3 +46,6 @@ export const MAX_EXTENSIONS_PER_REQUEST = 100;
 export const UPDATE_SERVICES = {
     CHROME_WEBSTORE: 'https://clients2.google.com/service/update2/json',
 };
+
+export const CHROME_WEBSTORE_SNIPPET =
+    'https://chromewebstore.googleapis.com/v2/items/{}:fetchItemSnippet';

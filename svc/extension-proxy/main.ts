@@ -4,6 +4,7 @@ import * as Omaha from './lib/omaha/index.ts';
 import * as ExtensionProxy from './lib/proxy.ts';
 import * as RequestHandler from './lib/request.ts';
 import * as ResponseHandler from './lib/response.ts';
+import * as OmahaConstants from './lib/omaha/constants.ts';
 
 const handleOmahaQuery = async (request: Request) => {
     const { apps, responseType } = await RequestHandler.getData(request);
@@ -24,13 +25,10 @@ const handleOmahaQuery = async (request: Request) => {
     );
 };
 
-const handlePayloadProxy = async (request: Request) => {
-    const originalURL = await ExtensionProxy.unwrap(request.url);
-    const response = await fetch(originalURL, {
-        headers: Util.filterHeaders(
-            request.headers,
-            Util.SAFE_REQUEST_HEADERS,
-        ),
+const handleProxy = async (url: string, headers?: Headers, method = 'GET') => {
+    const response = await fetch(url, {
+        method,
+        headers,
     });
 
     return new Response(response.body, {
@@ -43,10 +41,44 @@ const handlePayloadProxy = async (request: Request) => {
     });
 };
 
+const handlePayloadProxy = async (request: Request) => {
+    const originalURL = await ExtensionProxy.unwrap(request.url);
+    return handleProxy(
+        originalURL,
+        Util.filterHeaders(
+            request.headers,
+            Util.SAFE_REQUEST_HEADERS,
+        ),
+    );
+};
+
+const handleSnippetProxy = (request: Request) => {
+    const extensionId = new URL(request.url).searchParams.get('id');
+
+    if (!extensionId || !RequestHandler.APP_ID_REGEX.test(extensionId)) {
+        throw 'missing or invalid extension id';
+    }
+
+    // some google bullshit as usual
+    const headers = new Headers();
+    headers.set('Accept', 'application/x-protobuf');
+    headers.set('Content-Type', 'application/x-protobuf');
+    headers.set('X-HTTP-Method-Override', 'GET');
+
+    return handleProxy(
+        OmahaConstants.CHROME_WEBSTORE_SNIPPET
+            .replace('{}', extensionId),
+        headers,
+        'POST',
+    );
+};
+
 const handle = (request: Request) => {
     const url = new URL(request.url);
     if (url.pathname.endsWith('/proxy')) {
         return handlePayloadProxy(request);
+    } else if (url.pathname.endsWith('/cws_snippet')) {
+        return handleSnippetProxy(request);
     }
 
     return handleOmahaQuery(request);

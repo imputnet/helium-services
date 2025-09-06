@@ -72,7 +72,7 @@ export const getData = async (request: Request): Promise<RequestData> => {
     throw { status: 405, text: 'method not allowed' };
 };
 
-const APP_ID_REGEX = /^[a-p]{32}$/;
+export const APP_ID_REGEX = /^[a-p]{32}$/;
 
 export const normalizeApps = (apps: App[]) => {
     const ids = new Set();
