@@ -1,6 +1,6 @@
 import SevenZip from 'npm:7z-wasm@1.2.0';
 import { parse } from 'npm:@plist/parse@1.1.0';
-
+import { decode } from './util.ts';
 import { read } from './assets.ts';
 import type { Asset } from '../types/assets.ts';
 
@@ -19,7 +19,7 @@ const getMinimumVersion = async (data: Uint8Array) => {
 
     zip.callMain(['l', 'app.dmg']);
 
-    const lines = String.fromCharCode(...buf.splice(0)).split('\n');
+    const lines = decode(buf.splice(0)).split('\n');
 
     const headerIndex = lines.findIndex((l) => l.includes('Name') && l.includes('Compressed'));
     const nameOffset = lines[headerIndex]?.indexOf('Name');
@@ -38,7 +38,7 @@ const getMinimumVersion = async (data: Uint8Array) => {
 
     zip.callMain(['e', 'app.dmg', '-so', plistPath]);
 
-    const plistData = parse(String.fromCharCode(...buf.splice(0)));
+    const plistData = parse(decode(buf.splice(0)));
 
     if (
         plistData instanceof Object && 'LSMinimumSystemVersion' in plistData &&

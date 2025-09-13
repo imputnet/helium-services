@@ -32,3 +32,7 @@ export const arg = (name: string) => {
 
     return true;
 };
+
+export const decode = (chars: number[]): string => {
+    return new TextDecoder().decode(new Uint8Array(chars));
+};
