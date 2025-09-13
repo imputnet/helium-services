@@ -39,8 +39,9 @@ const toAppcastRelease = async (
     let minimumSystemVersion = '10.0';
     try {
         minimumSystemVersion = await getMinimumVersion(dmg);
-    } catch {
+    } catch (e) {
         console.warn(`[!] could not get minimum OS version for ${dmg.name}, falling back to 10.0`);
+        console.warn(e);
     }
 
     const appcastRelease: AppcastRelease = {
