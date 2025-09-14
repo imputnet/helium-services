@@ -15,7 +15,6 @@ ARG SERVICES_HOSTNAME
 ENV SERVICES_HOSTNAME "$SERVICES_HOSTNAME"
 
 RUN apk add --no-cache inotify-tools curl
-RUN curl https://ssl-config.mozilla.org/ffdhe4096.txt -o /etc/nginx/dhparam.pem
 
 COPY --from=prep /*.conf /etc/nginx/
 COPY --from=prep /assets.json /usr/share/ublock/ubo/
