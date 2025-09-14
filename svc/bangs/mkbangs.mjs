@@ -87,23 +87,30 @@ const validate = ({ bangs, ...rest }) => {
 
 const transform = ({ bangs, extras, ...rest }) => {
     const seen = new Set();
-    const handleBang = ({ s, t, u, sc }) => {
+    const handleBang = ({ s, t, ts, u, sc }) => {
         const transformedURL = u.replace(/{{{s}}}/g, '{searchTerms}');
         if (!u.includes('{{{s}}}') || transformedURL.includes('{{{s}}}')) {
             throw `malformed url for ${t}: ${u}`
         }
 
-        t = t.toLowerCase();
-
-        if (seen.has(t)) {
-            throw `duplicate bang key: !${t}`;
+        ts ??= [];
+        if (t) {
+            ts.push(t);
         }
 
-        seen.add(t);
+        ts = ts.map(t => t.toLowerCase()).sort((a, b) => {
+            return (a.length - b.length) || a.localeCompare(b);
+        });
+
+        for (const t of ts) {
+            if (seen.has(t))
+                throw `duplicate bang key: !${t}`;
+            seen.add(t);
+        }
 
         return {
             s,
-            t,
+            ts,
             u: transformedURL,
             sc: categoryMap[sc]
         };
@@ -119,23 +126,9 @@ const transform = ({ bangs, extras, ...rest }) => {
             const url = new URL(u);
             return url.hostname !== 'kagi.com' && !url.hostname.endsWith('kagi.com');
         } catch {}
-    }).flatMap(bang => {
-        // TODO: after enough time has passed, stop unrolling
-        // all `ts` into separate bangs, and instead just flatten
-        // any existing `t` into it
-        return [
-            bang,
-            ...(bang.ts ?? []).map(t => ({ ...bang, t }))
-        ];
     }).map(handleBang);
 
-    const extraBangs = extras.flatMap(bang => {
-        if (Array.isArray(bang.t)) {
-            return bang.t.map(t => ({ ...bang, t }));
-        }
-
-        return [ bang ];
-    }).map(handleBang);
+    const extraBangs = extras.map(handleBang);
 
     return { bangs: [ ...strippedBangs, ...extraBangs ], ...rest };
 }
@@ -155,13 +148,15 @@ const print = ({ bangs, license }) => {
     return [
         ...commentLicense, '',
         JSON.stringify(bangs, null, 1)
+        /* todo: uncomment this after 0.5.x:
+            .replace(/"(\n\s*])/g, '",\$1') */
     ].join('\n');
 }
 
 const sort = ({ bangs, ...rest }) => {
     bangs.sort((a, b) => {
-        a = a.t;
-        b = b.t;
+        a = a.ts[0];
+        b = b.ts[0];
 
         return (a.length - b.length) || a.localeCompare(b);
     });
