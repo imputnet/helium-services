@@ -1,4 +1,4 @@
-// Generated at 2025-09-14T18:33:24.641Z
+// Generated at 2025-09-16T14:37:41.106Z
 //
 // MIT License
 //
@@ -6724,11 +6724,17 @@
   "u": "https://clashroyale.fandom.com/wiki/Special:Search?query={searchTerms}"
  },
  {
-  "s": "Chrome Extension Repository",
+  "s": "Chrome Web Store",
   "ts": [
-   "crx"
+   "crx",
+   "cws",
+   "chrome",
+   "cstore",
+   "cwebstore",
+   "chromestore",
+   "chromewebstore"
   ],
-  "u": "https://chrome.google.com/webstore/search?q={searchTerms}"
+  "u": "https://chromewebstore.google.com/search/{searchTerms}"
  },
  {
   "s": "Android Code Search",
@@ -6889,18 +6895,6 @@
    "cwj"
   ],
   "u": "https://www.cwjobs.co.uk/jobs/{searchTerms}"
- },
- {
-  "s": "Chrome Web Store",
-  "ts": [
-   "cws",
-   "chrome",
-   "cstore",
-   "cwebstore",
-   "chromestore",
-   "chromewebstore"
-  ],
-  "u": "https://chrome.google.com/webstore/search/{searchTerms}"
  },
  {
   "s": "Crossword Tracker",
