@@ -84,6 +84,14 @@
     ],
     "supportURL": "https://github.com/uBlockOrigin/uAssets"
   },
+  "ublock-experimental": {
+    "content": "filters",
+    "group": "default",
+    "off": true,
+    "title": "uBlock filters – Experimental",
+    "contentURL": "https://{{ services_hostname }}/ubo/lists/ublock-experimental.txt",
+    "supportURL": "https://github.com/uBlockOrigin/uAssets"
+  },
   "adguard-generic": {
     "content": "filters",
     "group": "ads",
@@ -122,14 +130,6 @@
     "title": "AdGuard URL Tracking Protection",
     "tags": "privacy",
     "contentURL": "https://{{ services_hostname }}/ubo/lists/adguard-spyware-url.txt",
-    "supportURL": "https://github.com/AdguardTeam/AdguardFilters#adguard-filters"
-  },
-  "adguard-spyware": {
-    "content": "filters",
-    "group": "privacy",
-    "off": true,
-    "title": "AdGuard Tracking Protection",
-    "contentURL": "https://{{ services_hostname }}/ubo/lists/adguard-spyware.txt",
     "supportURL": "https://github.com/AdguardTeam/AdguardFilters#adguard-filters"
   },
   "block-lan": {
@@ -620,24 +620,13 @@
   "POL-0": {
     "content": "filters",
     "group": "regions",
-    "parent": "🇵🇱pl: Oficjalne Polskie Filtry",
+    "parent": null,
     "off": true,
     "title": "🇵🇱pl: Oficjalne Polskie Filtry do uBlocka Origin",
     "tags": "ads polish polski",
     "lang": "szl pl _",
     "contentURL": "https://{{ services_hostname }}/ubo/lists/POL-0.txt",
     "supportURL": "https://github.com/MajkiIT/polish-ads-filter"
-  },
-  "POL-3": {
-    "content": "filters",
-    "group": "regions",
-    "parent": "🇵🇱pl: Oficjalne Polskie Filtry",
-    "off": true,
-    "title": "🇵🇱pl: CERT.PL's Warning List",
-    "tags": "malware polish polski",
-    "lang": "szl pl",
-    "contentURL": "https://{{ services_hostname }}/ubo/lists/POL-3.txt",
-    "supportURL": "https://cert.pl/lista-ostrzezen/"
   },
   "ROU-1": {
     "content": "filters",

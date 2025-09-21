@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const VERSION = '1.65.0';
-const FILE_CHECKSUM = '5f35d1c6cf09d7231069b8cb15a577face574c89f8691585ae961c1495b31d1e';
+const VERSION = '1.66.4';
+const FILE_CHECKSUM = 'e29f49f1b565119988961671c6daefb0e90ac5b7a2ebf54e64c5bfc313030fef';
 
 const originalAssetURL = `https://raw.githubusercontent.com/gorhill/uBlock/refs/tags/${VERSION}/assets/assets.json`;
 
