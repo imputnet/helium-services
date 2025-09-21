@@ -33,11 +33,11 @@ const transform = async (assets) => {
     const listSources = {}, queue = [];
 
     const readList = async (filename, sourceURL) => {
-        const res = await fetch(sourceURL, { redirect: 'follow' });
         if (listSources[filename]) {
             throw "duplicate source key: " + filename;
         }
 
+        const res = await fetch(sourceURL, { redirect: 'follow' });
         listSources[filename] = res.url;
 
         if (res.ok) {
