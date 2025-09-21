@@ -3,7 +3,6 @@ const VERSION = '1.65.0';
 const FILE_CHECKSUM = '5f35d1c6cf09d7231069b8cb15a577face574c89f8691585ae961c1495b31d1e';
 
 const originalAssetURL = `https://raw.githubusercontent.com/gorhill/uBlock/refs/tags/${VERSION}/assets/assets.json`;
-const crxURL = `https://github.com/imputnet/ublock-origin-crx/releases/download/${VERSION}/uBlock0_${VERSION}.crx`;
 
 const digest = async (str) => {
     const u8 = new TextEncoder().encode(str);
@@ -131,35 +130,6 @@ const toNginxConfig = (listSources) => {
     return out.join('\n');
 }
 
-const generateUpdateManifest = () => {
-    return [
-        "<?xml version='1.0' encoding='UTF-8'?>",
-        "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>",
-        "    <app appid='blockjmkbacgjkknlgpkjjiijinjdanf'>",
-        "        <updatecheck codebase='https://{{ services_hostname }}/ubo/ublock.crx' version='" + VERSION + "' />",
-        "    </app>",
-        "</gupdate>"
-    ].join('\n')
-}
-
-const generateCRXDownloadInfo = async () => {
-    const response = await fetch(
-        `https://api.github.com/repos/imputnet/ublock-origin-crx/releases/tags/${VERSION}`
-    ).then(a => {
-        if (!a.ok) throw a;
-        return a.json();
-    });
-
-    const sha256sum = response.body.split('```\n')[1].split(' ')[0];
-    if (sha256sum.length !== 64) throw "invalid checksum";
-    console.log(`sha256(crx) = ${sha256sum}`);
-
-    return [
-        crxURL,
-        `${sha256sum} /usr/share/ublock/ubo/ublock.crx`
-    ].join('\n');
-}
-
 load().then(transform).then(async ({ assets, listSources }) => {
     const { writeFile } = await import('node:fs/promises');
     const { join } = await import('node:path');
@@ -173,14 +143,6 @@ load().then(transform).then(async ({ assets, listSources }) => {
         writeFile(
             out('nginx-ubo-lists.conf'),
             toNginxConfig(listSources),
-        ),
-        writeFile(
-            out('update.xml.j2'),
-            generateUpdateManifest(),
-        ),
-        writeFile(
-            out('crx_info.txt'),
-            await generateCRXDownloadInfo(),
         ),
     ]);
 });

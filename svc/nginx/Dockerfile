@@ -18,12 +18,7 @@ RUN apk add --no-cache inotify-tools curl
 
 COPY --from=prep /*.conf /etc/nginx/
 COPY --from=prep /assets.json /usr/share/ublock/ubo/
-COPY --from=prep /update.xml /usr/share/ublock/ubo/
-COPY ./ubo/gen/crx_info.txt /
 COPY ./nginx/*.sh /
-
-RUN head -n 1 /crx_info.txt | xargs curl -L -o /usr/share/ublock/ubo/ublock.crx
-RUN tail -n 1 /crx_info.txt | sha256sum -c
 
 HEALTHCHECK CMD \
     curl -f \
