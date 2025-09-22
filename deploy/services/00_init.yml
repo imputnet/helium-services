@@ -39,3 +39,16 @@
           - python3-docker
         state: present
         update_cache: true
+
+    - name: Enable IPv6 for Docker
+      ansible.builtin.copy:
+        content: '{"ipv6": true}'
+        dest: /etc/docker/daemon.json
+        mode: '0644'
+      notify: Restart Docker
+
+  handlers:
+    - name: Restart Docker
+      ansible.builtin.systemd_service:
+        name: docker
+        state: restarted

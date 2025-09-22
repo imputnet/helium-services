@@ -51,3 +51,9 @@ services:
 
 volumes:
   acme.sh: {}
+
+# Helium services are designed to run on a full-stack network.
+# If you need to disable this, make a compose.override.yml file.
+networks:
+  default:
+    enable_ipv6: true
