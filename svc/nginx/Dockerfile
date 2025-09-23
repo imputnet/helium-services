@@ -5,7 +5,6 @@ RUN apk add --no-cache jinja2-cli
 
 COPY ./nginx/*.j2 /
 COPY ./nginx/template.sh /
-COPY ./ubo/gen/ /
 
 RUN test -n "$SERVICES_HOSTNAME"
 RUN /template.sh
@@ -17,7 +16,6 @@ ENV SERVICES_HOSTNAME "$SERVICES_HOSTNAME"
 RUN apk add --no-cache inotify-tools curl
 
 COPY --from=prep /*.conf /etc/nginx/
-COPY --from=prep /assets.json /usr/share/ublock/ubo/
 COPY ./nginx/*.sh /
 
 HEALTHCHECK CMD \

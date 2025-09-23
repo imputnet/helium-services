@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-GENERATE_SCRIPT=generate.mjs
+GENERATE_SCRIPT=lib/ublock.ts
 RELEASE_URL_PREFIX=https://raw.githubusercontent.com/gorhill/uBlock/refs/tags/
 RELEASE_URL_SUFFIX=/assets/assets.json
 
@@ -32,8 +32,5 @@ $SED_CMD -i \
 "s/VERSION = '.*'/VERSION = '$NEW_VERSION'/g;"\
 "s/FILE_CHECKSUM = '.*'/FILE_CHECKSUM = '$FILE_CHECKSUM'/g" \
 "$GENERATE_SCRIPT"
-
-# 3. update template
-node $GENERATE_SCRIPT
 
 echo 'git add .; git diff --staged; git commit -m "ubo-filters: update from upstream"'

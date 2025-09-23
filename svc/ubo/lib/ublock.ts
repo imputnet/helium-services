@@ -1,0 +1,158 @@
+import * as Util from './util.ts';
+import * as Cache from './cache.ts';
+import * as Allowlist from './allowlist.ts';
+import { env } from './env.ts';
+
+import * as Path from '@std/path/posix';
+
+type Asset = {
+    content: 'internal' | 'filters';
+
+    // enumeration at: https://github.com/gorhill/uBlock/blob/705e6329ebd258ad71694d6942e340a471a51f76/src/js/3p-filters.js#L232
+    // mostly irrelevant for us though
+    group?: string;
+    parent?: string;
+    title?: string;
+    tags?: string;
+
+    updateAfter?: number;
+    contentURL: string | string[];
+    cdnURLs?: string[];
+    patchURLs?: string[];
+};
+
+type Filename = string;
+type AssetFile = Record<Filename, Asset>;
+
+const VERSION = '1.66.4';
+const FILE_CHECKSUM = 'e29f49f1b565119988961671c6daefb0e90ac5b7a2ebf54e64c5bfc313030fef';
+const originalAssetURL =
+    `https://raw.githubusercontent.com/gorhill/uBlock/refs/tags/${VERSION}/assets/assets.json`;
+
+const loadManifestFromGithub = async () => {
+    const assetList = await fetch(originalAssetURL).then((a) => a.text());
+    const checksum = await Util.digest(assetList);
+    if (checksum !== FILE_CHECKSUM) {
+        throw `checksum does not match: ${checksum}`;
+    }
+
+    return JSON.parse(assetList) as AssetFile;
+};
+
+const prepareAssetString = async () => {
+    const manifest = await loadManifestFromGithub();
+    const manifestId = 'assets.json';
+    const assetURLs: Record<string, string[]> = {};
+
+    for (const [id, asset] of Object.entries(manifest)) {
+        const allUrls = [asset.contentURL, asset.cdnURLs || []].flat();
+
+        delete asset.cdnURLs;
+        delete asset.patchURLs;
+
+        if (id === manifestId) {
+            asset.contentURL = new URL('assets.json', env.baseURL).toString();
+            continue;
+        }
+
+        const sourceURLs = allUrls.filter(Util.isValidUrl);
+        const locals = allUrls.filter((u) => u?.startsWith('assets/'));
+
+        if (!sourceURLs.length) {
+            throw `no source for ${asset.title}`;
+        }
+
+        const filename = (() => {
+            const fn = Path.basename(new URL(sourceURLs[0]).pathname);
+            if (fn.endsWith('.txt')) {
+                return fn;
+            }
+
+            return 'filters.txt';
+        })();
+
+        const reprHash = [
+            ...new Uint32Array(
+                await crypto.subtle.digest(
+                    { name: 'SHA-256' },
+                    new TextEncoder().encode(sourceURLs[0]),
+                ),
+            ),
+        ];
+
+        const key = `${id}/${reprHash[0].toString(16)}/${reprHash[1].toString(16)}/${filename}`;
+        const proxyURL = new URL(key, env.baseURL).toString();
+
+        if (locals.length) {
+            asset.contentURL = [
+                proxyURL,
+                ...locals,
+            ];
+        } else {
+            asset.contentURL = proxyURL;
+        }
+
+        assetURLs[key] = sourceURLs;
+    }
+
+    Allowlist.addEntries(manifestId, assetURLs);
+
+    return JSON.stringify(manifest, null, 4);
+};
+
+const prepareFilterlist = async (path: string) => {
+    const urls = Allowlist.getURLsForPath(path);
+    if (!urls) {
+        throw { status: 404, text: 'Not Found' };
+    }
+
+    const response = await Util.shotgunFetch(urls);
+    const text = await response.text();
+
+    const parentId = path.split('/')[0];
+    const toAllowlist: Record<string, string[]> = {};
+
+    for (const line of text.split('\n')) {
+        if (!line.startsWith('#!include')) {
+            continue;
+        }
+
+        const includePath = line.split('#!include ')[1].trim();
+        const absoluteIncludePath = Path.join(Path.dirname(path), includePath);
+
+        // This should not happen. Let's skip this include.
+        if (
+            URL.canParse(includePath)
+            || absoluteIncludePath.split('/')[0] !== parentId
+        ) {
+            console.warn('WARN: erroneous include in ', path, line);
+            continue;
+        }
+
+        toAllowlist[absoluteIncludePath] = urls.map((base) => {
+            return new URL(includePath, base).toString();
+        });
+    }
+
+    return text;
+};
+
+export const handleAssets = () => {
+    return Cache.materialize(
+        'assets.json',
+        { type: 'application/json', expiry_seconds: 86400 },
+        prepareAssetString,
+    );
+};
+
+export const handleFilterlist = (path: string) => {
+    if (path.startsWith('/')) {
+        path = path.substring(1);
+    }
+
+    return Cache.materialize(
+        path,
+        { expiry_seconds: 3600 },
+        () => prepareFilterlist(path),
+    );
+};

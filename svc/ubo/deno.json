@@ -1,0 +1,18 @@
+{
+    "license": "AGPL-3.0",
+    "tasks": {
+        "run": "deno serve --allow-env=UBO_PROXY_BASE_URL --allow-net --cached-only main.ts",
+        "dev": "UBO_PROXY_BASE_URL=http://localhost:8000/ deno serve -A --watch main.ts"
+    },
+    "fmt": {
+        "indentWidth": 4,
+        "singleQuote": true,
+        "lineWidth": 100,
+        "trailingCommas": "onlyMultiLine",
+        "operatorPosition": "nextLine"
+    },
+    "imports": {
+        "@std/path": "jsr:@std/path@^1.1.2",
+        "@types/node": "npm:@types/node@^24.5.2"
+    }
+}

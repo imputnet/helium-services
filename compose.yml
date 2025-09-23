@@ -20,6 +20,14 @@ services:
       - 443:443/udp
     restart: unless-stopped
 
+  ubo_proxy:
+    container_name: ubo_proxy
+    read_only: true
+    build: ./svc/ubo
+    restart: unless-stopped
+    environment:
+      - UBO_PROXY_BASE_URL=${UBO_PROXY_BASE_URL}
+
   ext_proxy:
     container_name: ext_proxy
     read_only: true
