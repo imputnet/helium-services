@@ -98,6 +98,10 @@ async function _materialize(key: string, options: Options, source: Producent | n
     return _materialize(key, options, null);
 }
 
+export function materialize(key: string, options: Options, source: Producent) {
+    return _materialize(key, options, source);
+}
+
 export const stats = () => {
     let count = 0, negative = 0, size = 0;
     for (const item of Object.values(_cache)) {
@@ -111,7 +115,3 @@ export const stats = () => {
 
     return { count, negative, size };
 };
-
-export function materialize(key: string, options: Options, source: Producent) {
-    return _materialize(key, options, source);
-}
