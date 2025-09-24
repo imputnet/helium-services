@@ -1,6 +1,5 @@
-/// <reference types="@types/node" />
 import * as Stats from './stats.ts';
-import z from 'node:zlib';
+import * as Resource from './resource.ts';
 
 type PositiveCacheEntry = {
     expiry?: number;
@@ -37,42 +36,11 @@ setInterval(() => {
     }
 }, 1000 * 60);
 
-function compress(s: string) {
-    const { promise, resolve, reject } = Promise.withResolvers<ArrayBuffer>();
-
-    z.brotliCompress(s, {
-        params: {
-            [z.constants.BROTLI_PARAM_MODE]: z.constants.BROTLI_MODE_TEXT,
-            [z.constants.BROTLI_PARAM_QUALITY]: 11,
-            [z.constants.BROTLI_PARAM_SIZE_HINT]: s.length,
-        },
-    }, (err, data) => {
-        if (err) {
-            return reject(err);
-        }
-
-        resolve(new Uint8Array(data).buffer);
-    });
-
-    return promise;
-}
-
-async function tag(s: string) {
-    const buf = await crypto.subtle.digest(
-        { name: 'SHA-256' },
-        new TextEncoder().encode(s),
-    );
-
-    // first 12 bytes should be plenty to ensure no collisions happen
-    return ['"', ...new Uint32Array(buf).slice(0, 3), '"']
-        .map((a) => a.toString(36)).join('');
-}
-
 async function set(key: string, value: string, options: Options) {
     const data: CacheEntry = {
         type: options.type ?? 'text/plain; charset=utf-8',
-        tag: await tag(value),
-        compressedData: await compress(value),
+        tag: await Resource.tag(value),
+        compressedData: await Resource.compress(value),
     };
 
     if (typeof options.expiry_seconds !== 'undefined') {
