@@ -38,7 +38,10 @@ export const respondWithError = (e: unknown) => {
     return new Response('server error', { status: 500 });
 };
 
-export const shotgunFetch = async (input: (RequestInfo | URL)[], init?: RequestInit) => {
+export const shotgunFetch = async (
+    input: readonly (RequestInfo | URL)[],
+    init?: Omit<RequestInit, 'signal'>,
+) => {
     const controller = new AbortController();
     const response = await Promise.any(
         input.map(async (info) => {

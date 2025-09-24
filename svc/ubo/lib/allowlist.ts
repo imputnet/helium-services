@@ -24,6 +24,6 @@ export const addEntries = (parent: string, entries: Record<string, string[]>) =>
     }
 };
 
-export const getURLsForPath = (path: string) => {
+export const getURLsForPath = (path: string): readonly string[] => {
     return _paths[path];
 };
