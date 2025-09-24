@@ -140,7 +140,10 @@ const prepareFilterlist = async (path: string) => {
 export const handleAssets = () => {
     return Cache.materialize(
         'assets.json',
-        { type: 'application/json', expiry_seconds: 86400 },
+        {
+            type: 'application/json; charset=utf-8',
+            expiry_seconds: 86400,
+        },
         prepareAssetString,
     );
 };

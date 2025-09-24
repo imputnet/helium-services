@@ -70,7 +70,7 @@ async function tag(s: string) {
 
 async function set(key: string, value: string, options: Options) {
     const data: CacheEntry = {
-        type: options.type ?? 'text/plain',
+        type: options.type ?? 'text/plain; charset=utf-8',
         tag: await tag(value),
         compressedData: await compress(value),
     };
