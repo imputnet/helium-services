@@ -48,7 +48,6 @@ const prepareAssetString = async () => {
         const allUrls = [asset.contentURL, asset.cdnURLs || []].flat();
 
         delete asset.cdnURLs;
-        delete asset.patchURLs;
 
         if (id === manifestId) {
             asset.contentURL = new URL('assets.json', env.baseURL).toString();
@@ -92,6 +91,12 @@ const prepareAssetString = async () => {
             asset.contentURL = proxyURL;
         }
 
+        if (asset.patchURLs) {
+            asset.patchURLs = [
+                new URL(Path.dirname(key), env.baseURL).toString(),
+            ];
+        }
+
         assetURLs[key] = sourceURLs;
     }
 
@@ -128,11 +133,31 @@ const prepareFilterlist = async (path: string) => {
         toAllowlist[absoluteIncludePath] ??= urls.map((base) => {
             return new URL(includePath, base).toString();
         });
-    }
+    };
+
+    const handleDiff = (line: string) => {
+        const diffPath = line.split('! Diff-Path:')[1].trim();
+        const absoluteDiffPath = Path.join(Path.dirname(path), diffPath);
+
+        // This might happen, but it's unlikely in the wild.
+        if (
+            URL.canParse(absoluteDiffPath)
+            || absoluteDiffPath.split('/')[0] !== parentId
+        ) {
+            console.warn('WARN: unsupported diff in ', path, line);
+            return;
+        }
+
+        toAllowlist[absoluteDiffPath] ??= urls.map((base) => {
+            return new URL(diffPath, base).toString();
+        });
+    };
 
     for (const line of text.split('\n')) {
         if (line.startsWith('#!include')) {
             handleInclude(line);
+        } else if (line.startsWith('! Diff-Path')) {
+            handleDiff(line);
         }
     }
 
