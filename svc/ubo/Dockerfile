@@ -6,6 +6,6 @@ COPY . .
 RUN deno cache --frozen main.ts
 
 HEALTHCHECK --start-period=3s --start-interval=5s --interval=5m --timeout=10s \
-        CMD curl -f "http://localhost:8000/assets.json"
+        CMD curl --compressed -f "http://localhost:8000/assets.json"
 
 CMD ["deno", "task", "run"]
