@@ -112,11 +112,7 @@ const prepareFilterlist = async (path: string) => {
     const parentId = path.split('/')[0];
     const toAllowlist: Record<string, string[]> = {};
 
-    for (const line of text.split('\n')) {
-        if (!line.startsWith('#!include')) {
-            continue;
-        }
-
+    const handleInclude = (line: string) => {
         const includePath = line.split('#!include ')[1].trim();
         const absoluteIncludePath = Path.join(Path.dirname(path), includePath);
 
@@ -126,13 +122,21 @@ const prepareFilterlist = async (path: string) => {
             || absoluteIncludePath.split('/')[0] !== parentId
         ) {
             console.warn('WARN: erroneous include in ', path, line);
-            continue;
+            return;
         }
 
-        toAllowlist[absoluteIncludePath] = urls.map((base) => {
+        toAllowlist[absoluteIncludePath] ??= urls.map((base) => {
             return new URL(includePath, base).toString();
         });
     }
+
+    for (const line of text.split('\n')) {
+        if (line.startsWith('#!include')) {
+            handleInclude(line);
+        }
+    }
+
+    Allowlist.addEntries(path, toAllowlist);
 
     return text;
 };
