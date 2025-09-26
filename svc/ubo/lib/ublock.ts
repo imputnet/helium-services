@@ -105,6 +105,8 @@ const prepareAssetString = async () => {
     return JSON.stringify(manifest, null, 4);
 };
 
+// https://raw.githubusercontent.com/gorhill/uBlock/34d202f79ddf0172d2b4ae9584192cffccf1f9cc/src/js/assets.js
+const INCLUDE_REGEX = /^!#include +(\S+)[^\n\r]*(?:[\n\r]+|$)/;
 const prepareFilterlist = async (path: string) => {
     const urls = Allowlist.getURLsForPath(path);
     if (!urls) {
@@ -117,8 +119,23 @@ const prepareFilterlist = async (path: string) => {
     const parentId = path.split('/')[0];
     const toAllowlist: Record<string, string[]> = {};
 
+    const addToAllowlist = (relativePath: string) => {
+        return (base: string) => {
+            const url = new URL(relativePath, base);
+            url.hash = '';
+
+            return url.toString();
+        };
+    };
+
     const handleInclude = (line: string) => {
-        const includePath = line.split('#!include ')[1].trim();
+        const includeMatch = INCLUDE_REGEX.exec(line);
+        if (includeMatch === null || !includeMatch[1]) {
+            console.warn('WARN: erroneous include in ', path, line);
+            return;
+        }
+
+        const includePath = includeMatch[1];
         const absoluteIncludePath = Path.join(Path.dirname(path), includePath);
 
         // This should not happen. Let's skip this include.
@@ -130,14 +147,12 @@ const prepareFilterlist = async (path: string) => {
             return;
         }
 
-        toAllowlist[absoluteIncludePath] ??= urls.map((base) => {
-            return new URL(includePath, base).toString();
-        });
+        toAllowlist[absoluteIncludePath] ??= urls.map(addToAllowlist(includePath));
     };
 
     const handleDiff = (line: string) => {
         const diffPath = line.split('! Diff-Path:')[1].trim();
-        const absoluteDiffPath = Path.join(Path.dirname(path), diffPath);
+        const absoluteDiffPath = Path.join(Path.dirname(path), diffPath).split('#')[0];
 
         // This might happen, but it's unlikely in the wild.
         if (
@@ -148,13 +163,11 @@ const prepareFilterlist = async (path: string) => {
             return;
         }
 
-        toAllowlist[absoluteDiffPath] ??= urls.map((base) => {
-            return new URL(diffPath, base).toString();
-        });
+        toAllowlist[absoluteDiffPath] ??= urls.map(addToAllowlist(diffPath));
     };
 
     for (const line of text.split('\n')) {
-        if (line.startsWith('#!include')) {
+        if (line.startsWith('!#include')) {
             handleInclude(line);
         } else if (line.startsWith('! Diff-Path')) {
             handleDiff(line);
