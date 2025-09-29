@@ -42121,8 +42121,8 @@
  {
   "s": "ChatGPT",
   "ts": [ 
-    "chatgpt",
-    "cgpt"
+   "chatgpt",
+   "cgpt"
   ],
   "u": "https://chatgpt.com/?q={searchTerms}",
   "sc": "ai"
