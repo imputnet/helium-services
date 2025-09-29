@@ -34,6 +34,7 @@ const handle = async (request: Request): Promise<Response> => {
         'Content-Length': String(data.size),
         'Content-Encoding': 'br',
         'ETag': etag,
+        'Vary': 'Accept-Encoding',
     };
 
     if (request.method === 'OPTIONS') {
