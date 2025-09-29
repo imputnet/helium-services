@@ -42120,7 +42120,10 @@
  },
  {
   "s": "ChatGPT",
-  "ts": [ "chatgpt" ],
+  "ts": [ 
+    "chatgpt",
+    "cgpt"
+  ],
   "u": "https://chatgpt.com/?q={searchTerms}",
   "sc": "ai"
  },
