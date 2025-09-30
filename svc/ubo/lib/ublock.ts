@@ -62,12 +62,8 @@ const prepareAssetString = async () => {
         }
 
         const filename = (() => {
-            if (id.includes('.')) {
-                return id;
-            }
-
             const fn = Path.basename(new URL(sourceURLs[0]).pathname);
-            if (fn.endsWith('.txt')) {
+            if (fn.endsWith('.txt') || fn.endsWith('.dat')) {
                 return fn;
             }
 
