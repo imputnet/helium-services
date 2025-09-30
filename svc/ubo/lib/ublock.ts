@@ -63,7 +63,7 @@ const prepareAssetString = async () => {
 
         const filename = (() => {
             const fn = Path.basename(new URL(sourceURLs[0]).pathname);
-            if (fn.endsWith('.txt')) {
+            if (fn.endsWith('.txt') || fn.endsWith('.dat')) {
                 return fn;
             }
 
@@ -182,10 +182,7 @@ const prepareFilterlist = async (path: string) => {
 export const handleAssets = () => {
     return Cache.materialize(
         'assets.json',
-        {
-            type: 'application/json; charset=utf-8',
-            expiry_seconds: 86400,
-        },
+        { type: 'application/json; charset=utf-8' },
         prepareAssetString,
     );
 };
