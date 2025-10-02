@@ -1,4 +1,4 @@
-// Generated at 2025-09-16T18:55:04.229Z
+// Generated at 2025-10-02T10:05:13.529Z
 //
 // MIT License
 //
@@ -6293,6 +6293,11 @@
   "u": "https://www.deepl.com/translator#xx/en/{searchTerms}"
  },
  {
+  "s": "DPM LOL",
+  "ts": [ "dpm" ],
+  "u": "https://dpm.lol/{searchTerms}"
+ },
+ {
   "s": "Dogpile News",
   "ts": [ "dpn" ],
   "u": "http://www.dogpile.com/search/news?q={searchTerms}"
@@ -7606,7 +7611,7 @@
  {
   "s": "G2A",
   "ts": [ "g2a" ],
-  "u": "https://www.g2a.com/?search={searchTerms}"
+  "u": "https://www.g2a.com/search?query={searchTerms}"
  },
  {
   "s": "g2play",
@@ -19728,6 +19733,11 @@
   "u": "https://www.fifa.com/search/?q={searchTerms}"
  },
  {
+  "s": "Figura Documentation",
+  "ts": [ "figs" ],
+  "u": "https://applejuiceyy.github.io/figs/latest/search/?q={searchTerms}"
+ },
+ {
   "s": "filmaffinity",
   "ts": [ "film" ],
   "u": "https://www.filmaffinity.com/es/search.php?stext={searchTerms}"
@@ -24309,6 +24319,11 @@
   "u": "https://translate.google.com/#pl/en/{searchTerms}"
  },
  {
+  "s": "Plex",
+  "ts": [ "plex" ],
+  "u": "https://app.plex.tv/desktop/#!/search?pivot=top&query={searchTerms}"
+ },
+ {
   "s": "Reverse (plfr)",
   "ts": [ "plfr" ],
   "u": "https://dictionnaire.reverso.net/polonais-francais/{searchTerms}"
@@ -24682,6 +24697,14 @@
   "s": "RACV",
   "ts": [ "racv" ],
   "u": "https://www.racv.com.au/search-results.html?q={searchTerms}"
+ },
+ {
+  "s": "Raindrop",
+  "ts": [
+   "rain",
+   "raindrop"
+  ],
+  "u": "https://app.raindrop.io/my/0/{searchTerms}"
  },
  {
   "s": "RATP",
@@ -28583,7 +28606,7 @@
  {
   "s": "Bandcamp tags",
   "ts": [ "bctag" ],
-  "u": "https://bandcamp.com/tag/{searchTerms}"
+  "u": "https://bandcamp.com/discover/{searchTerms}"
  },
  {
   "s": "Boa Dica",
@@ -29289,7 +29312,7 @@
   "u": "https://curia.europa.eu/juris/liste.jsf?&num={searchTerms}"
  },
  {
-  "s": "curseforge",
+  "s": "WoW Curseforge",
   "ts": [ "curse" ],
   "u": "https://www.curseforge.com/wow/addons/search?search={searchTerms}"
  },
@@ -36631,6 +36654,11 @@
    "finalfantasy"
   ],
   "u": "https://finalfantasy.wikia.com/wiki/Special:Search?query={searchTerms}"
+ },
+ {
+  "s": "FiguraMC Wiki",
+  "ts": [ "figura" ],
+  "u": "https://wiki.figuramc.org/index.php?search={searchTerms}"
  },
  {
   "s": "Figuya",
@@ -51073,6 +51101,11 @@
   "s": "Babylon Translator <en-es>",
   "ts": [ "babylonee" ],
   "u": "http://traductor.babylon-software.com/ingles/a-espanol/{searchTerms}"
+ },
+ {
+  "s": "Backloggd",
+  "ts": [ "backloggd" ],
+  "u": "https://backloggd.com/search/games/{searchTerms}"
  },
  {
   "s": "Baka-Tsuki",
