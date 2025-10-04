@@ -18,6 +18,9 @@ services:
       - 80:80/tcp
       - 443:443/tcp
       - 443:443/udp
+      - "[::]:80:80/tcp"
+      - "[::]:443:443/tcp"
+      - "[::]:443:443/udp"
     restart: unless-stopped
 
   ubo_proxy:
