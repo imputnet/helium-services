@@ -19,7 +19,6 @@ export const env = {
     edSigningKey: strictGet('ED_PRIVATE_KEY'),
     appcastDirectory: strictGet('APPCAST_PUBLIC_DIR'),
     shouldServeAssets: getBool('SERVE_ASSETS_LOCALLY'),
-    urlPrefix: Deno.env.get('URL_PREFIX'),
 };
 
 export const headers: Record<string, string> = {};

@@ -12,7 +12,7 @@ import { basename } from 'jsr:@std/path';
 
 const getUrlForAsset = (asset: Asset) => {
     if (env.shouldServeAssets) {
-        return (env.urlPrefix ?? '') + `assets/${asset.name}`;
+        return `assets/${asset.name}`;
     }
 
     return asset.user_facing_url;
