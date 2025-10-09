@@ -2,7 +2,7 @@
 
 these are the ansible playbooks used to deploy our instance of helium-services.
 
-the playbooks in this repo are written to configure machines running debian 12;
+the playbooks in this repo are written to configure machines running debian 13;
 your mileage may vary on any other distributions.
 
 the playbooks assume you are running a freshly installed version of the OS. if
