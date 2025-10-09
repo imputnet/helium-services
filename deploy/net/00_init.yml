@@ -38,8 +38,8 @@
         name: iptables-persistent
         state: present
 
-    - name: Install bird2
+    - name: Install bird3
       when: bgp is defined
       ansible.builtin.apt:
-        name: bird2
+        name: bird3
         state: present
