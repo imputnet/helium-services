@@ -11,6 +11,7 @@
           - ca-certificates
           - curl
           - git
+          - gnupg
         state: present
 
     - name: Ensure keyrings directory
