@@ -19,5 +19,30 @@
         "ts": ["kaa", "kag", "kga", "kassistant"],
         "u": "https://kagi.com/assistant?q={{{s}}}",
         "sc": "AI Chatbots"
+    },
+    {
+        "s": "Helium Bangs",
+        "ts": ["bang", "bangs", "heliumbangs"],
+        "u": "https://helium.computer/bangs#{{{s}}}"
+    },
+    {
+        "s": "Helium Code",
+        "ts": ["hcr", "helium"],
+        "u": "https://github.com/search?type=code&q=repo:imputnet/helium+{{{s}}}"
+    },
+    {
+        "s": "Helium macOS Code",
+        "ts": ["hcrm", "heliummac"],
+        "u": "https://github.com/search?type=code&q=repo:imputnet/helium-macos+{{{s}}}"
+    },
+    {
+        "s": "Helium Linux Code",
+        "ts": ["hcrl", "heliumlinux"],
+        "u": "https://github.com/search?type=code&q=repo:imputnet/helium-linux+{{{s}}}"
+    },
+    {
+        "s": "Helium Windows Code",
+        "ts": ["hcrw", "heliumwindows"],
+        "u": "https://github.com/search?type=code&q=repo:imputnet/helium-windows+{{{s}}}"
     }
 ]

@@ -1,4 +1,4 @@
-// Generated at 2025-10-02T10:05:13.529Z
+// Generated at 2025-10-15T18:25:38.603Z
 //
 // MIT License
 //
@@ -8646,6 +8646,14 @@
   "u": "http://okeanos-www.hbz-nrw.de/F/?func=find-c&ccl_term=WRD=\"{searchTerms}\""
  },
  {
+  "s": "Helium Code",
+  "ts": [
+   "hcr",
+   "helium"
+  ],
+  "u": "https://github.com/search?type=code&q=repo:imputnet/helium+{searchTerms}"
+ },
+ {
   "s": "Hockeydb.com",
   "ts": [ "hdb" ],
   "u": "https://www.hockeydb.com/ihdb/stats/find_player.php?full_name={searchTerms}"
@@ -9610,11 +9618,7 @@
  },
  {
   "s": "Kagi Bang Explorer",
-  "ts": [
-   "kbe",
-   "bang",
-   "bangs"
-  ],
+  "ts": [ "kbe" ],
   "u": "https://kbe.smaertness.net/search?q={searchTerms}"
  },
  {
@@ -17598,6 +17602,15 @@
   "u": "https://reiseauskunft.bahn.de/bin/query.exe/dn?S=&Z={searchTerms}"
  },
  {
+  "s": "Helium Bangs",
+  "ts": [
+   "bang",
+   "bangs",
+   "heliumbangs"
+  ],
+  "u": "https://helium.computer/bangs#{searchTerms}"
+ },
+ {
   "s": "Bibliothèque et Archives Nationales du Québec",
   "ts": [ "banq" ],
   "u": "https://www.banq.qc.ca/techno/recherche/rms.html?keyword={searchTerms}&Recherche=tout&fonction=chercher&afficherPortail=checked&afficherIris=checked&afficherPistard=checked&afficherColNum=checked"
@@ -21441,6 +21454,30 @@
   "s": "Hornbach.at",
   "ts": [ "hbat" ],
   "u": "https://www.hornbach.at/shop/suche/sortiment/{searchTerms}"
+ },
+ {
+  "s": "Helium Linux Code",
+  "ts": [
+   "hcrl",
+   "heliumlinux"
+  ],
+  "u": "https://github.com/search?type=code&q=repo:imputnet/helium-linux+{searchTerms}"
+ },
+ {
+  "s": "Helium macOS Code",
+  "ts": [
+   "hcrm",
+   "heliummac"
+  ],
+  "u": "https://github.com/search?type=code&q=repo:imputnet/helium-macos+{searchTerms}"
+ },
+ {
+  "s": "Helium Windows Code",
+  "ts": [
+   "hcrw",
+   "heliumwindows"
+  ],
+  "u": "https://github.com/search?type=code&q=repo:imputnet/helium-windows+{searchTerms}"
  },
  {
   "s": "historicum",
