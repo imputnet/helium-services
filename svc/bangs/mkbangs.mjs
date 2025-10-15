@@ -87,7 +87,7 @@ const validate = ({ bangs, ...rest }) => {
 
 const transform = ({ bangs, extras, ...rest }) => {
     const seen = new Set();
-    const handleBang = ({ s, t, ts, u, sc }) => {
+    const handleBang = ({ s, t, ts, u, sc }, dupes) => {
         const transformedURL = u.replace(/{{{s}}}/g, '{searchTerms}');
         if (!u.includes('{{{s}}}') || transformedURL.includes('{{{s}}}')) {
             throw `malformed url for ${t}: ${u}`
@@ -98,9 +98,11 @@ const transform = ({ bangs, extras, ...rest }) => {
             ts.push(t);
         }
 
-        ts = ts.map(t => t.toLowerCase()).sort((a, b) => {
-            return (a.length - b.length) || a.localeCompare(b);
-        });
+        ts = ts.map(t => t.toLowerCase())
+            .filter(t => !dupes || !dupes.has(t))
+            .sort((a, b) => {
+                return (a.length - b.length) || a.localeCompare(b);
+            });
 
         for (const t of ts) {
             if (seen.has(t))
@@ -116,19 +118,36 @@ const transform = ({ bangs, extras, ...rest }) => {
         };
     };
 
+    const extraBangs = extras.map(bang => handleBang(bang));
+    const extraTriggers = new Set(seen);
+
     const strippedBangs = bangs.filter(({ t, u, x }) => {
         if (x) {
             console.error(`[!] skipping unsupported bang !${t} with url ${u}`);
             return false;
         }
 
+        if (u.startsWith('/')) {
+            return false;
+        }
+
         try {
             const url = new URL(u);
-            return url.hostname !== 'kagi.com' && !url.hostname.endsWith('kagi.com');
+            if (url.hostname === 'kagi.com' || url.hostname.endsWith('.kagi.com')) {
+                return false;
+            }
         } catch {}
-    }).map(handleBang);
 
-    const extraBangs = extras.map(handleBang);
+        return true;
+    }).map(bang => {
+        const { t, ts } = bang;
+        const triggers = [...(ts || []), t].map(t => t.toLowerCase());
+
+        return handleBang(
+            bang,
+            extraTriggers
+        );
+    }).filter(bang => bang.ts.length > 0);
 
     return { bangs: [ ...strippedBangs, ...extraBangs ], ...rest };
 }
