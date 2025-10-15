@@ -1,4 +1,4 @@
-// Generated at 2025-10-15T18:25:38.603Z
+// Generated at 2025-10-15T18:29:34.129Z
 //
 // MIT License
 //
@@ -182,7 +182,13 @@
  },
  {
   "s": "X",
-  "ts": [ "x" ],
+  "ts": [
+   "x",
+   "twid",
+   "twit",
+   "tweet",
+   "twitter"
+  ],
   "u": "https://x.com/search?q={searchTerms}"
  },
  {
@@ -2477,7 +2483,7 @@
    "rb",
    "ruby"
   ],
-  "u": "https://www.google.com/cse?q={searchTerms}&cx=013598269713424429640:g5orptiw95w&ie=UTF-8"
+  "u": "https://docs.ruby-lang.org/en/master/?q={searchTerms}"
  },
  {
   "s": "Reader's Cave",
@@ -3680,11 +3686,6 @@
   "u": "https://abcnotation.com/searchTunes?q={searchTerms}"
  },
  {
-  "s": "Amazon Belgium",
-  "ts": [ "abe" ],
-  "u": "https://www.amazon.com.be/s?k={searchTerms}"
- },
- {
   "s": "ABN Lookup",
   "ts": [ "abn" ],
   "u": "https://abr.business.gov.au/Search.aspx?SearchText={searchTerms}"
@@ -3774,7 +3775,7 @@
   "u": "https://developer.apple.com/search/index.php?q={searchTerms}"
  },
  {
-  "s": "Amazon Austria",
+  "s": "Amazon Germany / Austria",
   "ts": [
    "ade",
    "age",
@@ -4055,16 +4056,6 @@
   "u": "https://addons.mozilla.org/search/?q={searchTerms}"
  },
  {
-  "s": "Amazon Smile",
-  "ts": [
-   "ams",
-   "asm",
-   "smam",
-   "smile"
-  ],
-  "u": "https://smile.amazon.com/s/?field-keywords={searchTerms}"
- },
- {
   "s": "Apple Music",
   "ts": [
    "amu",
@@ -4269,19 +4260,6 @@
   "s": "astrobites",
   "ts": [ "asb" ],
   "u": "https://astrobites.org/?s={searchTerms}"
- },
- {
-  "s": "Amazon Smile Deutschland",
-  "ts": [ "asd" ],
-  "u": "https://smile.amazon.de/s?url=search-alias=aps&field-keywords={searchTerms}"
- },
- {
-  "s": "Amazon Smile (Germany)",
-  "ts": [
-   "asg",
-   "sade"
-  ],
-  "u": "https://smile.amazon.de/s/?field-keywords={searchTerms}"
  },
  {
   "s": "Awesome Selfhosted",
@@ -4930,7 +4908,7 @@
  {
   "s": "Bayerische Staatsbibliothek",
   "ts": [ "bsb" ],
-  "u": "https://opacplus.bsb-muenchen.de/InfoGuideClient/start.do?Login=opacext&BaseURL=https://opacplus.bsb-muenchen.de/InfoGuideClient/start.do?Login=opacext&Query=-1=\"{searchTerms}\""
+  "u": "https://opacplus.bsb-muenchen.de/discovery/search?query=any,contains,{searchTerms}&tab=Everything&search_scope=MyInst_and_CI&vid=49BVB_BSB:VU1&offset=0"
  },
  {
   "s": "Business Insider",
@@ -13519,11 +13497,6 @@
   "u": "https://www.sololearn.com/Discuss?ordering=Trending&query={searchTerms}"
  },
  {
-  "s": "Smile.amazon.com",
-  "ts": [ "sma" ],
-  "u": "https://smile.amazon.com/s/&field-keywords={searchTerms}"
- },
- {
   "s": "sheetmusicdirect.com",
   "ts": [
    "smd",
@@ -14631,7 +14604,7 @@
  {
   "s": "Twitter Latest",
   "ts": [ "twl" ],
-  "u": "https://twitter.com/search?f=tweets&vertical=news&q={searchTerms}"
+  "u": "https://x.com/search?f=tweets&vertical=news&q={searchTerms}"
  },
  {
   "s": "The Weather Network",
@@ -17166,14 +17139,6 @@
   "u": "https://www.acronymfinder.com/~/search/af.aspx?string=exact&Acronym={searchTerms}"
  },
  {
-  "s": "Amazon.de Smile",
-  "ts": [
-   "ades",
-   "smde"
-  ],
-  "u": "https://smile.amazon.de/s?field-keywords={searchTerms}"
- },
- {
   "s": "Apple Developer",
   "ts": [
    "adev",
@@ -17446,11 +17411,6 @@
   "u": "https://groceries.asda.com/asda-webstore/landing/home.shtml#/search/{searchTerms}"
  },
  {
-  "s": "AmazonSmile Deutschland",
-  "ts": [ "asde" ],
-  "u": "https://smile.amazon.de/s/field-keywords={searchTerms}"
- },
- {
   "s": "Papers on Engineering Education Repository (ASEE PEER)",
   "ts": [ "asee" ],
   "u": "https://peer.asee.org/?q={searchTerms}"
@@ -17487,17 +17447,6 @@
    "astock"
   ],
   "u": "https://stock.adobe.com/search?k={searchTerms}"
- },
- {
-  "s": "Amazon Smile (UK)",
-  "ts": [
-   "asuk",
-   "amsuk",
-   "asmuk",
-   "smamuk",
-   "smileuk"
-  ],
-  "u": "https://smile.amazon.co.uk/s?field-keywords={searchTerms}"
  },
  {
   "s": "Asus",
@@ -17806,7 +17755,7 @@
    "bird",
    "birds"
   ],
-  "u": "https://www.allaboutbirds.org/search/?q={searchTerms}"
+  "u": "https://www.allaboutbirds.org/news/search/?q={searchTerms}"
  },
  {
   "s": "Bisafans.de",
@@ -18156,6 +18105,15 @@
   "s": "College Football Reference",
   "ts": [ "cfbr" ],
   "u": "https://www.sports-reference.com/cfb/search/search.fcgi?search={searchTerms}"
+ },
+ {
+  "s": "ChatGPT",
+  "ts": [
+   "cgpt",
+   "chatgpt"
+  ],
+  "u": "https://chatgpt.com/?q={searchTerms}",
+  "sc": "ai"
  },
  {
   "s": "charcod.es",
@@ -25286,11 +25244,6 @@
   "u": "http://pesquisa.sapo.pt/?barra=&q={searchTerms}"
  },
  {
-  "s": "AmazonSmile UK",
-  "ts": [ "sauk" ],
-  "u": "https://smile.amazon.co.uk/s/?field-keywords={searchTerms}"
- },
- {
   "s": "SAXO.com",
   "ts": [ "saxo" ],
   "u": "https://www.saxo.com/dk/products/search?query={searchTerms}"
@@ -26353,16 +26306,6 @@
   "u": "https://www.theyworkforyou.com/search/?q={searchTerms}"
  },
  {
-  "s": "Twitter",
-  "ts": [
-   "twid",
-   "twit",
-   "tweet",
-   "twitter"
-  ],
-  "u": "https://twitter.com/search?q={searchTerms}"
- },
- {
   "s": "Twig",
   "ts": [ "twig" ],
   "u": "https://twig.symfony.com/{searchTerms}"
@@ -26401,6 +26344,11 @@
   "s": "University of Central Florida",
   "ts": [ "ucfl" ],
   "u": "https://search.ucf.edu/#?q={searchTerms}"
+ },
+ {
+  "s": "UCSC Genome Browser (GRCH38)",
+  "ts": [ "ucsc" ],
+  "u": "https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position={searchTerms}"
  },
  {
   "s": "Ubuntu Developer",
@@ -33396,11 +33344,6 @@
   "u": "https://wiki.samba.org/index.php?title=Special:Search&search={searchTerms}&go=Go"
  },
  {
-  "s": "Amazon Smile (de)",
-  "ts": [ "samde" ],
-  "u": "https://smile.amazon.de/s/?url=search-alias=aps&field-keywords={searchTerms}"
- },
- {
   "s": "SAP Downloads",
   "ts": [ "sapdl" ],
   "u": "https://launchpad.support.sap.com/#/softwarecenter/search/{searchTerms}"
@@ -34860,6 +34803,15 @@
   "s": "XKCD Number",
   "ts": [ "xkcdn" ],
   "u": "https://xkcd.com/{searchTerms}/"
+ },
+ {
+  "s": "Twitter User",
+  "ts": [
+   "xuser",
+   "twitters",
+   "twitteruser"
+  ],
+  "u": "https://x.com/{searchTerms}"
  },
  {
   "s": "XWiki",
@@ -40479,7 +40431,7 @@
  {
   "s": "Twitter users",
   "ts": [ "twuser" ],
-  "u": "https://twitter.com/search/users?q={searchTerms}"
+  "u": "https://x.com/search/users?q={searchTerms}"
  },
  {
   "s": "Tyda.se Dictionary (Swedish-German)",
@@ -42184,12 +42136,6 @@
   "u": "https://charmed.wikia.com/wiki/Special:Search?search={searchTerms}"
  },
  {
-  "s": "ChatGPT",
-  "ts": [ "chatgpt" ],
-  "u": "https://chatgpt.com/?q={searchTerms}",
-  "sc": "ai"
- },
- {
   "s": "CheatCC.com",
   "ts": [
    "cheatcc",
@@ -43554,7 +43500,7 @@
  {
   "s": "Twitter Hashtags",
   "ts": [ "hashtag" ],
-  "u": "https://twitter.com/search?q=\\#{searchTerms}"
+  "u": "https://x.com/search?q=\\#{searchTerms}"
  },
  {
   "s": "Hastane",
@@ -46162,6 +46108,11 @@
   "u": "https://ubuntuforums.org/search.php?do=process&query={searchTerms}"
  },
  {
+  "s": "UCSC Genome Browser (Europe, GRCH38)",
+  "ts": [ "ucsc-eu" ],
+  "u": "https://genome-euro.ucsc.edu/cgi-bin/hgTracks?db=hg38&position={searchTerms}"
+ },
+ {
   "s": "Unreal Engine Documentation",
   "ts": [
    "ue4docs",
@@ -46832,6 +46783,11 @@
   "s": "Amazon.de",
   "ts": [ "amademp3" ],
   "u": "https://www.amazon.de/s?k={searchTerms}&i=digital-music"
+ },
+ {
+  "s": "Amazon Belgium",
+  "ts": [ "amazonbe" ],
+  "u": "https://www.amazon.com.be/s?k={searchTerms}"
  },
  {
   "s": "Amazon Nederland",
@@ -47596,6 +47552,11 @@
   "s": "Debian Pages (French)",
   "ts": [ "debianfr" ],
   "u": "https://www.google.com/cse?cx=007724375775369850404:jwpah_hbbjk&ie=UTF-8&q={searchTerms}&siteurl=www.google.com/cse/home?cx=007724375775369850404:jwpah_hbbjk"
+ },
+ {
+  "s": "Decipher Genomics",
+  "ts": [ "decipher" ],
+  "u": "https://www.deciphergenomics.org/search?q={searchTerms}"
  },
  {
   "s": "DeepDyve",
@@ -50508,14 +50469,6 @@
   "s": "tweakers.net",
   "ts": [ "tweakers" ],
   "u": "https://tweakers.net/nieuws/zoeken/?keyword={searchTerms}"
- },
- {
-  "s": "Twitter User",
-  "ts": [
-   "twitters",
-   "twitteruser"
-  ],
-  "u": "https://twitter.com/{searchTerms}"
  },
  {
   "s": "Ubiquiti Forums",
@@ -56347,6 +56300,11 @@
   "s": "FurAffinity",
   "ts": [ "furaffinity" ],
   "u": "https://www.furaffinity.net/search/?q={searchTerms}"
+ },
+ {
+  "s": "GeneReviews",
+  "ts": [ "genereviews" ],
+  "u": "https://www.ncbi.nlm.nih.gov/books/n/gene/?term={searchTerms}"
  },
  {
   "s": "Genickbruch.com",
