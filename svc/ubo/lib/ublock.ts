@@ -24,8 +24,8 @@ type Asset = {
 type Filename = string;
 type AssetFile = Record<Filename, Asset>;
 
-const VERSION = '1.66.4';
-const FILE_CHECKSUM = 'e29f49f1b565119988961671c6daefb0e90ac5b7a2ebf54e64c5bfc313030fef';
+const VERSION = '1.67.0';
+const FILE_CHECKSUM = 'd532b5eb89271234760b6ad50fb26a79cbfe8a52ca5ff2cf0f5ea9aaa9d0ed3a';
 const originalAssetURL =
     `https://raw.githubusercontent.com/gorhill/uBlock/refs/tags/${VERSION}/assets/assets.json`;
 
