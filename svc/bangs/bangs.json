@@ -18110,6 +18110,7 @@
   "s": "ChatGPT",
   "ts": [
    "cgpt",
+   "chat",
    "chatgpt"
   ],
   "u": "https://chatgpt.com/?q={searchTerms}",
