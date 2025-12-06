@@ -8,17 +8,21 @@ import * as OmahaConstants from './omaha/constants.ts';
 
 const handleOmahaQuery = async (request: Request) => {
     const { apps, responseType } = await RequestHelpers.getData(request);
-    RequestHelpers.normalizeApps(apps);
+    const serviceId = RequestHelpers.getOmahaServiceId(request);
 
-    const appsWithMixin = Util.shuffle(Mixins.addRandomExtensions(apps));
+    RequestHelpers.checkApps(apps);
+
+    const appsWithMixin = Util.shuffle(
+        Mixins.addRandomExtensions(serviceId, apps),
+    );
 
     const omahaResponse = await Omaha.request(
-        'CHROME_WEBSTORE',
+        serviceId,
         appsWithMixin,
         { userAgent: request.headers.get('user-agent') || '' },
     );
 
-    Mixins.addToPoolFromResponse(omahaResponse);
+    Mixins.addToPoolFromResponse(serviceId, omahaResponse);
     return ResponseHandler.createResponse(
         responseType,
         Mixins.unmixResponse(apps, omahaResponse),
