@@ -9,11 +9,10 @@ import * as OmahaConstants from './omaha/constants.ts';
 const handleOmahaQuery = async (request: Request) => {
     const { apps, responseType } = await RequestHelpers.getData(request);
     const serviceId = RequestHelpers.getOmahaServiceId(request);
-
-    RequestHelpers.checkApps(apps);
+    const filteredApps = RequestHelpers.checkAndFilterApps(serviceId, apps);
 
     const appsWithMixin = Util.shuffle(
-        Mixins.addRandomExtensions(serviceId, apps),
+        Mixins.addRandomExtensions(serviceId, filteredApps),
     );
 
     const omahaResponse = await Omaha.request(
@@ -25,7 +24,7 @@ const handleOmahaQuery = async (request: Request) => {
     Mixins.addToPoolFromResponse(serviceId, omahaResponse);
     return ResponseHandler.createResponse(
         responseType,
-        Mixins.unmixResponse(apps, omahaResponse),
+        Mixins.unmixResponse(filteredApps, omahaResponse),
     );
 };
 
@@ -89,6 +88,7 @@ type RequestHandler = (request: Request) => Promise<Response>;
 const handlers: Record<string, RequestHandler> = {
     '/proxy': handlePayloadProxy,
     '/cws_snippet': handleSnippetProxy,
+    '/com': handleOmahaQuery,
     '/': handleOmahaQuery,
 };
 
