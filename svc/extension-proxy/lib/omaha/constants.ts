@@ -49,6 +49,3 @@ export const UPDATE_SERVICES = {
 };
 
 export type ServiceId = keyof typeof UPDATE_SERVICES;
-
-export const CHROME_WEBSTORE_SNIPPET =
-    'https://chromewebstore.googleapis.com/v2/items/{}:fetchItemSnippet';
