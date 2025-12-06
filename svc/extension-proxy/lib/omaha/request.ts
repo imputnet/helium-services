@@ -5,9 +5,10 @@ import {
     type ServiceId,
     UPDATE_SERVICES,
 } from './constants.ts';
-import * as Chromium from '../data/chromium-version.ts';
 import type { OmahaResponse } from './response.ts';
+
 import * as Util from '../util.ts';
+import * as Chromium from '../data/chromium-version.ts';
 
 export type App = {
     appid: string;
@@ -70,8 +71,8 @@ const craftRequest = async (apps: App[]) => {
     return { request };
 };
 
-export default async function request(
-    store_id: ServiceId,
+export async function request(
+    serviceId: ServiceId,
     apps: App[],
     extraData: { userAgent: string },
 ) {
@@ -85,7 +86,7 @@ export default async function request(
     const body = await craftRequest(apps);
     const { updater } = body.request;
 
-    const response = await fetch(UPDATE_SERVICES[store_id], {
+    const response = await fetch(UPDATE_SERVICES[serviceId], {
         method: 'POST',
         headers: {
             'user-agent': extraData.userAgent,
@@ -95,7 +96,7 @@ export default async function request(
             'sec-fetch-mode': 'no-cors',
             'sec-fetch-site': 'none',
             'x-goog-update-appid': appIds,
-            'x-goog-update-interactivity': 'bg',
+            'x-goog-update-interactivity': serviceId === 'CHROME_COMPONENTS' ? 'fg' : 'bg',
             'x-goog-update-updater': `${updater.name}-${updater.version}`,
         },
         cache: 'no-cache',
