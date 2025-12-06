@@ -3,7 +3,7 @@ import { OmahaResponse } from './omaha/response.ts';
 import { ResponseType } from './request.ts';
 import { respond } from './util.ts';
 import * as ExtensionProxy from './proxy.ts';
-import * as xml from 'jsr:@libs/xml';
+import * as xml from '@libs/xml';
 
 const filterResponse = async ({ response }: OmahaResponse) => {
     return {

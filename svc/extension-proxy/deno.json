@@ -5,7 +5,8 @@
     },
     "imports": {
         "@libs/xml": "jsr:@libs/xml@^6.0.4",
-        "@std/assert": "jsr:@std/assert@1"
+        "@std/assert": "jsr:@std/assert@1",
+        "@std/encoding": "jsr:@std/encoding@^1.0.10"
     },
     "fmt": {
         "indentWidth": 4,
