@@ -1,6 +1,6 @@
 import { OMAHA_JSON_PREFIX } from './omaha/constants.ts';
 import { OmahaResponse } from './omaha/response.ts';
-import { ResponseType } from './request.ts';
+import { ResponseType } from './helpers.ts';
 import { respond } from './util.ts';
 import * as ExtensionProxy from './proxy.ts';
 import * as xml from '@libs/xml';

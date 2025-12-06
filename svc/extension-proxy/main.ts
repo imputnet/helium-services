@@ -2,13 +2,13 @@ import * as Util from './lib/util.ts';
 import * as Mixins from './lib/mixins.ts';
 import * as Omaha from './lib/omaha/index.ts';
 import * as ExtensionProxy from './lib/proxy.ts';
-import * as RequestHandler from './lib/request.ts';
+import * as RequestHelpers from './lib/helpers.ts';
 import * as ResponseHandler from './lib/response.ts';
 import * as OmahaConstants from './lib/omaha/constants.ts';
 
 const handleOmahaQuery = async (request: Request) => {
-    const { apps, responseType } = await RequestHandler.getData(request);
-    RequestHandler.normalizeApps(apps);
+    const { apps, responseType } = await RequestHelpers.getData(request);
+    RequestHelpers.normalizeApps(apps);
 
     const appsWithMixin = Util.shuffle(Mixins.addRandomExtensions(apps));
 
@@ -63,7 +63,7 @@ const handleSnippetProxy = (request: Request) => {
 
     const extensionId = new URL(request.url).searchParams.get('id');
 
-    if (!extensionId || !RequestHandler.APP_ID_REGEX.test(extensionId)) {
+    if (!extensionId || !RequestHelpers.APP_ID_REGEX.test(extensionId)) {
         throw 'missing or invalid extension id';
     }
 
