@@ -47,5 +47,7 @@ export const UPDATE_SERVICES = {
     CHROME_WEBSTORE: 'https://clients2.google.com/service/update2/json',
 };
 
+export type ServiceId = keyof typeof UPDATE_SERVICES;
+
 export const CHROME_WEBSTORE_SNIPPET =
     'https://chromewebstore.googleapis.com/v2/items/{}:fetchItemSnippet';

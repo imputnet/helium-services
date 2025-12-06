@@ -2,6 +2,7 @@ import {
     MAX_EXTENSIONS_PER_REQUEST,
     OMAHA_JSON_PREFIX,
     REQUEST_TEMPLATE,
+    type ServiceId,
     UPDATE_SERVICES,
 } from './constants.ts';
 import * as Chromium from '../data/chromium-version.ts';
@@ -70,7 +71,7 @@ const craftRequest = async (apps: App[]) => {
 };
 
 export default async function request(
-    store_id: keyof typeof UPDATE_SERVICES,
+    store_id: ServiceId,
     apps: App[],
     extraData: { userAgent: string },
 ) {
