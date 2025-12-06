@@ -1,6 +1,6 @@
 import * as Util from './util.ts';
-import * as Mixins from './mixins.ts';
 import * as Omaha from './omaha/index.ts';
+import * as Mixins from './omaha/mixins.ts';
 import * as ExtensionProxy from './proxy.ts';
 import * as RequestHelpers from './helpers.ts';
 import * as ResponseHandler from './response.ts';
