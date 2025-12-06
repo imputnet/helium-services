@@ -71,7 +71,7 @@ const handlers: Record<string, RequestHandler> = {
 };
 
 export const handle = (request: Request) => {
-    const pathname = RequestHelpers.getCanonicalPathname(request);
+    const { pathname } = new URL(request.url);
 
     if (Object.hasOwn(handlers, pathname)) {
         return handlers[pathname](request);

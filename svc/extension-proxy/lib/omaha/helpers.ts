@@ -3,7 +3,6 @@ import { ResponseType } from './response.ts';
 import type { App, OmahaRequest } from './request.ts';
 
 export * from '../helpers.ts';
-import * as Helpers from '../helpers.ts';
 
 type RequestData = {
     apps: App[];
@@ -76,7 +75,7 @@ export const getData = async (request: Request): Promise<RequestData> => {
 };
 
 export const getServiceId = (request: Request): ServiceId => {
-    const pathname = Helpers.getCanonicalPathname(request);
+    const { pathname } = new URL(request.url);
     if (pathname === '/com') {
         return 'CHROME_COMPONENTS';
     }
