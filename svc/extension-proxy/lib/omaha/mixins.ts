@@ -1,7 +1,7 @@
-import { ServiceId } from './omaha/constants.ts';
-import { App } from './omaha/request.ts';
-import { OmahaResponse } from './omaha/response.ts';
-import * as Util from './util.ts';
+import { ServiceId } from './constants.ts';
+import { App } from './request.ts';
+import { OmahaResponse } from './response.ts';
+import * as Util from '../util.ts';
 
 type Pool = {
     data: App[];
