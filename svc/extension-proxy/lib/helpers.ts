@@ -1,3 +1,4 @@
+import { ServiceId } from './omaha/constants.ts';
 import type { App, OmahaRequest } from './omaha/request.ts';
 
 export type ResponseType = 'json' | 'xml' | 'redirect';
@@ -74,10 +75,17 @@ export const getData = async (request: Request): Promise<RequestData> => {
 
 export const APP_ID_REGEX = /^[a-p]{32}$/;
 
-export const checkApps = (apps: App[]) => {
-    const ids = new Set();
+const APPID_ALLOWLIST: Partial<Record<ServiceId, Set<string>>> = {
+    'CHROME_COMPONENTS': new Set([
+        'hfnkpimlhhgieaddgfemjhofmfblmnib', // CRLSet
+    ]),
+};
 
-    apps.forEach((obj) => {
+export const checkAndFilterApps = (serviceId: ServiceId, apps: App[]) => {
+    const ids = new Set();
+    const allowlist = APPID_ALLOWLIST[serviceId];
+
+    return apps.filter((obj) => {
         const { appid, version } = obj;
 
         if (ids.has(appid)) {
@@ -88,7 +96,10 @@ export const checkApps = (apps: App[]) => {
             throw `invalid version -- ${version}`;
         }
 
-        ids.add(appid);
+        if (!allowlist || allowlist.has(appid)) {
+            ids.add(appid);
+            return true;
+        }
     });
 };
 
@@ -104,4 +115,13 @@ export const getCanonicalPathname = (request: Request) => {
     }
 
     return pathname;
+};
+
+export const getOmahaServiceId = (request: Request): ServiceId => {
+    const pathname = getCanonicalPathname(request);
+    if (pathname === '/com') {
+        return 'CHROME_COMPONENTS';
+    }
+
+    return 'CHROME_WEBSTORE';
 };

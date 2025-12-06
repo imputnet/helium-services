@@ -45,6 +45,7 @@ export const MAX_EXTENSIONS_PER_REQUEST = 100;
 
 export const UPDATE_SERVICES = {
     CHROME_WEBSTORE: 'https://clients2.google.com/service/update2/json',
+    CHROME_COMPONENTS: 'https://clients2.google.com/service/update2/json',
 };
 
 export type ServiceId = keyof typeof UPDATE_SERVICES;
