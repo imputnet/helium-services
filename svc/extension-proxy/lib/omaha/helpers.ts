@@ -49,6 +49,7 @@ const handlePost = async (request: Request): Promise<RequestData> => {
         throw { status: 422, text: 'invalid content-type' };
     }
 
+    const serviceId = getServiceId(request);
     let body: { request: OmahaRequest };
     try {
         body = await request.json();
@@ -58,9 +59,12 @@ const handlePost = async (request: Request): Promise<RequestData> => {
 
     return {
         responseType: 'json',
-        apps: body.request.app.filter((app) => app.brand !== 'GGRO').map(
-            ({ appid, version }) => ({ appid, version }),
-        ),
+        apps:
+            (body.request.app || body.request.apps)?.filter((app) =>
+                app.brand !== 'GGRO' || serviceId === 'CHROME_COMPONENTS'
+            ).map(
+                ({ appid, version }) => ({ appid, version }),
+            ) || [],
     };
 };
 

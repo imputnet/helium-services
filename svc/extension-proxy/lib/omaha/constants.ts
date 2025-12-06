@@ -39,6 +39,12 @@ export const REQUEST_TEMPLATE = {
     wow64: true,
 };
 
+export const REQUEST_TEMPLATE_V4 = {
+    ...structuredClone(REQUEST_TEMPLATE),
+    protocol: '4.0',
+    acceptformat: 'crx3',
+};
+
 export const OMAHA_JSON_PREFIX = ")]}'";
 
 export const MAX_EXTENSIONS_PER_REQUEST = 100;
