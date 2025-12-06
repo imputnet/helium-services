@@ -34,6 +34,9 @@ const handlePayloadProxy = async (request: Request) => {
     );
 };
 
+const CHROME_WEBSTORE_SNIPPET =
+    'https://chromewebstore.googleapis.com/v2/items/{}:fetchItemSnippet';
+
 const handleSnippetProxy = (request: Request) => {
     if (!['GET', 'POST'].includes(request.method)) {
         throw { status: 405, text: 'method not allowed' };
@@ -52,7 +55,7 @@ const handleSnippetProxy = (request: Request) => {
     headers.set('X-HTTP-Method-Override', 'GET');
 
     return handleProxy(
-        Omaha.CHROME_WEBSTORE_SNIPPET
+        CHROME_WEBSTORE_SNIPPET
             .replace('{}', extensionId),
         headers,
         'POST',
