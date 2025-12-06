@@ -46,6 +46,31 @@ type OmahaResponseInner = {
 export type OmahaResponse = { response: OmahaResponseInner };
 export type ResponseType = 'json' | 'xml' | 'redirect';
 
+type UpdateCheck = NonNullable<
+    OmahaResponse['response']['app']
+>[number]['updatecheck'];
+const getBestUrl = (updatecheck: UpdateCheck) => {
+    if (updatecheck?.status !== 'ok') {
+        return;
+    }
+
+    let backupUrl;
+    for (const urlObj of updatecheck.urls.url) {
+        if (!('codebase' in urlObj)) {
+            continue;
+        }
+
+        const url = new URL(urlObj.codebase);
+        if (url.protocol === 'https:') {
+            return url;
+        }
+
+        backupUrl = url;
+    }
+
+    return backupUrl;
+};
+
 const filterResponse = async ({ response }: OmahaResponse) => {
     return {
         server: response.server,
@@ -55,17 +80,23 @@ const filterResponse = async ({ response }: OmahaResponse) => {
             const updatecheck = app.updatecheck;
 
             if (updatecheck?.status === 'ok') {
-                await Promise.all(
-                    updatecheck.urls.url.map(async (obj) => {
-                        if ('codebase' in obj) {
-                            obj.codebase = await ExtensionProxy.wrap(obj.codebase);
-                        } else {
-                            throw 'differential updates are not supported here';
-                        }
+                const url = getBestUrl(updatecheck);
+                const fileName = updatecheck?.manifest?.packages?.package?.[0]?.name;
+                if (!url) {
+                    throw 'could not get any viable URL for download';
+                }
 
-                        return obj;
-                    }),
-                );
+                if (fileName) {
+                    if (!url.pathname.endsWith('/')) {
+                        url.pathname += '/';
+                    }
+
+                    url.pathname += fileName;
+                }
+
+                updatecheck.urls.url = [
+                    { codebase: await ExtensionProxy.wrap(url.toString()) },
+                ];
             }
 
             return {
