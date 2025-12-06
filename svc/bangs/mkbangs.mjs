@@ -170,8 +170,7 @@ const print = ({ bangs, license }) => {
         ...commentLicense, '',
         JSON.stringify(bangs, null, 1)
             .replace(/\[\s*\n\s*(".*?")\s*\n\s*\],/g, '[ $1 ],') // fold one-elem array onto single line
-        /* todo: uncomment this after 0.5.x:
-            .replace(/"(\n\s*])/g, '",\$1') */
+            .replace(/"(\n\s*])/g, '",\$1') // add trailing commas to multi-element trigger arrays
     ].join('\n');
 }
 
