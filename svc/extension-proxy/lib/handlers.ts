@@ -82,14 +82,18 @@ const handleSnippetProxy = (request: Request) => {
 };
 
 type RequestHandler = (request: Request) => Promise<Response>;
-const defaultHandler: RequestHandler = handleOmahaQuery;
 const handlers: Record<string, RequestHandler> = {
-    proxy: handlePayloadProxy,
-    cws_snippet: handleSnippetProxy,
+    '/proxy': handlePayloadProxy,
+    '/cws_snippet': handleSnippetProxy,
+    '/': handleOmahaQuery,
 };
 
 export const handle = (request: Request) => {
-    const url = new URL(request.url);
-    const requestType = url.pathname.split('/').pop() ?? '';
-    return (handlers[requestType] ?? defaultHandler)(request);
+    const pathname = RequestHelpers.getCanonicalPathname(request);
+
+    if (Object.hasOwn(handlers, pathname)) {
+        return handlers[pathname](request);
+    }
+
+    throw { status: 404, text: 'Not Found' };
 };

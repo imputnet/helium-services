@@ -91,3 +91,17 @@ export const normalizeApps = (apps: App[]) => {
         ids.add(appid);
     });
 };
+
+export const getCanonicalPathname = (request: Request) => {
+    const url = new URL(request.url);
+    let pathname = url.pathname;
+
+    // Typically, the extension proxy is behind a NGINX reverse
+    // proxy, which may prepend /ext/ to the path. If that happens,
+    // drop it.
+    if (pathname.startsWith('/ext/') || pathname === '/ext') {
+        pathname = pathname.replace('/ext', '') || '/';
+    }
+
+    return pathname;
+};
