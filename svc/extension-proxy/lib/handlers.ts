@@ -1,7 +1,7 @@
 import * as Util from './util.ts';
+import * as Omaha from './omaha/index.ts';
 import * as ExtensionProxy from './proxy.ts';
 import * as RequestHelpers from './helpers.ts';
-import * as Omaha from './omaha/index.ts';
 
 const handleProxy = async (url: string, headers?: Headers, method = 'GET') => {
     const response = await fetch(url, {

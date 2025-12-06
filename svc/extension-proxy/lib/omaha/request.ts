@@ -5,9 +5,10 @@ import {
     type ServiceId,
     UPDATE_SERVICES,
 } from './constants.ts';
-import * as Chromium from '../data/chromium-version.ts';
 import type { OmahaResponse } from './response.ts';
+
 import * as Util from '../util.ts';
+import * as Chromium from '../data/chromium-version.ts';
 
 export type App = {
     appid: string;
@@ -70,7 +71,7 @@ const craftRequest = async (apps: App[]) => {
     return { request };
 };
 
-export default async function request(
+export async function request(
     store_id: ServiceId,
     apps: App[],
     extraData: { userAgent: string },
