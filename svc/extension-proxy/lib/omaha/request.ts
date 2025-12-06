@@ -96,7 +96,7 @@ export async function request(
             'sec-fetch-mode': 'no-cors',
             'sec-fetch-site': 'none',
             'x-goog-update-appid': appIds,
-            'x-goog-update-interactivity': 'bg',
+            'x-goog-update-interactivity': serviceId === 'CHROME_COMPONENTS' ? 'fg' : 'bg',
             'x-goog-update-updater': `${updater.name}-${updater.version}`,
         },
         cache: 'no-cache',
