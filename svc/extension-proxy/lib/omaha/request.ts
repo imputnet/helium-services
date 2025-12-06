@@ -72,7 +72,7 @@ const craftRequest = async (apps: App[]) => {
 };
 
 export async function request(
-    store_id: ServiceId,
+    serviceId: ServiceId,
     apps: App[],
     extraData: { userAgent: string },
 ) {
@@ -86,7 +86,7 @@ export async function request(
     const body = await craftRequest(apps);
     const { updater } = body.request;
 
-    const response = await fetch(UPDATE_SERVICES[store_id], {
+    const response = await fetch(UPDATE_SERVICES[serviceId], {
         method: 'POST',
         headers: {
             'user-agent': extraData.userAgent,
