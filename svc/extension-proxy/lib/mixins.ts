@@ -1,41 +1,62 @@
+import { ServiceId } from './omaha/constants.ts';
 import { App } from './omaha/request.ts';
 import { OmahaResponse } from './omaha/response.ts';
 import * as Util from './util.ts';
 
-const extensionPool: App[] = [];
-const extensionPoolDedup = new Set<string>();
+type Pool = {
+    data: App[];
+    dedup: Set<string>;
+};
+
+const pools: Partial<Record<ServiceId, Pool>> = {};
+
 const MAX_EXTENSIONS_IN_POOL = 2 ** 10;
+
+setInterval(() => {
+    for (const { data } of Object.values(pools)) {
+        Util.shuffle(data);
+    }
+}, Util.ms.minutes(1));
+
+setInterval(() => {
+    if (Object.keys(pools).length > 0) {
+        console.log(`[mixins] Apps in mixin pool`);
+        for (const [name, { dedup }] of Object.entries(pools)) {
+            console.log(`\t${name}: ${dedup.size}`);
+        }
+    }
+}, Util.ms.minutes(15));
 
 const getKey = (app: App) => `${app.appid}_${app.version}`;
 
-Deno.unrefTimer(
-    setInterval(() => {
-        Util.shuffle(extensionPool);
-    }, Util.ms.minutes(1)),
-);
+const getPool = (id: ServiceId): Pool => {
+    let pool = pools[id];
 
-Deno.unrefTimer(
-    setInterval(() => {
-        console.log(`[mixins] Apps in mixin pool: ${extensionPoolDedup.size}`);
-    }, Util.ms.minutes(15)),
-);
-
-const addToPool = ({ appid, version }: App) => {
-    const key = getKey({ appid, version });
-
-    if (!extensionPoolDedup.has(key)) {
-        extensionPoolDedup.add(key);
-        extensionPool.push({ appid, version });
+    if (!pool) {
+        pool = { data: [], dedup: new Set() };
+        pools[id] = pool;
     }
 
-    if (extensionPool.length >= MAX_EXTENSIONS_IN_POOL) {
-        extensionPoolDedup.delete(
-            getKey(extensionPool.pop()!),
+    return pool;
+};
+
+const addToPool = (id: ServiceId, { appid, version }: App) => {
+    const key = getKey({ appid, version });
+    const { data: pool, dedup } = getPool(id);
+
+    if (!dedup.has(key)) {
+        dedup.add(key);
+        pool.push({ appid, version });
+    }
+
+    if (pool.length >= MAX_EXTENSIONS_IN_POOL) {
+        dedup.delete(
+            getKey(pool.pop()!),
         );
     }
 };
 
-export const addToPoolFromResponse = ({ response }: OmahaResponse) => {
+export const addToPoolFromResponse = (id: ServiceId, { response }: OmahaResponse) => {
     if (!response.app) {
         return;
     }
@@ -53,15 +74,16 @@ export const addToPoolFromResponse = ({ response }: OmahaResponse) => {
             }
         })
         .filter((a) => a !== undefined)
-        .map(addToPool);
+        .map((app) => addToPool(id, app));
 };
 
-export const addRandomExtensions = (apps: readonly App[]) => {
+export const addRandomExtensions = (id: ServiceId, apps: readonly App[]) => {
     const nAppsToMixin = Math.ceil(2 * (1 + Math.log2(apps.length)));
     const idSet = new Set(apps.map((a) => a.appid));
+    const { data: pool } = getPool(id);
 
     const mixins = Util.shuffle(
-        extensionPool.filter((app) => !idSet.has(app.appid)),
+        pool.filter((app) => !idSet.has(app.appid)),
     ).slice(0, nAppsToMixin);
 
     return [...apps, ...mixins];

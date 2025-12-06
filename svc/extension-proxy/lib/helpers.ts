@@ -74,7 +74,7 @@ export const getData = async (request: Request): Promise<RequestData> => {
 
 export const APP_ID_REGEX = /^[a-p]{32}$/;
 
-export const normalizeApps = (apps: App[]) => {
+export const checkApps = (apps: App[]) => {
     const ids = new Set();
 
     apps.forEach((obj) => {
