@@ -23452,7 +23452,7 @@
  {
   "s": "namuwiki",
   "ts": [ "namu" ],
-  "u": "https://namu.wiki/Search?q={searchTerms}"
+  "u": "https://namu.wiki/Go?q={searchTerms}"
  },
  {
   "s": "Timini",
