@@ -1,8 +1,8 @@
-import { App } from './request.ts';
-import { ServiceId } from './constants.ts';
-import { OmahaResponse } from './response.ts';
+import type { App, OmahaResponse, ServiceId } from './types.ts';
 
 import * as Util from '../util.ts';
+import * as V3 from './v3/index.ts';
+import * as V4 from './v4/index.ts';
 
 type Pool = {
     data: App[];
@@ -41,7 +41,7 @@ const getPool = (id: ServiceId): Pool => {
     return pool;
 };
 
-const addToPool = (id: ServiceId, { appid, version }: App) => {
+export const addToPool = (id: ServiceId, { appid, version }: App) => {
     const key = getKey({ appid, version });
     const { data: pool, dedup } = getPool(id);
 
@@ -58,24 +58,13 @@ const addToPool = (id: ServiceId, { appid, version }: App) => {
 };
 
 export const addToPoolFromResponse = (id: ServiceId, { response }: OmahaResponse) => {
-    if (!response.app) {
-        return;
+    if (response.protocol === '4.0') {
+        return V4.addToPoolFromResponse(id, { response });
+    } else if (response.protocol === '3.1') {
+        return V3.addToPoolFromResponse(id, { response });
     }
 
-    response.app
-        .map((app) => {
-            if (
-                app.updatecheck?.status === 'ok' &&
-                app.updatecheck.manifest.version
-            ) {
-                return {
-                    appid: app.appid,
-                    version: app.updatecheck.manifest.version,
-                };
-            }
-        })
-        .filter((a) => a !== undefined)
-        .map((app) => addToPool(id, app));
+    console.warn('[warn] unknown protocol in addToPoolFromResponse', response.protocol);
 };
 
 export const addRandomExtensions = (id: ServiceId, apps: readonly App[]) => {
@@ -91,11 +80,23 @@ export const addRandomExtensions = (id: ServiceId, apps: readonly App[]) => {
 };
 
 export const unmixResponse = (expectedApps: readonly App[], response: OmahaResponse) => {
-    if (response.response.app) {
-        const allowedIds = new Set(expectedApps.map((a) => a.appid));
-        response.response.app = response.response.app?.filter((app) => {
-            return allowedIds.has(app?.appid);
-        });
+    const allowedIds = new Set(expectedApps.map((a) => a.appid));
+    const inner = response.response;
+
+    if (inner.protocol === '4.0') {
+        if (inner.apps) {
+            inner.apps = inner.apps.filter((app) => {
+                return allowedIds.has(app?.appid);
+            });
+        }
+    } else if (inner.protocol === '3.1') {
+        if (inner.app) {
+            inner.app = inner.app.filter((app) => {
+                return allowedIds.has(app.appid);
+            });
+        }
+    } else {
+        throw `unknown protocol to unmix: ${inner.protocol}`;
     }
 
     return response;

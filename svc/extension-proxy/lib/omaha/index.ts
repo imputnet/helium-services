@@ -1,3 +1,2 @@
-export type { App } from './request.ts';
-export type { ServiceId } from './constants.ts';
+export type { App, ServiceId } from './types.ts';
 export { handleOmahaQuery } from './handlers.ts';
