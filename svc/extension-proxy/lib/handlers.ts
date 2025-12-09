@@ -1,29 +1,7 @@
 import * as Util from './util.ts';
-import * as Mixins from './mixins.ts';
 import * as Omaha from './omaha/index.ts';
 import * as ExtensionProxy from './proxy.ts';
 import * as RequestHelpers from './helpers.ts';
-import * as ResponseHandler from './response.ts';
-import * as OmahaConstants from './omaha/constants.ts';
-
-const handleOmahaQuery = async (request: Request) => {
-    const { apps, responseType } = await RequestHelpers.getData(request);
-    RequestHelpers.normalizeApps(apps);
-
-    const appsWithMixin = Util.shuffle(Mixins.addRandomExtensions(apps));
-
-    const omahaResponse = await Omaha.request(
-        'CHROME_WEBSTORE',
-        appsWithMixin,
-        { userAgent: request.headers.get('user-agent') || '' },
-    );
-
-    Mixins.addToPoolFromResponse(omahaResponse);
-    return ResponseHandler.createResponse(
-        responseType,
-        Mixins.unmixResponse(apps, omahaResponse),
-    );
-};
 
 const handleProxy = async (url: string, headers?: Headers, method = 'GET') => {
     const response = await fetch(url, {
@@ -56,6 +34,9 @@ const handlePayloadProxy = async (request: Request) => {
     );
 };
 
+const CHROME_WEBSTORE_SNIPPET =
+    'https://chromewebstore.googleapis.com/v2/items/{}:fetchItemSnippet';
+
 const handleSnippetProxy = (request: Request) => {
     if (!['GET', 'POST'].includes(request.method)) {
         throw { status: 405, text: 'method not allowed' };
@@ -74,7 +55,7 @@ const handleSnippetProxy = (request: Request) => {
     headers.set('X-HTTP-Method-Override', 'GET');
 
     return handleProxy(
-        OmahaConstants.CHROME_WEBSTORE_SNIPPET
+        CHROME_WEBSTORE_SNIPPET
             .replace('{}', extensionId),
         headers,
         'POST',
@@ -85,11 +66,12 @@ type RequestHandler = (request: Request) => Promise<Response>;
 const handlers: Record<string, RequestHandler> = {
     '/proxy': handlePayloadProxy,
     '/cws_snippet': handleSnippetProxy,
-    '/': handleOmahaQuery,
+    '/com': Omaha.handleOmahaQuery,
+    '/': Omaha.handleOmahaQuery,
 };
 
 export const handle = (request: Request) => {
-    const pathname = RequestHelpers.getCanonicalPathname(request);
+    const { pathname } = new URL(request.url);
 
     if (Object.hasOwn(handlers, pathname)) {
         return handlers[pathname](request);

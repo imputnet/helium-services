@@ -2,12 +2,14 @@ import {
     MAX_EXTENSIONS_PER_REQUEST,
     OMAHA_JSON_PREFIX,
     REQUEST_TEMPLATE,
+    REQUEST_TEMPLATE_V4,
     type ServiceId,
     UPDATE_SERVICES,
 } from './constants.ts';
-import * as Chromium from '../data/chromium-version.ts';
 import type { OmahaResponse } from './response.ts';
+
 import * as Util from '../util.ts';
+import * as Chromium from '../data/chromium-version.ts';
 
 export type App = {
     appid: string;
@@ -34,13 +36,16 @@ type AppInternal = App & {
 };
 
 export type OmahaRequest = Omit<typeof REQUEST_TEMPLATE, 'app'> & {
-    app: AppInternal[];
+    app?: AppInternal[];
+    apps?: AppInternal[];
 };
 
 const omaha_uuid = () => `{${crypto.randomUUID()}}`;
 
-const craftRequest = async (apps: App[]) => {
-    const request: OmahaRequest = structuredClone(REQUEST_TEMPLATE);
+const craftRequest = async (apps: App[], version: 3 | 4 = 3) => {
+    const request: OmahaRequest = structuredClone(
+        version === 3 ? REQUEST_TEMPLATE : REQUEST_TEMPLATE_V4,
+    );
     const browserVersion = await Chromium.getRandomVersion();
 
     request.prodversion =
@@ -70,8 +75,8 @@ const craftRequest = async (apps: App[]) => {
     return { request };
 };
 
-export default async function request(
-    store_id: ServiceId,
+export async function request(
+    serviceId: ServiceId,
     apps: App[],
     extraData: { userAgent: string },
 ) {
@@ -82,10 +87,13 @@ export default async function request(
     apps = Util.shuffle(apps);
 
     const appIds = apps.map((app) => app.appid).join(',');
-    const body = await craftRequest(apps);
+    const body = await craftRequest(
+        apps,
+        serviceId === 'CHROME_COMPONENTS' ? 4 : 3,
+    );
     const { updater } = body.request;
 
-    const response = await fetch(UPDATE_SERVICES[store_id], {
+    const response = await fetch(UPDATE_SERVICES[serviceId], {
         method: 'POST',
         headers: {
             'user-agent': extraData.userAgent,
@@ -95,7 +103,7 @@ export default async function request(
             'sec-fetch-mode': 'no-cors',
             'sec-fetch-site': 'none',
             'x-goog-update-appid': appIds,
-            'x-goog-update-interactivity': 'bg',
+            'x-goog-update-interactivity': serviceId === 'CHROME_COMPONENTS' ? 'fg' : 'bg',
             'x-goog-update-updater': `${updater.name}-${updater.version}`,
         },
         cache: 'no-cache',
