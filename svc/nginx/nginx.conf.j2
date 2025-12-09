@@ -128,6 +128,10 @@ http {
             proxy_pass http://exts/;
         }
 
+        location /com {
+            proxy_pass http://exts/com;
+        }
+
         location /ubo/ {
             proxy_pass http://ubo_proxy:8000/;
             proxy_pass_request_body off;
