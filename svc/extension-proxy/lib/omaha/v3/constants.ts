@@ -1,0 +1,42 @@
+import { deepFreeze } from '../../util.ts';
+
+export const REQUEST_TEMPLATE = deepFreeze({
+    '@os': 'win',
+    '@updater': 'chromecrx',
+    acceptformat: 'crx3,puff',
+    app: [],
+    arch: 'x86',
+    dedup: 'cr',
+    domainjoined: false,
+    hw: {
+        avx: false,
+        physmemory: 4,
+        sse: false,
+        sse2: false,
+        sse3: false,
+        sse41: false,
+        sse42: false,
+        ssse3: false,
+    },
+    ismachine: false,
+    nacl_arch: 'x86-64',
+    os: {
+        arch: 'x86_64',
+        platform: 'Windows',
+        // TODO: find a way to generate this too
+        version: '10.0.26100.3476',
+    },
+    updater: {
+        name: 'chromecrx',
+        ismachine: false,
+        autoupdatecheckenabled: true,
+        updatepolicy: 0,
+        version: '',
+    },
+    prodversion: '',
+    protocol: '3.1',
+    requestid: '',
+    sessionid: '',
+    updaterversion: '',
+    wow64: true,
+});

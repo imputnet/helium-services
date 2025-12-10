@@ -1,133 +1,8 @@
-import { respond } from '../util.ts';
-import { OMAHA_JSON_PREFIX } from './constants.ts';
+import type { OmahaResponse, ProtocolVersion, ResponseType } from './types.ts';
+import * as V3 from './v3/index.ts';
+import * as V4 from './v4/index.ts';
 
-import * as xml from '@libs/xml';
-import * as ExtensionProxy from '../proxy.ts';
-
-type OmahaResponseApp = {
-    appid: string;
-    status?: string;
-    cohort: string;
-    cohortname: string;
-    cohorthint: string;
-    ping: { status: string };
-    updatecheck?:
-        | { status: 'noupdate' }
-        | {
-            status: 'ok';
-            urls: {
-                url: ({ codebase: string } | { codebasediff: string })[];
-            };
-            manifest: {
-                version: string;
-                packages: {
-                    package: {
-                        hash_sha256: string;
-                        size: number;
-                        name: string;
-                        fp: string;
-                        required: boolean;
-                    }[];
-                };
-            };
-        };
-};
-
-type OmahaResponseInner = {
-    server: string;
-    protocol: string;
-    daystart: {
-        elapsed_seconds: number;
-        elapsed_days: number;
-    };
-    app?: OmahaResponseApp[];
-};
-
-export type OmahaResponse = { response: OmahaResponseInner };
-export type ResponseType = 'json' | 'xml' | 'redirect';
-
-type UpdateCheck = NonNullable<
-    OmahaResponse['response']['app']
->[number]['updatecheck'];
-const getBestUrl = (updatecheck: UpdateCheck) => {
-    if (updatecheck?.status !== 'ok') {
-        return;
-    }
-
-    let backupUrl;
-    for (const urlObj of updatecheck.urls.url) {
-        if (!('codebase' in urlObj)) {
-            continue;
-        }
-
-        const url = new URL(urlObj.codebase);
-        if (url.protocol === 'https:') {
-            return url;
-        }
-
-        backupUrl = url;
-    }
-
-    return backupUrl;
-};
-
-const filterResponse = async ({ response }: OmahaResponse) => {
-    return {
-        server: response.server,
-        protocol: response.protocol,
-        daystart: response.daystart,
-        app: response.app && await Promise.all(response.app.map(async (app) => {
-            const updatecheck = app.updatecheck;
-
-            if (updatecheck?.status === 'ok') {
-                const url = getBestUrl(updatecheck);
-                const fileName = updatecheck?.manifest?.packages?.package?.[0]?.name;
-                if (!url) {
-                    throw 'could not get any viable URL for download';
-                }
-
-                if (fileName) {
-                    if (!url.pathname.endsWith('/')) {
-                        url.pathname += '/';
-                    }
-
-                    url.pathname += fileName;
-                }
-
-                updatecheck.urls.url = [
-                    { codebase: await ExtensionProxy.wrap(url.toString()) },
-                ];
-            }
-
-            return {
-                appid: app.appid,
-                status: app.status,
-                cohort: '',
-                cohortname: '',
-                cohorthint: '',
-                ping: app.ping,
-                updatecheck,
-            };
-        })),
-    };
-};
-
-const handleRedirect = (data: OmahaResponse) => {
-    const updateCheck = data?.response?.app?.[0]?.updatecheck;
-
-    if (
-        updateCheck?.status === 'ok' &&
-        'codebase' in updateCheck?.urls?.url?.[0]
-    ) {
-        return respond(302, 'Found', {
-            location: updateCheck.urls.url[0].codebase,
-        });
-    }
-
-    return respond(404, 'Not Found');
-};
-
-const makeHeaders = ({ response }: OmahaResponse) => {
+export const makeHeaders = ({ response }: V3.OmahaResponse | V4.OmahaResponse) => {
     return {
         'x-daynum': String(response.daystart.elapsed_days),
         'x-daystart': String(response.daystart.elapsed_seconds),
@@ -137,82 +12,14 @@ const makeHeaders = ({ response }: OmahaResponse) => {
     };
 };
 
-const handleJSON = (response: OmahaResponse) => {
-    return respond(200, OMAHA_JSON_PREFIX + JSON.stringify(response), {
-        ...makeHeaders(response),
-        'content-type': 'application/json; charset=utf-8',
-    });
-};
-
-const handleXML = ({ response }: OmahaResponse) => {
-    return respond(
-        200,
-        xml.stringify({
-            '@version': '1.0',
-            '@encoding': 'UTF-8',
-            gupdate: {
-                '@xmlns': 'http://www.google.com/update2/response',
-                '@protocol': '2.0',
-                '@server': response.server,
-                daystart: {
-                    '@elapsed_days': response.daystart.elapsed_days,
-                    '@elapsed_seconds': response.daystart.elapsed_seconds,
-                },
-                app: response.app?.map((app) => {
-                    let updatecheck = null;
-
-                    if (app.updatecheck?.status === 'ok') {
-                        const urls = app.updatecheck.urls.url[0];
-                        const package_ = app.updatecheck.manifest.packages.package[0];
-                        if ('codebase' in urls) {
-                            updatecheck = {
-                                '@status': app.updatecheck?.status,
-                                '@fp': '',
-                                '@hash_sha256': package_.hash_sha256,
-                                '@size': package_.size,
-                                '@protected': '0',
-                                '@version': app.updatecheck.manifest.version,
-                                '@codebase': urls.codebase,
-                            };
-                        } else {
-                            throw 'differential updates are not supported here';
-                        }
-                    } else if (app.updatecheck) {
-                        updatecheck = Object.fromEntries(
-                            Object.entries(app.updatecheck)
-                                .map(([key, value]) => [`@${key}`, value]),
-                        );
-                    }
-
-                    return {
-                        '@appid': app.appid,
-                        '@status': app.status,
-                        ...(app.cohort ? { '@cohort': '', '@cohortname': '' } : {}),
-                        ...(updatecheck ? { updatecheck } : {}),
-                    };
-                }),
-            },
-        }),
-        {
-            ...makeHeaders({ response }),
-            'content-type': 'application/xml; charset=utf-8',
-        },
-    );
-};
-
-export async function createResponse(
+export function createResponse(
     responseType: ResponseType,
+    version: ProtocolVersion,
     data: OmahaResponse,
-): Promise<Response> {
-    data.response = await filterResponse(data);
-
-    if (responseType === 'redirect') {
-        return handleRedirect(data);
-    } else if (responseType === 'json') {
-        return handleJSON(data);
-    } else if (responseType === 'xml') {
-        return handleXML(data);
-    } else {
-        throw 'unreachable';
-    }
+) {
+    if (version === 3) {
+        return V3.createResponse(responseType, data as V3.OmahaResponse);
+    } else if (version === 4) {
+        return V4.createResponse(responseType, data as V4.OmahaResponse);
+    } else throw `unknown omaha version: ${version}`;
 }

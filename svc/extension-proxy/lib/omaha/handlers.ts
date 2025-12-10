@@ -6,7 +6,7 @@ import * as ResponseHandler from './response.ts';
 import * as Util from '../util.ts';
 
 export const handleOmahaQuery = async (request: Request) => {
-    const { apps, responseType } = await Helpers.getData(request);
+    const { apps, protocol, responseType } = await Helpers.getData(request);
     const serviceId = Helpers.getServiceId(request);
     const filteredApps = Helpers.checkAndFilterApps(serviceId, apps);
 
@@ -19,7 +19,7 @@ export const handleOmahaQuery = async (request: Request) => {
     );
 
     const omahaResponse = await OmahaRequest.request(
-        serviceId,
+        { serviceId, protocolVersion: protocol },
         appsWithMixin,
         { userAgent: request.headers.get('user-agent') || '' },
     );
@@ -27,6 +27,7 @@ export const handleOmahaQuery = async (request: Request) => {
     Mixins.addToPoolFromResponse(serviceId, omahaResponse);
     return ResponseHandler.createResponse(
         responseType,
+        protocol,
         Mixins.unmixResponse(filteredApps, omahaResponse),
     );
 };

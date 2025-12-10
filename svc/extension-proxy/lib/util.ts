@@ -113,3 +113,26 @@ export const filterHeaders = (old: Headers, allowlist: string[]) => {
 
     return headers;
 };
+
+type DeepReadonly<T> = {
+    readonly [P in keyof T]: DeepReadonly<T[P]>;
+};
+
+export const deepFreeze = <T extends object>(obj: T): DeepReadonly<T> => {
+    for (const value of Object.values(obj)) {
+        const freezable = typeof value === 'object' || typeof value === 'function';
+        if (value && freezable) {
+            deepFreeze(value);
+        }
+    }
+
+    return Object.freeze(obj);
+};
+
+export type DeepWritable<T> = {
+    -readonly [P in keyof T]: DeepWritable<T[P]>;
+};
+
+export const clone = <T extends object>(obj: T): DeepWritable<T> => {
+    return structuredClone(obj);
+};

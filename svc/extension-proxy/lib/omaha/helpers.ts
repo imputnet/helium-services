@@ -1,11 +1,12 @@
-import { ServiceId } from './constants.ts';
-import { ResponseType } from './response.ts';
-import type { App, OmahaRequest } from './request.ts';
+import * as V3 from './v3/index.ts';
+import * as V4 from './v4/index.ts';
+import type { App, OmahaRequest, ProtocolVersion, ResponseType, ServiceId } from './types.ts';
 
 export * from '../helpers.ts';
 
 type RequestData = {
     apps: App[];
+    protocol: ProtocolVersion;
     responseType: ResponseType;
 };
 
@@ -26,7 +27,7 @@ const getAppsFromQuery = (params: string[]): App[] => {
     });
 };
 
-const handleGet = (request: Request) => {
+const handleGet = (request: Request): RequestData => {
     const url = new URL(request.url);
     let responseType: RequestData['responseType'] = 'xml';
 
@@ -41,7 +42,45 @@ const handleGet = (request: Request) => {
         throw 'malformed request';
     }
 
-    return { responseType, apps: getAppsFromQuery(xParams) };
+    return {
+        responseType,
+        protocol: 3,
+        apps: getAppsFromQuery(xParams),
+    };
+};
+
+const getAppsForProtocol = (
+    request: OmahaRequest,
+    protocol: ProtocolVersion,
+): App[] => {
+    let appList: App[];
+
+    if (protocol === 3) {
+        appList = (request as V3.OmahaRequest).app;
+    } else if (protocol === 4) {
+        appList = (request as V4.OmahaRequest).apps;
+    } else {
+        throw 'unreachable';
+    }
+
+    if (!appList) {
+        throw 'malformed request';
+    }
+
+    return appList.map((app) => ({
+        appid: app.appid,
+        version: app.version,
+        brand: app.brand,
+        updatecheck: app.updatecheck && {
+            cause: 'cause' in app.updatecheck ? app.updatecheck.cause : undefined,
+            sameversionupdate: 'sameversionupdate' in app.updatecheck
+                ? app.updatecheck.sameversionupdate
+                : undefined,
+            rollback_allowed: app.updatecheck.rollback_allowed,
+            targetversionprefix: app.updatecheck.targetversionprefix,
+            updatedisabled: app.updatecheck.updatedisabled,
+        },
+    }));
 };
 
 const handlePost = async (request: Request): Promise<RequestData> => {
@@ -49,7 +88,6 @@ const handlePost = async (request: Request): Promise<RequestData> => {
         throw { status: 422, text: 'invalid content-type' };
     }
 
-    const serviceId = getServiceId(request);
     let body: { request: OmahaRequest };
     try {
         body = await request.json();
@@ -57,14 +95,21 @@ const handlePost = async (request: Request): Promise<RequestData> => {
         throw 'invalid body';
     }
 
+    const protocolStr = body.request.protocol;
+    let protocol: ProtocolVersion;
+    if (protocolStr?.startsWith('3.')) {
+        protocol = 3;
+    } else if (protocolStr?.startsWith('4.')) {
+        protocol = 4;
+    } else {
+        throw `unknown omaha protocol version: "${protocolStr}"`;
+    }
+
+    const apps = getAppsForProtocol(body.request, protocol);
     return {
         responseType: 'json',
-        apps:
-            (body.request.app || body.request.apps)?.filter((app) =>
-                app.brand !== 'GGRO' || serviceId === 'CHROME_COMPONENTS'
-            ).map(
-                ({ appid, version }) => ({ appid, version }),
-            ) || [],
+        protocol,
+        apps,
     };
 };
 
