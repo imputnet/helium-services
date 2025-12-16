@@ -15,6 +15,8 @@ type Asset = {
     title?: string;
     tags?: string;
 
+    off?: boolean;
+
     updateAfter?: number;
     contentURL: string | string[];
     cdnURLs?: string[];
@@ -28,6 +30,20 @@ const VERSION = '1.67.0';
 const FILE_CHECKSUM = 'd532b5eb89271234760b6ad50fb26a79cbfe8a52ca5ff2cf0f5ea9aaa9d0ed3a';
 const originalAssetURL =
     `https://raw.githubusercontent.com/gorhill/uBlock/refs/tags/${VERSION}/assets/assets.json`;
+
+const extraEnabledFilters = new Set([
+    "adguard-ads",
+
+    "adguard-spyware-url",
+
+    "adguard-cookies",
+    "fanboy-cookiemonster",
+    "ublock-cookies-easylist",
+
+    "ublock-annoyances",
+    "easylist-notifications",
+    "easylist-newsletters",
+]);
 
 const loadManifestFromGithub = async () => {
     const assetList = await fetch(originalAssetURL).then((a) => a.text());
@@ -98,6 +114,13 @@ const prepareAssetString = async () => {
         }
 
         assetURLs[key] = sourceURLs;
+
+        if (extraEnabledFilters.has(id)) {
+            // https://github.com/gorhill/uBlock/blob/daccdf50/src/js/assets.js#L620
+            if (asset.off) {
+                delete asset.off;
+            }
+        }
     }
 
     Allowlist.addEntries(manifestId, assetURLs);
