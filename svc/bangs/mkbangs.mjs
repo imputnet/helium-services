@@ -2,9 +2,9 @@
 const VERSION = '202512011623';
 const BANG_CHECKSUM = '79a27f2d7ee96d0778e464623f1d2ab9630d5ed37ad47839d81932a6af4b03c3';
 
-const prefix = `https://raw.githubusercontent.com/kagisearch/bangs/refs/tags/${VERSION}`;
+const SOURCE_URL_PREFIX = `https://raw.githubusercontent.com/kagisearch/bangs/refs/tags/${VERSION}`;
 
-const categoryMap = {
+const CATEGORY_MAP = {
     "AI Chatbots": 'ai'
 };
 
@@ -40,7 +40,8 @@ const digest = async (str) => {
 }
 
 const load = async () => {
-    const bangText = await fetch(prefix + '/data/bangs.json').then(a => a.text());
+    const bangText = await fetch(SOURCE_URL_PREFIX + '/data/bangs.json')
+                           .then(a => a.text());
     if (await digest(bangText) !== BANG_CHECKSUM) {
         throw `checksum does not match: ${await digest(bangText)}`;
     }
@@ -49,7 +50,8 @@ const load = async () => {
     const extras = await import(
         './extras.json', { with: { type: 'json' } }
     ).then(i => i.default);
-    const license = await fetch(prefix + '/LICENSE').then(a => a.text());
+    const license = await fetch(
+        SOURCE_URL_PREFIX + '/LICENSE').then(a => a.text());
 
     return { bangs, extras, license }
 }
@@ -138,7 +140,7 @@ const transform = ({ bangs, extras, ...rest }) => {
             ts,
             f: intoFlags(fmt) || undefined,
             u: transformedURL,
-            sc: categoryMap[sc]
+            sc: CATEGORY_MAP[sc]
         };
     };
 
