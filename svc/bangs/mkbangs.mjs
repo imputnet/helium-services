@@ -6,6 +6,29 @@ const prefix = `https://raw.githubusercontent.com/kagisearch/bangs/refs/tags/${V
 
 const categoryMap = {
     "AI Chatbots": 'ai'
+};
+
+// Flags can be deprecated and removed, but their
+// values must never be reused.
+const FLAGS = {
+    OPEN_BASE_PATH          : 1 << 0,
+    OPEN_SNAP_DOMAIN        : 1 << 1,
+    URL_ENCODE_PLACEHOLDER  : 1 << 2,
+    URL_ENCODE_SPACE_TO_PLUS: 1 << 3,
+};
+
+const intoFlags = (fmt) => {
+    let flags = 0;
+
+    for (const flag of fmt || []) {
+        if (!FLAGS[flag.toUpperCase()]) {
+            console.warn('[!] missing flag', flag, 'in bit map');
+        }
+
+        flags |= FLAGS[flag.toUpperCase()] || 0;
+    }
+
+    return flags;
 }
 
 const digest = async (str) => {
@@ -87,7 +110,7 @@ const validate = ({ bangs, ...rest }) => {
 
 const transform = ({ bangs, extras, ...rest }) => {
     const seen = new Set();
-    const handleBang = ({ s, t, ts, u, sc }, dupes) => {
+    const handleBang = ({ s, t, ts, fmt, u, sc }, dupes) => {
         const transformedURL = u.replace(/{{{s}}}/g, '{searchTerms}');
         if (!u.includes('{{{s}}}') || transformedURL.includes('{{{s}}}')) {
             throw `malformed url for ${t}: ${u}`
@@ -113,6 +136,7 @@ const transform = ({ bangs, extras, ...rest }) => {
         return {
             s,
             ts,
+            f: intoFlags(fmt) || undefined,
             u: transformedURL,
             sc: categoryMap[sc]
         };
