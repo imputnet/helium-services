@@ -2,10 +2,33 @@
 const VERSION = '202512011623';
 const BANG_CHECKSUM = '79a27f2d7ee96d0778e464623f1d2ab9630d5ed37ad47839d81932a6af4b03c3';
 
-const prefix = `https://raw.githubusercontent.com/kagisearch/bangs/refs/tags/${VERSION}`;
+const SOURCE_URL_PREFIX = `https://raw.githubusercontent.com/kagisearch/bangs/refs/tags/${VERSION}`;
 
-const categoryMap = {
+const CATEGORY_MAP = {
     "AI Chatbots": 'ai'
+};
+
+// Flags can be deprecated and removed, but their
+// values must never be reused.
+const FLAGS = {
+    OPEN_BASE_PATH          : 1 << 0,
+    OPEN_SNAP_DOMAIN        : 1 << 1,
+    URL_ENCODE_PLACEHOLDER  : 1 << 2,
+    URL_ENCODE_SPACE_TO_PLUS: 1 << 3,
+};
+
+const intoFlags = (fmt) => {
+    let flags = 0;
+
+    for (const flag of fmt || []) {
+        if (!FLAGS[flag.toUpperCase()]) {
+            console.warn('[!] missing flag', flag, 'in bit map');
+        }
+
+        flags |= FLAGS[flag.toUpperCase()] || 0;
+    }
+
+    return flags;
 }
 
 const digest = async (str) => {
@@ -17,7 +40,8 @@ const digest = async (str) => {
 }
 
 const load = async () => {
-    const bangText = await fetch(prefix + '/data/bangs.json').then(a => a.text());
+    const bangText = await fetch(SOURCE_URL_PREFIX + '/data/bangs.json')
+                           .then(a => a.text());
     if (await digest(bangText) !== BANG_CHECKSUM) {
         throw `checksum does not match: ${await digest(bangText)}`;
     }
@@ -26,7 +50,8 @@ const load = async () => {
     const extras = await import(
         './extras.json', { with: { type: 'json' } }
     ).then(i => i.default);
-    const license = await fetch(prefix + '/LICENSE').then(a => a.text());
+    const license = await fetch(
+        SOURCE_URL_PREFIX + '/LICENSE').then(a => a.text());
 
     return { bangs, extras, license }
 }
@@ -87,7 +112,7 @@ const validate = ({ bangs, ...rest }) => {
 
 const transform = ({ bangs, extras, ...rest }) => {
     const seen = new Set();
-    const handleBang = ({ s, t, ts, u, sc }, dupes) => {
+    const handleBang = ({ s, t, ts, fmt, u, sc }, dupes) => {
         const transformedURL = u.replace(/{{{s}}}/g, '{searchTerms}');
         if (!u.includes('{{{s}}}') || transformedURL.includes('{{{s}}}')) {
             throw `malformed url for ${t}: ${u}`
@@ -113,8 +138,9 @@ const transform = ({ bangs, extras, ...rest }) => {
         return {
             s,
             ts,
+            f: intoFlags(fmt) || undefined,
             u: transformedURL,
-            sc: categoryMap[sc]
+            sc: CATEGORY_MAP[sc]
         };
     };
 
