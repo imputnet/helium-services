@@ -2,6 +2,7 @@ import * as Util from './util.ts';
 import * as Cache from './cache.ts';
 import * as Allowlist from './allowlist.ts';
 import { env } from './env.ts';
+import HeliumOverlay from '../assets.helium.json' with { type: 'json' };
 
 import * as Path from '@std/path/posix';
 
@@ -15,6 +16,8 @@ type Asset = {
     title?: string;
     tags?: string;
 
+    off?: boolean;
+
     updateAfter?: number;
     contentURL: string | string[];
     cdnURLs?: string[];
@@ -23,6 +26,7 @@ type Asset = {
 
 type Filename = string;
 type AssetFile = Record<Filename, Asset>;
+type AssetPatch = Record<Filename, Partial<Asset>>;
 
 const VERSION = '1.67.0';
 const FILE_CHECKSUM = 'd532b5eb89271234760b6ad50fb26a79cbfe8a52ca5ff2cf0f5ea9aaa9d0ed3a';
@@ -41,11 +45,17 @@ const loadManifestFromGithub = async () => {
 
 const prepareAssetString = async () => {
     const manifest = await loadManifestFromGithub();
+    const overlay: AssetPatch = HeliumOverlay;
+
     const manifestId = 'assets.json';
     const assetURLs: Record<string, string[]> = {};
 
     for (const [id, asset] of Object.entries(manifest)) {
         const allUrls = [asset.contentURL, asset.cdnURLs || []].flat();
+
+        if (id in overlay) {
+            Object.assign(manifest[id], overlay[id]);
+        }
 
         delete asset.cdnURLs;
 
