@@ -1,0 +1,10 @@
+{
+    "adguard-ads": { "off": false },
+    "adguard-spyware-url": { "off": false },
+    "adguard-cookies": { "off": false },
+    "fanboy-cookiemonster": { "off": false },
+    "ublock-annoyances": { "off": false },
+    "ublock-cookies-easylist": { "off": false },
+    "easylist-notifications": { "off": false },
+    "easylist-newsletters": { "off": false }
+}
