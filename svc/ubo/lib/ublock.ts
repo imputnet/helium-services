@@ -1,6 +1,7 @@
 import * as Util from './util.ts';
 import * as Cache from './cache.ts';
 import * as Allowlist from './allowlist.ts';
+import * as Constants from './constants.ts';
 import { env } from './env.ts';
 
 import * as Path from '@std/path/posix';
@@ -24,15 +25,12 @@ type Asset = {
 type Filename = string;
 type AssetFile = Record<Filename, Asset>;
 
-const VERSION = '1.67.0';
-const FILE_CHECKSUM = 'd532b5eb89271234760b6ad50fb26a79cbfe8a52ca5ff2cf0f5ea9aaa9d0ed3a';
-const originalAssetURL =
-    `https://raw.githubusercontent.com/gorhill/uBlock/refs/tags/${VERSION}/assets/assets.json`;
-
 const loadManifestFromGithub = async () => {
-    const assetList = await fetch(originalAssetURL).then((a) => a.text());
+    const assetList = await fetch(
+        Constants.ASSET_URL,
+    ).then((a) => a.text());
     const checksum = await Util.digest(assetList);
-    if (checksum !== FILE_CHECKSUM) {
+    if (checksum !== Constants.FILE_CHECKSUM) {
         throw `checksum does not match: ${checksum}`;
     }
 
