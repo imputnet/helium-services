@@ -22,7 +22,7 @@ const handle = async (request: Request): Promise<Response> => {
     if (!acceptsBrotli) {
         throw {
             status: 406,
-            text: 'this service operates only with brotli-encoded'
+            text: 'this service can only respond with brotli-encoded'
                 + 'responses',
         };
     }
