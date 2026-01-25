@@ -30,6 +30,7 @@ const loadManifestFromGithub = async () => {
         .then((a) => a.text());
     const checksum = await Util.digest(assetList);
     if (checksum !== AssetsInfo.fileChecksum) {
+        console.warn('[!] assets.json checksum does not match');
         throw `checksum does not match: ${checksum}`;
     }
 
