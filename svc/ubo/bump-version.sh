@@ -47,5 +47,6 @@ do_check() {
 }
 
 do_check gorhill/uBlock VANILLA
+do_check imputnet/uBlock HELIUM
 
 echo 'git add .; git diff --staged; git commit -m "ubo-filters: update from upstream"'
