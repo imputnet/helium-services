@@ -7,7 +7,7 @@
     "fmt": {
         "indentWidth": 4,
         "singleQuote": true,
-        "lineWidth": 100,
+        "lineWidth": 80,
         "trailingCommas": "onlyMultiLine",
         "operatorPosition": "nextLine"
     },

@@ -50,7 +50,8 @@ const prepareAssetString = async () => {
         delete asset.cdnURLs;
 
         if (id === manifestId) {
-            asset.contentURL = new URL('assets.json', env.baseURL).toString();
+            asset.contentURL = new URL('assets.json', env.baseURL)
+                .toString();
             continue;
         }
 
@@ -79,7 +80,12 @@ const prepareAssetString = async () => {
             ),
         ];
 
-        const key = `${id}/${reprHash[0].toString(16)}/${reprHash[1].toString(16)}/${filename}`;
+        const key = [
+            id,
+            reprHash[0].toString(16),
+            reprHash[1].toString(16),
+            filename,
+        ].join('/');
         const proxyURL = new URL(key, env.baseURL).toString();
 
         if (locals.length) {
@@ -136,7 +142,10 @@ const prepareFilterlist = async (path: string) => {
         }
 
         const includePath = includeMatch[1];
-        const absoluteIncludePath = Path.join(Path.dirname(path), includePath);
+        const absoluteIncludePath = Path.join(
+            Path.dirname(path),
+            includePath,
+        );
 
         // This should not happen. Let's skip this include.
         if (
@@ -147,12 +156,15 @@ const prepareFilterlist = async (path: string) => {
             return;
         }
 
-        toAllowlist[absoluteIncludePath] ??= urls.map(addToAllowlist(includePath));
+        toAllowlist[absoluteIncludePath] ??= urls.map(
+            addToAllowlist(includePath),
+        );
     };
 
     const handleDiff = (line: string) => {
         const diffPath = line.split('! Diff-Path:')[1].trim();
-        const absoluteDiffPath = Path.join(Path.dirname(path), diffPath).split('#')[0];
+        const absoluteDiffPath =
+            Path.join(Path.dirname(path), diffPath).split('#')[0];
 
         // This might happen, but it's unlikely in the wild.
         if (
@@ -163,7 +175,9 @@ const prepareFilterlist = async (path: string) => {
             return;
         }
 
-        toAllowlist[absoluteDiffPath] ??= urls.map(addToAllowlist(diffPath));
+        toAllowlist[absoluteDiffPath] ??= urls.map(
+            addToAllowlist(diffPath),
+        );
     };
 
     for (const line of text.split('\n')) {
