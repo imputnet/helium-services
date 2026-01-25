@@ -1,0 +1,13 @@
+! Title: Helium - Unbreak
+! Last modified: %timestamp%
+! Expires: 5 days
+! Description: Helium-specific fixes for filterlists used by Helium.
+! Homepage: https://github.com/imputnet/helium-services
+! License: https://github.com/imputnet/helium-services/blob/main/LICENSE
+!
+! All fixes should include a GitHub comment explaining why they are in place.
+
+! https://github.com/imputnet/helium/issues/816#issuecomment-3796798642
+*$permissions=join-ad-interest-group=(),from=~localhost|~127.0.0.1|~[::1]|~0.0.0.0|~[::]|~local,badfilter
+*$permissions=run-ad-auction=(),from=~localhost|~127.0.0.1|~[::1]|~0.0.0.0|~[::]|~local,badfilter
+*$permissions=browsing-topics=(),from=~localhost|~127.0.0.1|~[::1]|~0.0.0.0|~[::]|~local,badfilter

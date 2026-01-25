@@ -1,0 +1,14 @@
+! Title: Helium - Annoyances
+! Last modified: %timestamp%
+! Expires: 5 days
+! Description: Helium-specific fixes for filterlists used by Helium.
+! Homepage: https://github.com/imputnet/helium-services
+! License: https://github.com/imputnet/helium-services/blob/main/LICENSE
+!
+! All filters should include a GitHub comment explaining why
+! they are not in upstream filterlists.
+
+! https://github.com/easylist/easylist/issues/22583
+search.brave.com##.download-cta
+search.brave.com##.mobile-promo-content-wrapper
+search.brave.com##dialog:has(.promo-content)
