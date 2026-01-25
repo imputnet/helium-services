@@ -1,7 +1,7 @@
 {
     "license": "AGPL-3.0",
     "tasks": {
-        "run": "deno serve --allow-env=UBO_PROXY_BASE_URL,USE_ORIGINAL_UBLOCK_ASSETS --allow-net --cached-only main.ts",
+        "run": "deno serve --allow-env='UBO_*' --allow-net --cached-only main.ts",
         "dev": "UBO_PROXY_BASE_URL=http://localhost:8000/ deno serve -A --watch main.ts"
     },
     "fmt": {

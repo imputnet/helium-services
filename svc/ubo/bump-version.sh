@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-CONSTANTS_FILE=lib/constants.ts
+CONSTANTS_FILE=lib/assets-info.ts
 
 RELEASE_URL0=https://raw.githubusercontent.com/
 RELEASE_URL1=/refs/tags/

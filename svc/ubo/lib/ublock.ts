@@ -1,7 +1,7 @@
 import * as Util from './util.ts';
 import * as Cache from './cache.ts';
 import * as Allowlist from './allowlist.ts';
-import * as Constants from './constants.ts';
+import * as AssetsInfo from './assets-info.ts';
 import { env } from './env.ts';
 
 import * as Path from '@std/path/posix';
@@ -26,11 +26,10 @@ type Filename = string;
 type AssetFile = Record<Filename, Asset>;
 
 const loadManifestFromGithub = async () => {
-    const assetList = await fetch(
-        Constants.ASSET_URL,
-    ).then((a) => a.text());
+    const assetList = await fetch(AssetsInfo.assetsUrl)
+        .then((a) => a.text());
     const checksum = await Util.digest(assetList);
-    if (checksum !== Constants.FILE_CHECKSUM) {
+    if (checksum !== AssetsInfo.fileChecksum) {
         throw `checksum does not match: ${checksum}`;
     }
 
