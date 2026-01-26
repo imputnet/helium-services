@@ -5,7 +5,10 @@ type sURL = string;
 const _paths: Record<Path, sURL[]> = {};
 const _parents: Record<PathOrResource, Path[]> = {};
 
-export const addEntries = (parent: string, entries: Record<string, string[]>) => {
+export const addEntries = (
+    parent: string,
+    entries: Record<string, string[]>,
+) => {
     if (parent in _parents) {
         _parents[parent].forEach((path) => {
             delete _paths[path];
@@ -16,7 +19,9 @@ export const addEntries = (parent: string, entries: Record<string, string[]>) =>
 
     for (const [path, urls] of Object.entries(entries)) {
         if (path in _paths) {
-            console.warn(`WARN: urls are already defined for ${path}, skipping`);
+            console.warn(
+                `WARN: urls are already defined for ${path}, skipping`,
+            );
             continue;
         }
 

@@ -27,7 +27,9 @@ services:
     restart: unless-stopped
     environment:
       - UBO_PROXY_BASE_URL=${UBO_PROXY_BASE_URL}
-
+      - UBO_USE_ORIGINAL_UBLOCK_ASSETS=${UBO_USE_ORIGINAL_UBLOCK_ASSETS:-0}
+      - UBO_ASSETS_JSON_URL=${UBO_ASSETS_JSON_URL:-}
+      - UBO_ASSETS_JSON_SHA256=${UBO_ASSETS_JSON_SHA256:-}
   ext_proxy:
     container_name: ext_proxy
     read_only: true

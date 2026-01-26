@@ -2,7 +2,11 @@
 import z from 'node:zlib';
 
 export function compress(s: string) {
-    const { promise, resolve, reject } = Promise.withResolvers<ArrayBuffer>();
+    const {
+        promise,
+        resolve,
+        reject,
+    } = Promise.withResolvers<ArrayBuffer>();
 
     z.brotliCompress(s, {
         params: {

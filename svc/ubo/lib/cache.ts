@@ -58,7 +58,11 @@ function has(key: string) {
         );
 }
 
-async function _materialize(key: string, options: Options, source: Producent | null) {
+async function _materialize(
+    key: string,
+    options: Options,
+    source: Producent | null,
+) {
     if (has(key)) {
         if (source !== null) {
             Stats.hit();
@@ -98,7 +102,11 @@ async function _materialize(key: string, options: Options, source: Producent | n
     return _materialize(key, options, null);
 }
 
-export function materialize(key: string, options: Options, source: Producent) {
+export function materialize(
+    key: string,
+    options: Options,
+    source: Producent,
+) {
     return _materialize(key, options, source);
 }
 

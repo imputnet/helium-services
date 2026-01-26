@@ -20,7 +20,11 @@ const handle = async (request: Request): Promise<Response> => {
         ?.split(', ', 8).some((enc) => enc === '*' || enc === 'br');
 
     if (!acceptsBrotli) {
-        throw { status: 406, text: 'this service operates only with brotli-encoded responses' };
+        throw {
+            status: 406,
+            text: 'this service can only respond with brotli-encoded'
+                + 'responses',
+        };
     }
 
     const [data, etag] = await handleData(request);

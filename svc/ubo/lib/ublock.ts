@@ -1,6 +1,7 @@
 import * as Util from './util.ts';
 import * as Cache from './cache.ts';
 import * as Allowlist from './allowlist.ts';
+import * as AssetsInfo from './assets-info.ts';
 import { env } from './env.ts';
 
 import * as Path from '@std/path/posix';
@@ -24,15 +25,12 @@ type Asset = {
 type Filename = string;
 type AssetFile = Record<Filename, Asset>;
 
-const VERSION = '1.67.0';
-const FILE_CHECKSUM = 'd532b5eb89271234760b6ad50fb26a79cbfe8a52ca5ff2cf0f5ea9aaa9d0ed3a';
-const originalAssetURL =
-    `https://raw.githubusercontent.com/gorhill/uBlock/refs/tags/${VERSION}/assets/assets.json`;
-
 const loadManifestFromGithub = async () => {
-    const assetList = await fetch(originalAssetURL).then((a) => a.text());
+    const assetList = await fetch(AssetsInfo.assetsUrl)
+        .then((a) => a.text());
     const checksum = await Util.digest(assetList);
-    if (checksum !== FILE_CHECKSUM) {
+    if (checksum !== AssetsInfo.fileChecksum) {
+        console.warn('[!] assets.json checksum does not match');
         throw `checksum does not match: ${checksum}`;
     }
 
@@ -50,7 +48,8 @@ const prepareAssetString = async () => {
         delete asset.cdnURLs;
 
         if (id === manifestId) {
-            asset.contentURL = new URL('assets.json', env.baseURL).toString();
+            asset.contentURL = new URL('assets.json', env.baseURL)
+                .toString();
             continue;
         }
 
@@ -79,7 +78,12 @@ const prepareAssetString = async () => {
             ),
         ];
 
-        const key = `${id}/${reprHash[0].toString(16)}/${reprHash[1].toString(16)}/${filename}`;
+        const key = [
+            id,
+            reprHash[0].toString(16),
+            reprHash[1].toString(16),
+            filename,
+        ].join('/');
         const proxyURL = new URL(key, env.baseURL).toString();
 
         if (locals.length) {
@@ -136,7 +140,10 @@ const prepareFilterlist = async (path: string) => {
         }
 
         const includePath = includeMatch[1];
-        const absoluteIncludePath = Path.join(Path.dirname(path), includePath);
+        const absoluteIncludePath = Path.join(
+            Path.dirname(path),
+            includePath,
+        );
 
         // This should not happen. Let's skip this include.
         if (
@@ -147,12 +154,15 @@ const prepareFilterlist = async (path: string) => {
             return;
         }
 
-        toAllowlist[absoluteIncludePath] ??= urls.map(addToAllowlist(includePath));
+        toAllowlist[absoluteIncludePath] ??= urls.map(
+            addToAllowlist(includePath),
+        );
     };
 
     const handleDiff = (line: string) => {
         const diffPath = line.split('! Diff-Path:')[1].trim();
-        const absoluteDiffPath = Path.join(Path.dirname(path), diffPath).split('#')[0];
+        const absoluteDiffPath =
+            Path.join(Path.dirname(path), diffPath).split('#')[0];
 
         // This might happen, but it's unlikely in the wild.
         if (
@@ -163,7 +173,9 @@ const prepareFilterlist = async (path: string) => {
             return;
         }
 
-        toAllowlist[absoluteDiffPath] ??= urls.map(addToAllowlist(diffPath));
+        toAllowlist[absoluteDiffPath] ??= urls.map(
+            addToAllowlist(diffPath),
+        );
     };
 
     for (const line of text.split('\n')) {
