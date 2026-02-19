@@ -11,6 +11,6 @@ export const decodeBase64 = (input: Parameters<typeof _decode>[0]) => {
 export const encodeBase64 = (input: Parameters<typeof _encode>[0]) => {
     return _encode(input)
         .replaceAll('+', '-')
-        .replaceAll('_', '/')
+        .replaceAll('/', '_')
         .replaceAll('=', '');
 };
