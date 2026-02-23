@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const VERSION = '202601261507';
-const BANG_CHECKSUM = 'fda42c9edc177207d651f24745ea5a6f04e17aa44c4147aebb76c11e9ddd3044';
+const VERSION = '202602231517';
+const BANG_CHECKSUM = '74c237875a515e642797bffc394dd0e09323e8e72f8818bbab5de7f4e2a1be9f';
 
 const SOURCE_URL_PREFIX = `https://raw.githubusercontent.com/kagisearch/bangs/refs/tags/${VERSION}`;
 
