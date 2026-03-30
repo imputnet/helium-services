@@ -115,7 +115,8 @@ const transform = ({ bangs, extras, ...rest }) => {
     const handleBang = ({ s, t, ts, fmt, u, sc }, dupes) => {
         const transformedURL = u.replace(/{{{s}}}/g, '{searchTerms}');
         if (!u.includes('{{{s}}}') || transformedURL.includes('{{{s}}}')) {
-            throw `malformed url for ${t}: ${u}`
+            console.warn(`[!] malformed url for ${t}: ${u}`);
+            return;
         }
 
         ts ??= [];
@@ -165,15 +166,9 @@ const transform = ({ bangs, extras, ...rest }) => {
         } catch {}
 
         return true;
-    }).map(bang => {
-        const { t, ts } = bang;
-        const triggers = [...(ts || []), t].map(t => t.toLowerCase());
-
-        return handleBang(
-            bang,
-            extraTriggers
-        );
-    }).filter(bang => bang.ts.length > 0);
+    })
+    .map(bang => handleBang(bang, extraTriggers))
+    .filter(bang => bang?.ts?.length > 0);
 
     return { bangs: [ ...strippedBangs, ...extraBangs ], ...rest };
 }
