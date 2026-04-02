@@ -1,10 +1,10 @@
 {
     "license": "AGPL-3.0",
     "tasks": {
-        "dev": "deno run -A --watch src/main.ts",
-        "start": "deno run -A src/main.ts",
+        "dev": "deno run -A --watch main.ts",
+        "start": "deno run -A main.ts",
         "test": "deno test -A",
-        "gen": "deno run src/generate-secrets.ts"
+        "gen": "deno run generate-secrets.ts"
     },
     "imports": {
         "@hono-rate-limiter/hono-rate-limiter": "jsr:@hono-rate-limiter/hono-rate-limiter@^0.4.2",
