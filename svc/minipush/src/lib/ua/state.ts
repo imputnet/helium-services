@@ -31,6 +31,20 @@ const getUaid = (state: ConnectionState) => {
     return uaid;
 };
 
+export const stats = {
+    get connectedClients() {
+        return connectedClients.size;
+    },
+    get openChannels() {
+        return channels.size;
+    },
+    get queuedMessages() {
+        return notifications.size;
+    },
+    dispatchedMessages: 0,
+    expiredMessages: 0,
+};
+
 export const onClientConnected = (state: ConnectionState) => {
     const uaid = getUaid(state);
     state.channels = new Set();
@@ -132,6 +146,7 @@ export const onNackNotification = (version: string) => {
         return;
     }
 
+    delete message.delete;
     maybeSendImmediately(message);
 };
 
@@ -145,6 +160,7 @@ const sendMessage = (
 
     state?.ws.send(JSON.stringify(notification.data));
     notification.delete = true;
+    stats.dispatchedMessages++;
     return true;
 };
 
@@ -160,6 +176,7 @@ const onTick = () => {
                 continue;
             } else if (expired(noti)) {
                 noti.delete = true;
+                stats.expiredMessages++;
             } else if (state) {
                 sendMessage(state, noti);
             }
