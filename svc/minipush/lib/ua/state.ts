@@ -167,6 +167,7 @@ const sendMessage = (
 const onTick = () => {
     for (const [chid, { uaid, bucket }] of channels) {
         const state = uaid && connectedClients.get(uaid)?.deref();
+        const expectingMessage = state && state.channels?.has(chid);
 
         for (const id of bucket) {
             const noti = notifications.get(id);
@@ -177,7 +178,7 @@ const onTick = () => {
             } else if (expired(noti)) {
                 noti.delete = true;
                 stats.expiredMessages++;
-            } else if (state) {
+            } else if (expectingMessage) {
                 sendMessage(state, noti);
             }
 
@@ -187,7 +188,7 @@ const onTick = () => {
             }
         }
 
-        if (bucket.size === 0 && !state) {
+        if (bucket.size === 0 && !expectingMessage) {
             channels.delete(chid);
         }
     }
