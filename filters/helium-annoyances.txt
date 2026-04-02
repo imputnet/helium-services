@@ -9,6 +9,4 @@
 ! they are not in upstream filterlists.
 
 ! https://github.com/easylist/easylist/issues/22583
-search.brave.com##.download-cta
-search.brave.com##.mobile-promo-content-wrapper
 search.brave.com##dialog:has(.promo-content)
