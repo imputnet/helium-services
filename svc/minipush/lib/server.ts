@@ -24,6 +24,10 @@ export const startServer = async (params: ServerParameters) => {
         return UA.handleWebsocketSetup(c.req.raw);
     });
 
+    app.get('/healthcheck', () => {
+        return new Response(null, { status: 204 });
+    });
+
     const WPUSH = new URLPattern({ pathname: '/wpush/:version/:token' });
     app.post(WPUSH.pathname, (c) => {
         const match = WPUSH.exec(c.req.url)!;
