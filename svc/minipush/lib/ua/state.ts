@@ -101,7 +101,7 @@ const maybeSendImmediately = (message: NotificationInternal) => {
 
     const client = connectedClients.get(uaid);
     const ref = client?.deref();
-    if (ref) {
+    if (ref && ref.channels?.has(chid)) {
         return sendMessage(ref, message);
     }
 
