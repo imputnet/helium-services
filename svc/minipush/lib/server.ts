@@ -46,7 +46,6 @@ export const startServer = async (params: ServerParameters) => {
         signal: params.signal,
     }, app.fetch);
 
-    console.log(env);
-
+    env.log();
     await server.finished;
 };

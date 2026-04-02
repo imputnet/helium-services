@@ -62,4 +62,17 @@ export const env = Object.freeze({
 
     // TODO: this is not actually implemented.
     requireVapid: getBoolean('MINIPUSH_REQUIRE_VAPID', false),
+
+    log: function () {
+        console.log(
+            Object.fromEntries(
+                Object.entries(this)
+                    .map(([k, v]) => [
+                        k,
+                        k.toLowerCase().includes('secret') ? '***' : v,
+                    ])
+                    .filter(([, v]) => typeof v !== 'function'),
+            ),
+        );
+    },
 });
