@@ -33,7 +33,7 @@ const getNumberClamped = (
     name: string,
     min: number,
     fallback: number,
-    max: number
+    max: number,
 ) => Util.clamp(getNumber(name, fallback), min, max);
 
 const getBoolean = (name: string, byDefault = false) => {
@@ -50,12 +50,17 @@ export const env = Object.freeze({
     baseUrl: get('MINIPUSH_BASE_URL', `http://${getHostname()}:${getPort()}/`),
     hmacSecret: get('MINIPUSH_HMAC_SECRET'),
     endpointSecret: get('MINIPUSH_ENDPOINT_SECRET'),
-    maxTtlSeconds: getNumberClamped('MINIPUSH_MAX_TTL_SECONDS', 0, 30, 86400),
+    maxTtlSeconds: getNumberClamped(
+        'MINIPUSH_MAX_TTL_SECONDS',
+        0,
+        30,
+        Infinity,
+    ),
     maxQueuedPerChannel: getNumberClamped(
         'MINIPUSH_MAX_QUEUED_PER_CHANNEL',
         0,
         64,
-        64,
+        Infinity,
     ),
     rateLimitWindowMs: getNumber('MINIPUSH_RATE_LIMIT_WINDOW', 60 * 1000),
     rateLimit: getNumber('MINIPUSH_RATE_LIMIT', 1000),
