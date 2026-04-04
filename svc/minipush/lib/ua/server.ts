@@ -6,6 +6,8 @@ import type { ConnectionState } from './state.ts';
 import { ServerMessage } from './server-schema.ts';
 import { type ClientMessage, clientMessage } from './client-schema.ts';
 
+import { assert } from '@std/assert';
+
 const waitForHelloTimeout = (state: ConnectionState) => {
     state.helloTimeoutId = setTimeout(() => {
         state.ws.close(
@@ -47,13 +49,22 @@ const handleWebsocketConnection = (state: ConnectionState) => {
     const { ws } = state;
 
     ws.addEventListener('message', async (event) => {
-        const { success, data } = await clientMessage.safeParseAsync(
-            JSON.parse(event.data),
-        );
+        let success = false, data;
+        try {
+            const obj = JSON.parse(event.data);
+            const parsed = await clientMessage.safeParseAsync(obj);
+            success = parsed.success;
+            data = parsed.data;
+        } catch {
+            // fail via !success
+        }
+
         if (!success) {
             ws.close(CloseStatus.PROTOCOL_ERROR, 'invalid data');
             return;
         }
+
+        assert(data);
 
         if (data.messageType === 'hello' && state.helloTimeoutId) {
             clearTimeout(state.helloTimeoutId);
