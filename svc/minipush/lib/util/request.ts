@@ -48,6 +48,9 @@ export const readBoundedBodyWithTimeout = async (
             readBoundedBody(request, maxBytes),
             expiry,
         ]);
+    } catch {
+        request.body?.cancel();
+        return null;
     } finally {
         clearTimeout(timeoutId);
     }
