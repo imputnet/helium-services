@@ -83,8 +83,13 @@ export const onChannelRegistered = (state: ConnectionState, chid: string) => {
 };
 
 export const onChannelUnregistered = (state: ConnectionState, chid: string) => {
+    const uaid = getUaid(state);
     const record = channels.get(chid);
     if (!record) {
+        return;
+    }
+
+    if (record.uaid && record.uaid !== uaid) {
         return;
     }
 
