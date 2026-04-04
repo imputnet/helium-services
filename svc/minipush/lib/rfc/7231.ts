@@ -8,4 +8,5 @@ export const HTTPStatus = {
     METHOD_NOT_ALLOWED: 405,
     PAYLOAD_TOO_LARGE: 413,
     UPGRADE_REQUIRED: 426,
+    TOO_MANY_REQUESTS: 429,
 };

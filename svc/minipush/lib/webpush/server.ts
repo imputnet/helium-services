@@ -122,7 +122,7 @@ export const handleWebPushRequest = async (
 
     if (!g_state.onNewNotification(notification)) {
         return new Response(null, {
-            status: 429,
+            status: HTTP.status.TOO_MANY_REQUESTS,
             headers: {
                 'Retry-After': '120',
             },
@@ -130,7 +130,7 @@ export const handleWebPushRequest = async (
     }
 
     return new Response(null, {
-        status: 201,
+        status: HTTP.status.CREATED,
         headers: {
             Ttl: String(ttl),
             Location: getMessageLocation(id),
@@ -151,5 +151,5 @@ export const handleWebPushDeletion = (
     assert(id, 'id missing from url');
     g_state.onDeleteNotification(id);
 
-    return new Response(null, { status: 204 });
+    return new Response(null, { status: HTTP.status.NO_CONTENT });
 };
