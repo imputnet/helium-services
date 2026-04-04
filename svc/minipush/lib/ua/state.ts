@@ -16,7 +16,7 @@ type CHID = string;
 type MessageVersion = string;
 
 type ChannelRecord = {
-    uaid?: UAID;
+    uaid: UAID;
     bucket: Set<MessageVersion>;
 };
 
@@ -89,7 +89,7 @@ export const onChannelUnregistered = (state: ConnectionState, chid: string) => {
         return;
     }
 
-    if (record.uaid && record.uaid !== uaid) {
+    if (record.uaid !== uaid) {
         return;
     }
 
