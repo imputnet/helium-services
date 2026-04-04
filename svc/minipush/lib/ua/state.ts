@@ -57,6 +57,10 @@ export const onClientDisconnected = (state: ConnectionState) => {
         return;
     }
 
+    if (connectedClients.get(uaid)?.deref() !== state) {
+        return;
+    }
+
     connectedClients.delete(uaid);
 };
 
