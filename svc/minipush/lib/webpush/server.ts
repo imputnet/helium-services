@@ -54,7 +54,14 @@ export const handleWebPushRequest = async (
     const { version, token } = params.pathname.groups;
     assert(version && token, 'version or token missing from url');
 
-    const { uaid, chid } = await unwrap(version, token);
+    let unwrapped;
+    try {
+        unwrapped = await unwrap(version, token);
+    } catch {
+        return new Response(null, { status: HTTP.status.BAD_REQUEST });
+    }
+
+    const { uaid, chid } = unwrapped;
     assert(uaid && chid, 'could not unwrap uaid/chid');
 
     const maxPayloadBytes = 4096;
