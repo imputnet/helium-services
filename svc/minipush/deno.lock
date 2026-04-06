@@ -1,0 +1,47 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@hono-rate-limiter/hono-rate-limiter@~0.4.2": "0.4.2",
+    "jsr:@hono/hono@^4.12.9": "4.12.9",
+    "jsr:@hono/hono@^4.6.12": "4.12.9",
+    "jsr:@std/assert@1": "1.0.18",
+    "jsr:@std/encoding@^1.0.10": "1.0.10",
+    "jsr:@std/internal@^1.0.12": "1.0.12",
+    "jsr:@zod/zod@^4.3.6": "4.3.6"
+  },
+  "jsr": {
+    "@hono-rate-limiter/hono-rate-limiter@0.4.2": {
+      "integrity": "028c2ded3d21be30fb787044ddac3e656b24a9d3a06e42241a5a693409210217",
+      "dependencies": [
+        "jsr:@hono/hono@^4.6.12"
+      ]
+    },
+    "@hono/hono@4.12.9": {
+      "integrity": "53c2b0a721c1d782e6a347ad5bf15a3235ff624b98859c21f779b7ee2f5e040e"
+    },
+    "@std/assert@1.0.18": {
+      "integrity": "270245e9c2c13b446286de475131dc688ca9abcd94fc5db41d43a219b34d1c78",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/encoding@1.0.10": {
+      "integrity": "8783c6384a2d13abd5e9e87a7ae0520a30e9f56aeeaa3bdf910a3eaaf5c811a1"
+    },
+    "@std/internal@1.0.12": {
+      "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
+    },
+    "@zod/zod@4.3.6": {
+      "integrity": "7144e5e11f8ffc3cf6e2fca624f6597a8762898aac9868cc8938e9398b96ffe4"
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@hono-rate-limiter/hono-rate-limiter@~0.4.2",
+      "jsr:@hono/hono@^4.12.9",
+      "jsr:@std/assert@1",
+      "jsr:@std/encoding@^1.0.10",
+      "jsr:@zod/zod@^4.3.6"
+    ]
+  }
+}
