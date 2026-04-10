@@ -48,6 +48,10 @@ http {
         listen [::]:80 ipv6only=off default_server;
         server_name _;
 
+        location = /connectivitycheck {
+            return 204;
+        }
+
         location /.well-known/acme-challenge/ {
             root /var/tmp/acme.sh/;
         }
@@ -109,6 +113,10 @@ http {
             add_header Cache-Control "public, max-age=86400, stale-if-error=604800";
             add_header Access-Control-Allow-Origin *;
             root /dev/shm/bangs;
+        }
+
+        location = /connectivitycheck {
+            return 204;
         }
 
         location /updates/mac {
