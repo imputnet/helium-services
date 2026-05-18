@@ -1,4 +1,4 @@
-FROM alpine:3.21.3@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c AS prep
+FROM alpine:3.22.4@sha256:310c62b5e7ca5b08167e4384c68db0fd2905dd9c7493756d356e893909057601 AS prep
 ARG SERVICES_HOSTNAME
 
 RUN apk add --no-cache jinja2-cli
@@ -9,7 +9,7 @@ COPY ./nginx/template.sh /
 RUN test -n "$SERVICES_HOSTNAME"
 RUN /template.sh
 
-FROM nginx:1.26.3-alpine3.20-slim@sha256:b72dec66dea425356956e863bfbccca6c1f8748f5913e094d4ca20b71e4ba2c3
+FROM nginx:1.30.1-alpine3.23-slim@sha256:a5688ea5d06cccc298505dddac20e8e28bfe7de67b015a374006593bc23700b1
 ARG SERVICES_HOSTNAME
 ENV SERVICES_HOSTNAME "$SERVICES_HOSTNAME"
 
