@@ -1,12 +1,12 @@
 import { env } from './env.ts';
 
-const VERSION_HELIUM = '1.69.0';
-const VERSION_VANILLA = '1.69.0';
+const VERSION_HELIUM = '1.71.0';
+const VERSION_VANILLA = '1.71.0';
 
 const CSUM_HELIUM =
-    'e1b8fe8fca5f81d1bfb9e149b82dfb077624329f4e4a75603dd7d23534ea142d';
+    '38252894162bf0cc9ed682669760922c17af67d9a1bd27b082997d732895afd0';
 const CSUM_VANILLA =
-    'bb082033a0f52ac7b22217ecbfe3e53f5b080732ec959f81d2e6cbe8df5a53a5';
+    '5107ce702293e110ce6cc6467a51e689e919eed4382650c354c1d66db2aacc3d';
 
 const VERSION = env.useHeliumAssets ? VERSION_HELIUM : VERSION_VANILLA;
 const REPO = env.useHeliumAssets ? 'imputnet/uBlock' : 'gorhill/uBlock';
