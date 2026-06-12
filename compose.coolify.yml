@@ -1,0 +1,43 @@
+services:
+  ubo_proxy:
+    container_name: ubo_proxy
+    build: ./svc/ubo
+    read_only: true
+    init: true
+    restart: unless-stopped
+    environment:
+      - UBO_PROXY_BASE_URL=${UBO_PROXY_BASE_URL}
+      - UBO_USE_ORIGINAL_UBLOCK_ASSETS=${UBO_USE_ORIGINAL_UBLOCK_ASSETS:-0}
+      - UBO_ASSETS_JSON_URL=${UBO_ASSETS_JSON_URL:-}
+      - UBO_ASSETS_JSON_SHA256=${UBO_ASSETS_JSON_SHA256:-}
+    expose:
+      - "8000"
+
+  ext_proxy:
+    container_name: ext_proxy
+    build: ./svc/extension-proxy
+    read_only: true
+    init: true
+    restart: unless-stopped
+    environment:
+      - HMAC_SECRET=${HMAC_SECRET}
+      - PROXY_BASE_URL=${PROXY_BASE_URL}
+    expose:
+      - "8000"
+
+  bangs:
+    container_name: bangs
+    image: joseluisq/static-web-server:2-alpine
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/bangs.json"]
+      interval: 30s
+      timeout: 5s
+      start_period: 3s
+    environment:
+      - SERVER_CORS_ALLOW_ORIGIN=*
+    volumes:
+      - ./svc/bangs/bangs.json:/public/bangs.json:ro
+    expose:
+      - "80"
