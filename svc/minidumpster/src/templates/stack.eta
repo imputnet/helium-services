@@ -1,0 +1,36 @@
+<% if (!it.hasTraces) { %>
+<p class="muted">No stacktraces in symbolicated output.</p>
+<% } else { %>
+
+<p class="muted">
+  <%= it.crashReason %><% if (it.sysInfo) { %> · <%= it.sysInfo %><% } %>
+</p>
+
+<% it.threads.forEach((t) => { %>
+<h3>Thread <%= t.id %><% if (t.name) { %> — <%= t.name %><% } %><% if (t.crashed) { %> (crashed)<% } %></h3>
+<div class="overflow">
+<table class="frames">
+  <thead>
+    <tr><th>#</th><th>Function</th><th>File</th><th>Module</th></tr>
+  </thead>
+  <tbody>
+    <% t.frames.forEach((frame, i) => { %>
+    <tr>
+      <td class="idx mono"><%= i %></td>
+      <td class="mono">
+        <% if (frame.fn) { %>
+        <%~ include('cpp-name', { name: frame.fn, collapseCppName: it.collapseCppName }) %>
+        <% } else { %>
+        <span class="muted"><%= frame.addr %></span>
+        <% } %>
+      </td>
+      <td class="mono muted"><%= frame.loc %></td>
+      <td class="muted"><%= frame.mod %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+</div>
+<% }) %>
+
+<% } %>

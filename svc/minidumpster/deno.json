@@ -1,0 +1,30 @@
+{
+    "tasks": {
+        "dev": "deno run --watch --allow-net --allow-read --allow-write --allow-env --allow-run src/main.ts",
+        "start": "deno run --allow-net --allow-read --allow-write --allow-env --allow-run=symsorter src/main.ts",
+        "test": "deno test --allow-net --allow-read --allow-write --allow-env --allow-run"
+    },
+    "imports": {
+        "@std/assert": "jsr:@std/assert@1",
+        "@std/path": "jsr:@std/path@1",
+        "@zip-js/zip-js": "jsr:@zip-js/zip-js@^2.8.26",
+        "fzstd": "npm:fzstd@0.1.1",
+        "hono": "jsr:@hono/hono@^4.12",
+        "hono-rate-limiter": "jsr:@hono-rate-limiter/hono-rate-limiter@^0.4.2",
+        "tar": "npm:tar@7.5.19",
+        "@hono/oauth-providers": "npm:@hono/oauth-providers@^0.8.5",
+        "busboy": "npm:busboy@^1.6.0",
+        "eta": "jsr:@eta-dev/eta@^3",
+        "@types/busboy": "npm:@types/busboy@^1.5.4"
+    },
+    "fmt": {
+        "indentWidth": 4,
+        "singleQuote": true,
+        "lineWidth": 80,
+        "trailingCommas": "onlyMultiLine",
+        "operatorPosition": "nextLine"
+    },
+    "compilerOptions": {
+        "strict": true
+    }
+}

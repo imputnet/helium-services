@@ -1,0 +1,26 @@
+<div class="overflow">
+<table>
+  <thead>
+    <tr><th>Report</th><th>Product</th><th>Platform</th><th>Status</th><th>Received</th></tr>
+  </thead>
+  <tbody>
+    <% if (it.reports.length === 0) { %>
+    <tr><td colspan="5" class="muted">No reports.</td></tr>
+    <% } %>
+    <% it.reports.forEach((r) => { %>
+    <tr>
+      <td><a href="/reports/<%= r.id %>" class="mono"><%= r.id.slice(0, 8) %></a></td>
+      <td><%= r.product ?? '' %> <%= r.version ?? '' %></td>
+      <td><%= r.platform ?? '' %></td>
+      <td class="status-<%= r.status %>">
+        <%= r.status %>
+        <% if (r.status === 'processed' && !r.symbolicated) { %>
+        <span class="pill pill-warn">missing symbols</span>
+        <% } %>
+      </td>
+      <td class="muted"><%= it.fmtTime(r.received_at) %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+</div>

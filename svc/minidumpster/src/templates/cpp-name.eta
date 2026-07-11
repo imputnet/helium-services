@@ -1,0 +1,10 @@
+<% const short = it.collapseCppName(it.name) %>
+<% if (short === it.name) { %>
+<%= it.name %>
+<% } else { %>
+<span
+  class="expandable"
+  data-full="<%= it.name %>"
+  title="<%= it.name %>"
+><%= short %></span>
+<% } %>

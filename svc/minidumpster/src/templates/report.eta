@@ -1,0 +1,60 @@
+<% layout('layout') %>
+
+<div class="crumbs">
+  <a href="/">← all groups</a>
+  <% if (it.group) { %>
+  / <a href="/groups/<%= it.group.id %>" class="mono"><%~ include('cpp-name', { name: it.group.title, collapseCppName: it.collapseCppName }) %></a>
+  <% } %>
+</div>
+
+<h2>Report <span class="mono"><%= it.report.id %></span></h2>
+<p>
+  <strong><%= it.report.product ?? 'unknown product' %> <%= it.report.version ?? '' %></strong>
+  <% if (it.report.platform) { %> · <%= it.report.platform %><% } %>
+</p>
+
+<p>
+  <span class="pill"><%= it.report.kind === 'apple' ? 'macOS crash report' : 'minidump' %></span>
+  <% if (it.report.status === 'processed' && !it.report.symbolicated) { %>
+  <span class="pill pill-warn" title="Symbols for this build were not available when the report was processed. Uploading them requeues it automatically.">missing symbols</span>
+  <% } %>
+  Status: <span class="status-<%= it.report.status %>"><%= it.report.status %></span>
+  <% if (it.report.error) { %> — <code><%= it.report.error %></code><% } %>
+  · received <%= it.fmtTime(it.report.received_at) %>
+  <% if (it.report.processed_at) { %> · processed <%= it.fmtTime(it.report.processed_at) %><% } %>
+</p>
+
+<p>
+  <% if (it.report.dump_deleted) { %>
+  <span class="muted">raw payload deleted by retention</span>
+  <% } else { %>
+  <a href="/reports/<%= it.report.id %>/dump">Download raw <%= it.report.kind === 'apple' ? 'crash report' : '.dmp' %></a>
+  <% } %>
+  <% if (it.report.status === 'processed') { %>
+  · <a href="/reports/<%= it.report.id %>/json">Download processed JSON</a>
+  <% } %>
+</p>
+
+<h2>Annotations</h2>
+<div class="overflow">
+<table>
+  <thead>
+    <tr><th>Key</th><th>Value</th></tr>
+  </thead>
+  <tbody>
+    <% if (it.annotations.length === 0) { %>
+    <tr><td colspan="2" class="muted">none</td></tr>
+    <% } %>
+    <% it.annotations.forEach(([key, value]) => { %>
+    <tr><td class="mono"><%= key %></td><td class="mono"><%= value %></td></tr>
+    <% }) %>
+  </tbody>
+</table>
+</div>
+
+<% if (it.stack) { %>
+<h2>Threads</h2>
+<%~ it.stack %>
+<% } else { %>
+<p class="muted">Not symbolicated yet.</p>
+<% } %>

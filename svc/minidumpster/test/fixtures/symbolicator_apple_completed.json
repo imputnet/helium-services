@@ -1,0 +1,65 @@
+{
+    "status": "completed",
+    "timestamp": 1783455246,
+    "system_info": {
+        "os_name": "macOS 26.5.1 (25F80)",
+        "os_version": "",
+        "cpu_arch": "arm64",
+        "device_model": "Mac16,10"
+    },
+    "crashed": true,
+    "crash_reason": "EXC_BREAKPOINT (SIGTRAP)",
+    "crash_details": "0x0000000000000001, 0x000000011a316988",
+    "stacktraces": [
+        {
+            "thread_id": 0,
+            "thread_name": "CrBrowserMain",
+            "is_requesting": true,
+            "frames": [
+                {
+                    "status": "symbolicated",
+                    "instruction_addr": "0x11a316988",
+                    "package": "Helium Framework",
+                    "function": "logging::LogMessage::~LogMessage()",
+                    "filename": "base/logging.cc",
+                    "lineno": 921
+                },
+                {
+                    "status": "symbolicated",
+                    "instruction_addr": "0x117870094",
+                    "package": "Helium Framework",
+                    "function": "content::RenderWidgetHostImpl::OnKeyboardEvent()",
+                    "filename": "content/browser/renderer_host/render_widget_host_impl.cc",
+                    "lineno": 1337
+                },
+                {
+                    "status": "symbolicated",
+                    "instruction_addr": "0x1024a485c",
+                    "package": "Helium",
+                    "function": "main",
+                    "filename": "chrome/app/chrome_exe_main_mac.cc",
+                    "lineno": 52
+                }
+            ]
+        },
+        {
+            "thread_id": 1,
+            "thread_name": "StackSamplingProfiler",
+            "is_requesting": false,
+            "frames": [
+                {
+                    "status": "missing",
+                    "instruction_addr": "0x18d34dc34",
+                    "package": "libsystem_kernel.dylib"
+                }
+            ]
+        }
+    ],
+    "modules": [
+        {
+            "debug_status": "found",
+            "debug_id": "4c4c44fc-5555-3144-a1ef-327a92b9b0e8",
+            "code_file": "/Users/USER/*/Helium.app/Contents/Frameworks/Helium Framework.framework/Versions/150.0.7871.46/Helium Framework"
+        }
+    ]
+}

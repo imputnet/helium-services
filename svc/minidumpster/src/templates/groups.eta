@@ -1,0 +1,67 @@
+<% layout('layout') %>
+
+<div class="statwrap">
+  <div class="muted">
+    Reports per day, last <%= it.chart.days %> days (<%= it.chart.total %> total)
+  </div>
+  <div class="statgrid">
+    <% it.chart.series.forEach((d) => { %>
+    <div class="bar" style="height:<%= d.pct %>%" title="<%= d.day %>: <%= d.n %> reports"><span><%= d.n %></span></div>
+    <% }) %>
+  </div>
+  <div class="statlabels">
+    <span><%= it.chart.first %></span>
+    <span><%= it.chart.last %></span>
+  </div>
+</div>
+
+<form class="filters" method="get" action="/">
+  <%~ include('select', { name: 'product', values: it.options.products, selected: it.filter.product }) %>
+  <%~ include('select', { name: 'version', values: it.options.versions, selected: it.filter.version }) %>
+  <%~ include('select', { name: 'platform', values: it.options.platforms, selected: it.filter.platform }) %>
+  <input type="hidden" name="sort" value="<%= it.sort %>">
+  <button type="submit">Filter</button>
+</form>
+
+<div class="overflow">
+<table>
+  <thead>
+    <tr>
+      <th>Signature</th>
+      <th class="num"><a href="<%= it.countHref %>">Count<%= it.sort === 'count' ? ' ▾' : '' %></a></th>
+      <th>Versions</th>
+      <th>Platforms</th>
+      <th>First seen</th>
+      <th><a href="<%= it.lastSeenHref %>">Last seen<%= it.sort === 'last_seen' ? ' ▾' : '' %></a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (it.groups.length === 0) { %>
+    <tr><td colspan="6" class="muted">No crash groups yet.</td></tr>
+    <% } %>
+    <% it.groups.forEach((g) => { %>
+    <tr>
+      <td>
+        <a href="/groups/<%= g.id %>" class="mono"><%~ include('cpp-name', { name: g.title, collapseCppName: it.collapseCppName }) %></a>
+        <% if (g.unsymbolicated > 0) { %>
+        <span class="pill pill-warn" title="<%= g.unsymbolicated %> report(s) without symbols">missing symbols</span>
+        <% } %>
+      </td>
+      <td class="num"><%= g.report_count %></td>
+      <td>
+        <% g.versions.forEach((v) => { %>
+        <span class="pill"><%= v %></span>
+        <% }) %>
+      </td>
+      <td>
+        <% g.platforms.forEach((p) => { %>
+        <span class="pill"><%= p %></span>
+        <% }) %>
+      </td>
+      <td class="muted"><%= it.fmtTime(g.first_seen) %></td>
+      <td class="muted"><%= it.fmtTime(g.last_seen) %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+</div>

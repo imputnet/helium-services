@@ -1,0 +1,10 @@
+cache_dir: /data
+bind: 0.0.0.0:3021
+caches:
+    downloaded:
+        retry_misses_after: 5m
+sources:
+    - id: local
+      type: filesystem
+      path: /symbols
+      layout: { type: unified }

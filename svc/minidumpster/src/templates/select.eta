@@ -1,0 +1,6 @@
+<select name="<%= it.name %>">
+  <option value="">any <%= it.name %></option>
+  <% it.values.forEach((v) => { %>
+  <option value="<%= v %>"<%~ v === it.selected ? ' selected' : '' %>><%= v %></option>
+  <% }) %>
+</select>

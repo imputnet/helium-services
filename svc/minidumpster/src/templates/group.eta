@@ -1,0 +1,22 @@
+<% layout('layout') %>
+
+<div class="crumbs"><a href="/">← all groups</a></div>
+
+<h2 class="mono"><%~ include('cpp-name', { name: it.group.title, collapseCppName: it.collapseCppName }) %></h2>
+<p class="muted">
+  <%= it.group.report_count %> reports
+  · first seen <%= it.fmtTime(it.group.first_seen) %>
+  · last seen <%= it.fmtTime(it.group.last_seen) %>
+  · signature <code><%= it.group.signature.slice(0, 16) %>…</code>
+</p>
+
+<% if (it.latestStack) { %>
+<h2>
+  Latest stack
+  <span class="muted">(report <a href="/reports/<%= it.latestStack.reportId %>" class="mono"><%= it.latestStack.reportId.slice(0, 8) %></a>)</span>
+</h2>
+<%~ it.latestStack.html %>
+<% } %>
+
+<h2>Recent reports</h2>
+<%~ include('reports-table', { reports: it.reports, fmtTime: it.fmtTime }) %>

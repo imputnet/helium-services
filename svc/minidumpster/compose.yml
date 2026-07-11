@@ -1,0 +1,53 @@
+services:
+    app:
+        build: .
+        restart: unless-stopped
+        user: '${APP_UID:-1000}:${APP_GID:-1000}'
+        read_only: true
+        cap_drop: [ALL]
+        security_opt:
+            - no-new-privileges:true
+        tmpfs:
+            - /tmp
+        ports:
+            - '127.0.0.1:${PORT:-8080}:8080'
+        environment:
+            PORT: '8080'
+            DATA_DIR: /data
+            SYMBOLICATOR_URL: http://symbolicator:3021
+            GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:?set in .env}
+            GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:?set in .env}
+            GITHUB_ORG: ${GITHUB_ORG:?set in .env}
+            GITHUB_ARTIFACT_TOKEN: ${GITHUB_ARTIFACT_TOKEN:-}
+            SESSION_SECRET: ${SESSION_SECRET:?set in .env}
+            SYMBOL_UPLOAD_TOKEN: ${SYMBOL_UPLOAD_TOKEN:?set in .env}
+            PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set in .env}
+            MAX_DUMP_SIZE_MB: ${MAX_DUMP_SIZE_MB:-20}
+            RETENTION_DAYS: ${RETENTION_DAYS:-30}
+            SYMBOLS_RETENTION_DAYS: ${SYMBOLS_RETENTION_DAYS:-180}
+            ARTIFACT_CRAWLER_POLL_MS: ${ARTIFACT_CRAWLER_POLL_MS:-900000}
+            ARTIFACT_CRAWLER_MAX_MB: ${ARTIFACT_CRAWLER_MAX_MB:-20480}
+            ARTIFACT_CRAWLER_MAX_AGE_DAYS: ${ARTIFACT_CRAWLER_MAX_AGE_DAYS:-7}
+            ARTIFACT_CRAWLER_NAME_PATTERN: ${ARTIFACT_CRAWLER_NAME_PATTERN:-}
+        volumes:
+            - ./data:/data
+        depends_on:
+            - symbolicator
+
+    symbolicator:
+        image: getsentry/symbolicator:latest
+        restart: unless-stopped
+        read_only: true
+        cap_drop: [ALL]
+        security_opt:
+            - no-new-privileges:true
+        tmpfs:
+            - /tmp
+        command: ['run', '-c', '/etc/symbolicator/config.yml']
+        volumes:
+            - ./symbolicator.config.yml:/etc/symbolicator/config.yml:ro
+            - ./data/symbols:/symbols:ro
+            - symbolicator-cache:/data
+
+volumes:
+    symbolicator-cache:

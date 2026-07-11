@@ -1,0 +1,14 @@
+<% layout('layout') %>
+<h2>Symbolicate a macOS crash report</h2>
+<p class="muted">
+  Paste the "Translated Report" text from Console.app or the crash dialog
+  (or attach the .crash file). It is symbolicated against the uploaded
+  symbols and filed as a report; re-uploading the same incident opens the
+  existing report.
+</p>
+<% if (it.error) { %><p class="status-failed"><%= it.error %></p><% } %>
+<form method="post" action="/upload" enctype="multipart/form-data">
+  <p><textarea name="text" rows="16" style="width:100%" placeholder="Process:             Helium [9625]&#10;..."></textarea></p>
+  <p><input type="file" name="file"> <span class="muted">— or upload the file instead</span></p>
+  <p><button type="submit">Symbolicate</button></p>
+</form>

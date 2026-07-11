@@ -1,0 +1,69 @@
+<% layout('layout') %>
+
+<h2>Symbols</h2>
+<p class="muted">
+  Release artifacts discovered by the crawler and symbol bundles currently
+  installed for Symbolicator.
+</p>
+
+<% if (it.versions.length === 0) { %>
+<p class="muted">No release artifacts have been discovered yet.</p>
+<% } %>
+
+<% it.versions.forEach((release) => { %>
+<h2>
+  <span class="mono"><%= release.version %></span>
+  <% if (release.installed) { %>
+  <span class="pill status-ingested">symbols installed</span>
+  <% } else { %>
+  <span class="pill pill-warn">no installed bundle</span>
+  <% } %>
+</h2>
+<div class="overflow">
+<table>
+  <thead>
+    <tr>
+      <th>Platform</th><th>Architecture</th><th>Artifact</th><th>Status</th>
+      <th>Attempts</th><th>Updated</th><th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% release.artifacts.forEach((artifact) => { %>
+    <tr>
+      <td><%= artifact.platform %></td>
+      <td class="mono"><%= artifact.arch %></td>
+      <td class="mono"><%= artifact.artifact_name %></td>
+      <td class="status-<%= artifact.status %>"><%= artifact.status %></td>
+      <td class="num"><%= artifact.attempts %></td>
+      <td class="muted">
+        <% if (artifact.ingested_at) { %>
+        <%= it.fmtTime(artifact.ingested_at) %>
+        <% } else if (artifact.next_attempt_at > it.now) { %>
+        retry <%= it.fmtTime(artifact.next_attempt_at) %>
+        <% } else { %>—<% } %>
+      </td>
+      <td class="mono muted"><%= artifact.error ?? '' %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+</div>
+<% }) %>
+
+<h2>Installed bundles</h2>
+<div class="overflow">
+<table>
+  <thead><tr><th>Bundle</th><th>Installed / refreshed</th></tr></thead>
+  <tbody>
+    <% if (it.bundles.length === 0) { %>
+    <tr><td colspan="2" class="muted">No symbol bundles installed.</td></tr>
+    <% } %>
+    <% it.bundles.forEach((bundle) => { %>
+    <tr>
+      <td class="mono"><%= bundle.id %></td>
+      <td class="muted"><%= it.fmtTime(bundle.updatedAt) %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+</div>

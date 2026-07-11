@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= it.title %> · minidumpster</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <h1><a href="/">minidumpster</a></h1>
+  <% if (!it.section || it.section === 'reports') { %>
+  <span class="muted">crash reports</span>
+  <% } else { %><a href="/">crash reports</a><% } %>
+  <% if (it.section === 'upload') { %>
+  <span class="muted">upload report</span>
+  <% } else { %><a href="/upload">upload report</a><% } %>
+  <% if (it.section === 'symbols') { %>
+  <span class="muted">symbols</span>
+  <% } else { %><a href="/symbols">symbols</a><% } %>
+  <form class="search" method="get" action="/search">
+    <input name="q" placeholder="report id / guid" minlength="4">
+  </form>
+  <% if (it.user) { %>
+  <span class="user"><%= it.user %> · <a href="/auth/logout">logout</a></span>
+  <% } %>
+</header>
+<%~ it.body %>
+<script>
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('.expandable');
+  if (!t) {
+    return;
+  }
+  const full = t.dataset.full;
+  t.dataset.full = t.textContent;
+  t.textContent = full;
+});
+</script>
+</body>
+</html>

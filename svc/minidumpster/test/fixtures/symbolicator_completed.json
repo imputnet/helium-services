@@ -1,0 +1,110 @@
+{
+    "status": "completed",
+    "arch": "x86_64",
+    "crashed": true,
+    "crash_reason": "EXCEPTION_ACCESS_VIOLATION_WRITE / 0x0000000000000000",
+    "crash_details": null,
+    "system_info": {
+        "os_name": "Windows",
+        "os_version": "10.0.19045",
+        "cpu_arch": "x86_64"
+    },
+    "modules": [
+        {
+            "debug_id": "3f6e9d1c8a2b4e5f9c0d1a2b3c4d5e6f-1",
+            "code_file": "C:\\Program Files\\MyBrowser\\Application\\138.0.1.0\\mybrowser.dll",
+            "debug_file": "mybrowser.dll.pdb",
+            "debug_status": "found"
+        },
+        {
+            "debug_id": "aabbccddeeff00112233445566778899-1",
+            "code_file": "C:\\Windows\\System32\\ntdll.dll",
+            "debug_file": "ntdll.pdb",
+            "debug_status": "found"
+        }
+    ],
+    "stacktraces": [
+        {
+            "thread_id": 0,
+            "thread_name": "CrRendererMain",
+            "is_requesting_thread": true,
+            "registers": {
+                "rip": "0x7ffb2c341234",
+                "rsp": "0x000000e4f2bfe3d0"
+            },
+            "frames": [
+                {
+                    "status": "symbolicated",
+                    "function": "RtlRaiseStatus",
+                    "package": "C:\\Windows\\System32\\ntdll.dll",
+                    "instruction_addr": "0x7ffb2c341234",
+                    "filename": null,
+                    "lineno": null
+                },
+                {
+                    "status": "symbolicated",
+                    "function": "content::RenderProcessHostImpl::OnChannelError()",
+                    "package": "C:\\Program Files\\MyBrowser\\Application\\138.0.1.0\\mybrowser.dll",
+                    "instruction_addr": "0x7ff6a1b2c3d4",
+                    "filename": "content/browser/renderer_host/render_process_host_impl.cc",
+                    "lineno": 4521
+                },
+                {
+                    "status": "symbolicated",
+                    "function": "IPC::ChannelProxy::Context::OnChannelError()",
+                    "package": "C:\\Program Files\\MyBrowser\\Application\\138.0.1.0\\mybrowser.dll",
+                    "instruction_addr": "0x7ff6a1a0b0c0",
+                    "filename": "ipc/ipc_channel_proxy.cc",
+                    "lineno": 322
+                },
+                {
+                    "status": "symbolicated",
+                    "function": "base::RunLoop::Run()",
+                    "package": "C:\\Program Files\\MyBrowser\\Application\\138.0.1.0\\mybrowser.dll",
+                    "instruction_addr": "0x7ff6a0102030",
+                    "filename": "base/run_loop.cc",
+                    "lineno": 134
+                },
+                {
+                    "status": "symbolicated",
+                    "function": "main",
+                    "package": "C:\\Program Files\\MyBrowser\\Application\\mybrowser.exe",
+                    "instruction_addr": "0x7ff700001111",
+                    "filename": "mybrowser/app/main.cc",
+                    "lineno": 52
+                },
+                {
+                    "status": "symbolicated",
+                    "function": "__scrt_common_main_seh",
+                    "package": "C:\\Program Files\\MyBrowser\\Application\\mybrowser.exe",
+                    "instruction_addr": "0x7ff700002222",
+                    "filename": null,
+                    "lineno": null
+                }
+            ]
+        },
+        {
+            "thread_id": 1,
+            "thread_name": "ThreadPoolServiceThread",
+            "is_requesting_thread": false,
+            "frames": [
+                {
+                    "status": "symbolicated",
+                    "function": "NtWaitForSingleObject",
+                    "package": "C:\\Windows\\System32\\ntdll.dll",
+                    "instruction_addr": "0x7ffb2c340001",
+                    "filename": null,
+                    "lineno": null
+                },
+                {
+                    "status": "symbolicated",
+                    "function": "base::WaitableEvent::Wait()",
+                    "package": "C:\\Program Files\\MyBrowser\\Application\\138.0.1.0\\mybrowser.dll",
+                    "instruction_addr": "0x7ff6a0405060",
+                    "filename": "base/synchronization/waitable_event_win.cc",
+                    "lineno": 71
+                }
+            ]
+        }
+    ]
+}

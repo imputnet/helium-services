@@ -1,0 +1,9 @@
+<% layout('layout') %>
+<h2>Search results for <span class="mono"><%= it.query %></span></h2>
+<% if (it.results.length > 0) { %>
+<%~ include('reports-table', { reports: it.results, fmtTime: it.fmtTime }) %>
+<% } else { %>
+<p class="muted">No reports match that id or guid. Users find their
+report id in <span class="mono">helium://crashes</span> ("Uploaded Crash Report
+ID") — it is only assigned once the crash has actually been uploaded.</p>
+<% } %>

@@ -1,0 +1,62 @@
+-------------------------------------
+Translated Report (Full Report Below)
+-------------------------------------
+
+Process:             Helium [9625]
+Path:                /Users/USER/*/Helium.app/Contents/MacOS/Helium
+Identifier:          net.imput.helium
+Version:             0.14.3.1 (0.14.3.1)
+Code Type:           ARM-64 (Native)
+Parent Process:      launchd [1]
+User ID:             501
+
+Date/Time:           2026-07-07 20:14:06.2645 +0000
+OS Version:          macOS 26.5.1 (25F80)
+Hardware Model:      Mac16,10
+
+Crash Reporter Key:  2A8B901A-4790-B9F3-FD46-9702D4C3E375
+Incident Identifier: 893ED25D-2D48-4068-9451-7BB173D52BDD
+
+Exception Type:    EXC_BREAKPOINT (SIGTRAP)
+Exception Codes:   0x0000000000000001, 0x000000011a316988
+
+Triggered by Thread: 0  CrBrowserMain, Dispatch Queue: com.apple.main-thread
+
+Thread 0 Crashed:: CrBrowserMain Dispatch queue: com.apple.main-thread
+0   Helium Framework                         0x11a316988 ChromeMain + 93296464
+1   Helium Framework                         0x11a316954 ChromeMain + 93296412
+2   Helium                                   0x1024a485c main + 196
+3   dyld                                     0x18cfd3e00 start + 6992
+
+Thread 1:: StackSamplingProfiler
+0   libsystem_kernel.dylib                   0x18d34dc34 mach_msg2_trap + 8
+1   libsystem_pthread.dylib                  0x18d38cc1c thread_start + 8
+
+Thread 2:
+
+Thread 0 crashed with ARM Thread State (64-bit):
+    x0: 0x000000016d956eac   x1: 0x0000012c144bbe44   x2: 0xfffffffffffffff4   x3: 0x00000000000000ff
+    pc: 0x000000011a316988 cpsr: 0x60000000
+
+Binary Images:
+       0x1024a4000 -        0x1024a7fff net.imput.helium (0.14.3.1) <4c4c4480-5555-3144-a1c9-68200780c659> /Users/USER/*/Helium.app/Contents/MacOS/Helium
+       0x114a18000 -        0x121543fff net.imput.helium.framework (0.14.3.1) <4c4c44fc-5555-3144-a1ef-327a92b9b0e8> /Users/USER/*/Helium.app/Contents/Frameworks/Helium Framework.framework/Versions/150.0.7871.46/Helium Framework
+       0x102870000 -        0x10287bfff libobjc-trampolines.dylib (*) <ca58aa96-b997-3a6d-9132-19d49be4b3e9> /usr/lib/libobjc-trampolines.dylib
+       0x18cfb4000 -        0x18d05a217 dyld (*) <a237ef81-b68b-37ba-a165-92c965529534> /usr/lib/dyld
+       0x18d34d000 -        0x18d38a2af libsystem_kernel.dylib (*) <cc1cf985-bc65-3725-809f-4c1e36b8f4ba> /usr/lib/system/libsystem_kernel.dylib
+       0x18d38b000 -        0x18d397b3b libsystem_pthread.dylib (*) <4f33683c-18c8-39a1-800b-2e3bd43bcc13> /usr/lib/system/libsystem_pthread.dylib
+
+External Modification Summary:
+  Calls made by other processes targeting this process:
+    task_for_pid: 0
+
+-----------
+Full Report
+-----------
+
+{"app_name":"Helium","timestamp":"2026-07-07 20:14:06.00 +0000","app_version":"0.14.3.1","bug_type":"309"}
+{
+  "uptime" : 2800000,
+  "procRole" : "Foreground",
+  "threads" : [{"threadState":{"x":[{"value":6133477036}]}}]
+}
