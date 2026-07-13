@@ -47,11 +47,21 @@ export function streamMultipartToDisk(
             reject(err instanceof Error ? err : new Error(String(err)));
         };
 
+        let filesStarted = 0;
+
         bb.on('field', (name, value) => {
             fields[name] = value;
         });
 
         bb.on('file', (name, stream, info) => {
+            filesStarted++;
+            if (filesStarted > 1) {
+                // Drain so busboy can complete parsing, then fail.
+                stream.resume();
+                fail(new Error('multipart: too many files'));
+                return;
+            }
+
             // Late 'error' events (e.g. truncated form) would otherwise be uncaught
             // once pipeline has detached its listeners.
             stream.on('error', fail);
