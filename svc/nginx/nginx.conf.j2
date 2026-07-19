@@ -119,10 +119,6 @@ http {
             return 204;
         }
 
-        location /updates/mac {
-            proxy_pass https://updates.helium.computer/mac;
-        }
-
         location /dict {
             gzip_static always;
             root /dev/shm/dictionaries;
