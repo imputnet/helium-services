@@ -8,3 +8,43 @@ sources:
       type: filesystem
       path: /symbols
       layout: { type: unified }
+
+    # official M$ symbols for windows system DLLs
+    - id: microsoft
+      type: http
+      url: https://msdl.microsoft.com/download/symbols/
+      layout: { type: symstore }
+      filters:
+          filetypes: [pe, pdb]
+          path_patterns:
+              - "?:/Windows/**"
+      is_public: true
+
+    # DWARF/debuginfo for common Linux distributions
+    - id: linux-debuginfod
+      type: http
+      url: https://debuginfod.elfutils.org/buildid/
+      layout: { type: debuginfod }
+      filters:
+          filetypes: [elf_code, elf_debug]
+          path_patterns:
+              - "/lib/**"
+              - "/usr/lib/**"
+      is_public: true
+
+    # Mozilla Breakpad archive, used as a cross-platform fallback
+    # especially for Apple system frameworks since Apple has no
+    # public symbol server
+    - id: mozilla-system-symbols
+      type: http
+      url: https://symbols.mozilla.org/
+      layout: { type: native }
+      filters:
+          filetypes: [breakpad]
+          path_patterns:
+              - "?:/Windows/**"
+              - "/lib/**"
+              - "/usr/lib/**"
+              - "/System/Library/**"
+              - "/System/Volumes/Preboot/Cryptexes/OS/**"
+      is_public: true
