@@ -25,6 +25,7 @@ code,
 .mono {
     font-family: ui-monospace, monospace;
     font-size: .92em;
+    line-break: anywhere;
 }
 
 header {
