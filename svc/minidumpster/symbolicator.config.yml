@@ -1,10 +1,14 @@
 cache_dir: /data
 bind: 0.0.0.0:3021
+enable_cache_cleanup: true
+cache_cleanup_interval: 15m
 caches:
     downloaded:
+        max_unused_for: 7d
         retry_misses_after: 0s
         retry_misses_after_public: 1h
     derived:
+        max_unused_for: 7d
         retry_misses_after: 0s
         retry_misses_after_public: 1h
 sources:
