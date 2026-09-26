@@ -1,8 +1,17 @@
 #!/bin/sh
 set -euxo pipefail
 
-DICT_COMMIT="cccf64a8acc951afe3f47fee023908e55699bc58"
-DICT_TARBALL="https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+archive/$DICT_COMMIT.tar.gz"
+# dictionary filenames are versioned (e.g. en-US-10-1.bdic vs en-US-10-2.bdic),
+# and helium builds on different chromium versions request different ones, so
+# files from several commits are served side by side. newer commits go last,
+# so that they win for files which exist in more than one.
+# - cccf64a8: last commit with the -10-1 english dictionaries, for chromium 151
+# - cee14e31: -10-2 english dictionaries, pinned in the DEPS of chromium 154
+DICT_COMMITS="
+    cccf64a8acc951afe3f47fee023908e55699bc58
+    cee14e319bb7603a1157bb4d1e216be64ee82b77
+"
+DICT_ARCHIVE_URL="https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+archive"
 DICT_DIR="/dev/shm/dictionaries/"
 
 cleanup() {
@@ -16,7 +25,9 @@ do_refresh() {
 
     mkdir -p "$DICT_DIR/tmp" \
     && cd "$DICT_DIR/tmp" \
-    && curl -s "$DICT_TARBALL" | tar xz \
+    && for commit in $DICT_COMMITS; do
+        curl -s "$DICT_ARCHIVE_URL/$commit.tar.gz" | tar xz || return 1
+    done \
     && find . -type f -not -name '*.gz' -exec gzip -9 {} \; \
     && mv "$DICT_DIR/dict" "$DICT_DIR/tmp2" \
     && mv "$DICT_DIR/tmp" "$DICT_DIR/dict" \
