@@ -23,15 +23,29 @@ cleanup() {
 do_refresh() {
     cleanup
 
-    mkdir -p "$DICT_DIR/tmp" \
-    && cd "$DICT_DIR/tmp" \
-    && for commit in $DICT_COMMITS; do
-        curl -s "$DICT_ARCHIVE_URL/$commit.tar.gz" | tar xz || return 1
-    done \
-    && find . -type f -not -name '*.gz' -exec gzip -9 {} \; \
+    mkdir -p "$DICT_DIR/tmp" && cd "$DICT_DIR/tmp" || return 1
+
+    # each archive is extracted on its own and only merged in once complete,
+    # so one failed download doesn't hold back the others, and a partial
+    # extraction is never served. an incomplete refresh still publishes what
+    # it got, and returns non-zero so that it's retried.
+    incomplete=0
+    for commit in $DICT_COMMITS; do
+        rm -rf "$DICT_DIR/archive"
+        mkdir "$DICT_DIR/archive" \
+        && curl -s "$DICT_ARCHIVE_URL/$commit.tar.gz" | tar xz -C "$DICT_DIR/archive" \
+        && cp -a "$DICT_DIR/archive/." . \
+        || incomplete=1
+    done
+    rm -rf "$DICT_DIR/archive"
+
+    [ -n "$(ls -A)" ] || return 1
+
+    find . -type f -not -name '*.gz' -exec gzip -9 {} \; \
     && mv "$DICT_DIR/dict" "$DICT_DIR/tmp2" \
     && mv "$DICT_DIR/tmp" "$DICT_DIR/dict" \
-    && cleanup
+    && cleanup \
+    && [ "$incomplete" = 0 ]
 }
 
 for i in 1 2 3; do
