@@ -1,7 +1,7 @@
 #!/bin/sh
 set -euxo pipefail
 
-DICT_COMMIT="cccf64a8acc951afe3f47fee023908e55699bc58"
+DICT_COMMIT="cee14e319bb7603a1157bb4d1e216be64ee82b77"
 DICT_TARBALL="https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+archive/$DICT_COMMIT.tar.gz"
 DICT_DIR="/dev/shm/dictionaries/"
 
