@@ -1,25 +1,13 @@
 <% layout('layout') %>
 
-<div class="statwrap">
-  <div class="muted">
-    Reports per day, last <%= it.chart.days %> days (<%= it.chart.total %> total)
-  </div>
-  <div class="statgrid">
-    <% it.chart.series.forEach((d) => { %>
-    <div class="bar" style="height:<%= d.pct %>%" title="<%= d.day %>: <%= d.n %> reports"><span><%= d.n %></span></div>
-    <% }) %>
-  </div>
-  <div class="statlabels">
-    <span><%= it.chart.first %></span>
-    <span><%= it.chart.last %></span>
-  </div>
-</div>
+<%~ include('reports-chart', { chart: it.chart, filter: it.filter, action: '/' }) %>
 
 <form class="filters" method="get" action="/">
   <%~ include('select', { name: 'product', values: it.options.products, selected: it.filter.product }) %>
   <%~ include('select', { name: 'version', values: it.options.versions, selected: it.filter.version }) %>
   <%~ include('select', { name: 'platform', values: it.options.platforms, selected: it.filter.platform }) %>
   <%~ include('select', { name: 'ptype', values: it.options.ptypes, selected: it.filter.ptype }) %>
+  <input type="hidden" name="breakdown" value="<%= it.chart.breakdown %>">
   <input type="hidden" name="sort" value="<%= it.sort %>">
   <button type="submit">Filter</button>
 </form>

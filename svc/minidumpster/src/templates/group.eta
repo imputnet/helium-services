@@ -10,6 +10,8 @@
   · signature <code><%= it.group.signature.slice(0, 16) %>…</code>
 </p>
 
+<%~ include('reports-chart', { chart: it.chart, filter: {}, action: '/groups/' + it.group.id }) %>
+
 <div class="actions">
   <form method="post" action="/groups/<%= it.group.id %>/reprocess"
         data-confirm="Reprocess all <%= it.group.report_count %> reports in this group?">
