@@ -1,0 +1,35 @@
+<div class="statwrap">
+  <div class="statheading">
+    <div class="muted">
+      Reports per day, last <%= it.chart.days %> days (<%= it.chart.total %> total, UTC)
+    </div>
+    <form method="get" action="<%= it.action %>">
+      <% Object.entries(it.filter).forEach(([key, value]) => { if (value) { %>
+      <input type="hidden" name="<%= key %>" value="<%= value %>">
+      <% } }) %>
+      <select name="breakdown" aria-label="Break down reports by" data-chart-breakdown>
+        <% const choices = [['total', 'Total'], ['version', 'Version'], ['platform', 'Platform']]; choices.forEach(([value, label]) => { %>
+        <option value="<%= value %>"<%~ value === it.chart.breakdown ? ' selected' : '' %>><%= label %></option>
+        <% }) %>
+      </select>
+    </form>
+  </div>
+  <div class="statgrid" role="img" aria-label="Reports per day for the last <%= it.chart.days %> days, <%= it.chart.total %> total">
+    <% it.chart.series.forEach((d) => { %>
+    <div class="bar" style="height:<%= d.pct %>%" title="<%= d.day %>: <%= d.n %> reports">
+      <% d.segments.forEach((s) => { %>
+      <div class="bar-segment" style="height:<%= s.pct %>%;background:<%= s.color %>" title="<%= d.day %> · <%= s.label %>: <%= s.n %> reports"></div>
+      <% }) %>
+    </div>
+    <% }) %>
+  </div>
+  <div class="statlabels">
+    <span><%= it.chart.first %></span>
+    <span><%= it.chart.last %></span>
+  </div>
+  <div class="statlegend">
+    <% it.chart.legend.forEach((s) => { %>
+    <span><i style="background:<%= s.color %>"></i><%= s.label %> (<%= s.total %>)</span>
+    <% }) %>
+  </div>
+</div>

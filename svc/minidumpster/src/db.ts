@@ -47,6 +47,14 @@ export interface GroupFilter {
     sort?: 'count' | 'last_seen';
 }
 
+export type ChartBreakdown = 'total' | 'version' | 'platform';
+
+export interface ReportDayStat {
+    day: string;
+    n: number;
+    segment: string | null;
+}
+
 export interface NewReport {
     id: string;
     product: string | null;
@@ -732,20 +740,46 @@ export class Db {
         );
     }
 
-    reportsPerDay(sinceMs: number): { day: string; n: number }[] {
-        return this.many<{ day: string; n: number }>(
+    reportsPerDay(
+        sinceMs: number,
+        options: {
+            breakdown?: ChartBreakdown;
+            filter?: GroupFilter;
+            groupId?: number;
+        } = {},
+    ): ReportDayStat[] {
+        const { breakdown = 'total', filter = {}, groupId } = options;
+        const column = breakdown === 'version' || breakdown === 'platform'
+            ? breakdown
+            : null;
+        const conditions = ['received_at >= ?'];
+        const params: (string | number)[] = [sinceMs];
+        for (
+            const key of ['product', 'version', 'platform', 'ptype'] as const
+        ) {
+            if (filter[key]) {
+                conditions.push(`${key} = ?`);
+                params.push(filter[key]);
+            }
+        }
+        if (groupId !== undefined) {
+            conditions.push('group_id = ?');
+            params.push(groupId);
+        }
+        return this.many<ReportDayStat>(
             `SELECT
                  strftime(
                      '%Y-%m-%d',
                      received_at / 1000,
                      'unixepoch'
                  ) AS day,
-                 COUNT(*) AS n
+                 COUNT(*) AS n,
+                 ${column ?? 'NULL'} AS segment
              FROM reports
-             WHERE received_at >= ?
-             GROUP BY day
-             ORDER BY day`,
-            sinceMs,
+             WHERE ${conditions.join(' AND ')}
+             GROUP BY day, segment
+             ORDER BY day, segment`,
+            ...params,
         );
     }
 

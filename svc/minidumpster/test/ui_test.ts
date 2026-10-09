@@ -72,6 +72,7 @@ Deno.test('groupsPage renders populated rows', () => {
             unsymbolicated: 1,
         }],
         stats: [],
+        breakdown: 'total',
         options: {
             products: ['Helium'],
             versions: ['0.14.3.1'],
