@@ -86,12 +86,19 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
         };
 
         const groups = db.listGroups(filter);
-        const stats = db.reportsPerDay(Date.now() - 14 * 86400_000);
+        const value = c.req.query('breakdown');
+        const breakdown = value === 'version' || value === 'platform'
+            ? value
+            : 'total';
+        const stats = db.reportsPerDay(ui.reportChartSince(), {
+            breakdown,
+            filter,
+        });
         const options = db.filterOptions();
 
         return c.html(
             ui.groupsPage(
-                { groups, stats, options, filter },
+                { groups, stats, options, filter, breakdown },
                 c.get('session').login,
             ),
         );
@@ -243,8 +250,19 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
             }
         }
 
+        const value = c.req.query('breakdown');
+        const breakdown = value === 'version' || value === 'platform'
+            ? value
+            : 'total';
+        const stats = db.reportsPerDay(ui.reportChartSince(), {
+            groupId: group.id,
+            breakdown,
+        });
         return c.html(
-            ui.groupPage(group, reports, latestStack, c.get('session').login),
+            ui.groupPage(
+                { group, reports, latestStack, stats, breakdown },
+                c.get('session').login,
+            ),
         );
     });
 

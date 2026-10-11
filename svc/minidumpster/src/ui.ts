@@ -4,8 +4,10 @@ import { basename } from '@std/path/windows';
 
 import type {
     ArtifactIngestRow,
+    ChartBreakdown,
     GroupListRow,
     GroupRow,
+    ReportDayStat,
     ReportRow,
 } from './db.ts';
 import {
@@ -136,7 +138,8 @@ function csv(joined: string | null): string[] {
 
 interface GroupsPageData {
     groups: GroupListRow[];
-    stats: { day: string; n: number }[];
+    stats: ReportDayStat[];
+    breakdown: ChartBreakdown;
     options: {
         products: string[];
         versions: string[];
@@ -152,26 +155,63 @@ interface GroupsPageData {
     };
 }
 
-function chartData(stats: { day: string; n: number }[], days = 14) {
-    const countByDay = new Map(stats.map((s) => [s.day, s.n]));
-    const now = Date.now();
-    const series: { day: string; n: number }[] = [];
+const CHART_DAYS = 14;
+const DAY_MS = 86400_000;
 
-    for (let i = days - 1; i >= 0; i--) {
-        const day = new Date(now - i * 86400_000).toISOString().slice(0, 10);
-        series.push({ day, n: countByDay.get(day) ?? 0 });
+export function reportChartSince(): number {
+    return Math.floor(Date.now() / DAY_MS) * DAY_MS
+        - (CHART_DAYS - 1) * DAY_MS;
+}
+
+function chartData(stats: ReportDayStat[], breakdown: ChartBreakdown) {
+    const since = reportChartSince();
+    const series = Array.from({ length: CHART_DAYS }, (_, i) => ({
+        day: new Date(since + i * DAY_MS).toISOString().slice(0, 10),
+        n: 0,
+        counts: new Map<string | null, number>(),
+    }));
+    const byDay = new Map(series.map((day) => [day.day, day]));
+    const totals = new Map<string | null, number>();
+
+    for (const row of stats) {
+        const day = byDay.get(row.day);
+        if (!day) continue;
+
+        const label = breakdown === 'total' ? 'Total' : row.segment;
+        day.n += row.n;
+        day.counts.set(label, (day.counts.get(label) ?? 0) + row.n);
+        totals.set(label, (totals.get(label) ?? 0) + row.n);
     }
 
-    const max = Math.max(1, ...series.map((s) => s.n));
+    const legend = [...totals].sort(([a], [b]) =>
+        (a ?? '').localeCompare(b ?? '')
+    ).map(([value, total], i) => ({
+        value,
+        label: value ?? 'Unknown',
+        total,
+        color: breakdown === 'total'
+            ? 'var(--accent)'
+            : `hsl(${Math.round(i * 137.508) % 360} 65% 55%)`,
+    }));
+    const max = Math.max(1, ...series.map((day) => day.n));
 
     return {
-        days,
-        total: series.reduce((sum, s) => sum + s.n, 0),
+        days: CHART_DAYS,
+        breakdown,
+        legend: breakdown === 'total' ? [] : legend,
+        total: series.reduce((sum, day) => sum + day.n, 0),
         first: series[0].day,
-        last: series[series.length - 1].day,
-        series: series.map((s) => ({
-            ...s,
-            pct: Math.max(3, Math.round((s.n / max) * 100)),
+        last: series[CHART_DAYS - 1].day,
+        series: series.map(({ day, n, counts }) => ({
+            day,
+            n,
+            pct: n / max * 100,
+            segments: legend.flatMap(({ value, label, color }) => {
+                const count = counts.get(value);
+                return count
+                    ? [{ label, color, n: count, pct: count / n * 100 }]
+                    : [];
+            }),
         })),
     };
 }
@@ -183,7 +223,13 @@ export function groupsPage(data: GroupsPageData, user?: string): string {
     // Href for a column-header sort link, preserving the active filters.
     const sortHref = (sort: string): string => {
         const params = new URLSearchParams();
-        for (const [key, value] of Object.entries({ ...filter, sort })) {
+        for (
+            const [key, value] of Object.entries({
+                ...filter,
+                breakdown: data.breakdown,
+                sort,
+            })
+        ) {
             if (value) {
                 params.set(key, value);
             }
@@ -198,7 +244,7 @@ export function groupsPage(data: GroupsPageData, user?: string): string {
         options,
         filter,
         sort,
-        chart: chartData(data.stats),
+        chart: chartData(data.stats, data.breakdown),
         countHref: sortHref('count'),
         lastSeenHref: sortHref('last_seen'),
         groups: groups.map((g) => ({
@@ -394,17 +440,20 @@ export function stackHtml(
 }
 
 export function groupPage(
-    group: GroupRow,
-    reports: ReportRow[],
-    latestStack: { reportId: string; html: string } | null,
+    data: {
+        group: GroupRow;
+        reports: ReportRow[];
+        latestStack: { reportId: string; html: string } | null;
+        stats: ReportDayStat[];
+        breakdown: ChartBreakdown;
+    },
     user?: string,
 ): string {
     return render('group', {
-        title: group.title,
+        ...data,
+        title: data.group.title,
         user,
-        group,
-        reports,
-        latestStack,
+        chart: chartData(data.stats, data.breakdown),
     });
 }
 

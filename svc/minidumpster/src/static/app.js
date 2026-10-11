@@ -7,6 +7,12 @@ document.addEventListener('submit', (event) => {
     }
 });
 
+document.addEventListener('change', (event) => {
+    if (event.target.matches('[data-chart-breakdown]')) {
+        event.target.form.requestSubmit();
+    }
+});
+
 document.addEventListener('click', (event) => {
     if (event.target.matches('[data-stack-fold-toggle]')) {
         const foldToggle = event.target;
