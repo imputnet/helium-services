@@ -64,11 +64,7 @@ http {
     # HTTPS fallback
     server {
         listen [::]:443 ipv6only=off ssl default_server;
-        listen [::]:443 ipv6only=off quic reuseport;
         http2 on;
-        http3 on;
-        http3_hq on;
-        quic_retry on;
 
         ssl_reject_handshake on;
     }
@@ -81,12 +77,8 @@ http {
     # services
     server {
         listen [::]:443 ssl;
-        listen [::]:443 quic;
 
         http2 on;
-        http3 on;
-        http3_hq on;
-        quic_retry on;
 
         ssl_certificate /certs/fullchain.pem;
         ssl_certificate_key /certs/private.key;
@@ -94,7 +86,7 @@ http {
         server_name {{ services_hostname }};
 
         add_header Strict-Transport-Security "max-age=63072000" always;
-        add_header Alt-Svc 'h3=":443"; ma=86400' always;
+        add_header Alt-Svc clear always;
 
         proxy_ssl_verify on;
         proxy_ssl_server_name on;
@@ -126,6 +118,11 @@ http {
             autoindex on;
             sub_filter ".gz" "";
             sub_filter_once off;
+        }
+
+        location = /ext/proxy {
+            proxy_buffering off;
+            proxy_pass http://exts/proxy;
         }
 
         location /ext/ {
