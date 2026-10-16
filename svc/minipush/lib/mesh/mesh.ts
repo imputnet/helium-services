@@ -1,4 +1,5 @@
 import type { Frame, FrameHandler, MemberId } from './protocol.ts';
+import type { PeerEvents } from './transport.ts';
 import { env } from '../env.ts';
 import { isDraining } from '../lifecycle.ts';
 import { Ring } from './ring.ts';
@@ -70,14 +71,12 @@ export const request = async (to: MemberId, frame: Frame): Promise<Frame> => {
 
 export const announceDraining = Transport.setDraining;
 
-export const start = async (h: FrameHandler) => {
+export const start = async (
+    h: FrameHandler,
+    events: Omit<PeerEvents, 'frame'>,
+) => {
     handler = h;
-    Transport.start({
-        up: () => {},
-        down: () => {},
-        draining: () => {},
-        frame: dispatch,
-    });
+    Transport.start({ ...events, frame: dispatch });
 
     await Transport.settle(5_000);
 };

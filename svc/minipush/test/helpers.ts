@@ -21,6 +21,7 @@ export const sharedSecrets = () => ({
 
 export type Node = {
     id: string;
+    env: Record<string, string>;
     url: string;
     wsUrl: string;
     proc: Deno.ChildProcess;
@@ -48,19 +49,21 @@ export const waitFor = async (
 export const startNode = async (
     env: Record<string, string> = {},
 ): Promise<Node> => {
-    const port = freePort();
+    const port = env.MINIPUSH_PORT ?? String(freePort());
     const url = `http://127.0.0.1:${port}/`;
     const id = env.MINIPUSH_NODE_ID ?? 'local';
+    env = {
+        ...sharedSecrets(),
+        MINIPUSH_PORT: port,
+        MINIPUSH_MESH_PORT: String(freePort()),
+        MINIPUSH_BASE_URL: url,
+        ...env,
+    };
+
     const proc = new Deno.Command(Deno.execPath(), {
         args: ['run', '-A', 'main.ts'],
         cwd: ROOT,
-        env: {
-            ...sharedSecrets(),
-            MINIPUSH_PORT: String(port),
-            MINIPUSH_MESH_PORT: String(freePort()),
-            MINIPUSH_BASE_URL: url,
-            ...env,
-        },
+        env,
         stdout: 'piped',
         stderr: 'piped',
     }).spawn();
@@ -120,6 +123,7 @@ export const startNode = async (
 
     return {
         id,
+        env,
         url,
         wsUrl: url.replace(/^http/, 'ws'),
         proc,
@@ -128,6 +132,9 @@ export const startNode = async (
         exited: () => status,
     };
 };
+
+// Starts a stopped node again, on the same ports and with the same config.
+export const restartNode = (node: Node) => startNode(node.env);
 
 export type ClusterMember = {
     id: string;

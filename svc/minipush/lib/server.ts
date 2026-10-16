@@ -3,7 +3,7 @@ import * as UA from './ua/server.ts';
 import * as Webpush from './webpush/server.ts';
 import * as Mesh from './mesh/mesh.ts';
 import * as Transport from './mesh/transport.ts';
-import { handleFrame } from './mesh/dispatch.ts';
+import { handleFrame, memberEvents } from './mesh/dispatch.ts';
 
 import { Hono } from '@hono/hono';
 import { getConnInfo } from '@hono/hono/deno';
@@ -30,7 +30,7 @@ export const startServer = async (params: ServerParameters) => {
         return new Response(null, { status: HTTP.status.NOT_FOUND });
     });
 
-    await Mesh.start(handleFrame);
+    await Mesh.start(handleFrame, memberEvents);
 
     const app = new Hono();
 
