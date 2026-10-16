@@ -6,6 +6,7 @@ COPY . .
 RUN deno cache --frozen main.ts
 
 HEALTHCHECK --start-period=3s --start-interval=5s --interval=5m --timeout=10s \
-        CMD curl -f "http://localhost:10001/healthcheck"
+        CMD curl -f ${MINIPUSH_UNIX_SOCKET:+--unix-socket "$MINIPUSH_UNIX_SOCKET"} \
+            "http://localhost:${MINIPUSH_PORT:-10001}/healthcheck"
 
 CMD ["deno", "task", "start"]

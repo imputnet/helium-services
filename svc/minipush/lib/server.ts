@@ -98,9 +98,17 @@ export const startServer = async (params: ServerParameters) => {
         return Webpush.handleWebPushDeletion(c.req.raw, match);
     });
 
+    const listen = env.unixSocket
+        ? { path: env.unixSocket }
+        : { hostname: env.bindHostname, port: env.port };
+
+    if (env.unixSocket) {
+        // left over from a previous run
+        await Deno.remove(env.unixSocket).catch(() => {});
+    }
+
     const server = Deno.serve({
-        hostname: env.bindHostname,
-        port: env.port,
+        ...listen,
         signal: params.signal,
     }, app.fetch);
 

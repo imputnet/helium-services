@@ -64,6 +64,10 @@ const peers = getPeers();
 export const env = Object.freeze({
     bindHostname: getHostname(),
     port: getPort(),
+    // if set, listen on this unix socket instead of hostname:port, which
+    // avoids running out of ephemeral ports between a proxy and us. the
+    // client ip is then only known via MINIPUSH_TRUST_PROXY.
+    unixSocket: Deno.env.get('MINIPUSH_UNIX_SOCKET') || undefined,
     baseUrl: get('MINIPUSH_BASE_URL', `http://${getHostname()}:${getPort()}/`),
     nodeId: get('MINIPUSH_NODE_ID', 'local'),
     peers,
