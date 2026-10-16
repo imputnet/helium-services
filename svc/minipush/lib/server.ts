@@ -2,6 +2,7 @@ import { env } from './env.ts';
 import * as UA from './ua/server.ts';
 import * as Webpush from './webpush/server.ts';
 import * as Mesh from './mesh/mesh.ts';
+import * as Transport from './mesh/transport.ts';
 import { handleFrame } from './mesh/dispatch.ts';
 
 import { Hono } from '@hono/hono';
@@ -16,7 +17,21 @@ type ServerParameters = {
 };
 
 export const startServer = async (params: ServerParameters) => {
-    Mesh.setHandler(handleFrame);
+    const mesh = Deno.serve({
+        hostname: env.meshHostname,
+        port: env.meshPort,
+        signal: params.signal,
+        onListen: () => {},
+    }, (req) => {
+        if (new URL(req.url).pathname === '/mesh') {
+            return Transport.accept(req);
+        }
+
+        return new Response(null, { status: HTTP.status.NOT_FOUND });
+    });
+
+    await Mesh.start(handleFrame);
+
     const app = new Hono();
 
     const connectLimiter = new RateLimiter(
@@ -84,5 +99,5 @@ export const startServer = async (params: ServerParameters) => {
     }, app.fetch);
 
     env.log();
-    await server.finished;
+    await Promise.all([server.finished, mesh.finished]);
 };
