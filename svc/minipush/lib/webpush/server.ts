@@ -2,10 +2,10 @@ import { assert } from '@std/assert/assert';
 import { unwrap } from './chid.ts';
 import { env } from '../env.ts';
 import { encodeBase64Url } from '@std/encoding/base64url';
-import { NotificationInternal } from './notification.ts';
+import type { StoredMessage } from '../home/mailbox.ts';
 import * as HTTP from '../util/http.ts';
 import * as MessageId from './message-id.ts';
-import * as g_state from '../ua/state.ts';
+import * as Router from '../mesh/router.ts';
 
 const getTtl = (req: Request) => {
     const max = env.maxTtlSeconds;
@@ -108,7 +108,9 @@ export const handleWebPushRequest = async (
     if (topic) headers.topic = topic;
 
     // TODO: stricter-ish header validation
-    const notification: NotificationInternal = {
+    const message: StoredMessage = {
+        uaid,
+        expiresAt: timestamp + ttl * 1000,
         data: {
             messageType: 'notification',
             channelID: chid,
@@ -116,16 +118,21 @@ export const handleWebPushRequest = async (
             data: hasBody ? encodeBase64Url(body) : undefined,
             headers,
         },
-        uaid,
-        ttl,
-        timestamp,
     };
 
-    if (!g_state.onNewNotification(notification)) {
+    const status = await Router.route(message);
+    if (status === 'full') {
         return new Response(null, {
             status: HTTP.status.TOO_MANY_REQUESTS,
             headers: {
                 'Retry-After': '120',
+            },
+        });
+    } else if (status !== 'ok') {
+        return new Response(null, {
+            status: HTTP.status.SERVICE_UNAVAILABLE,
+            headers: {
+                'Retry-After': '30',
             },
         });
     }
@@ -151,13 +158,14 @@ export const handleWebPushDeletion = async (
     const { id } = params.pathname.groups;
     assert(id, 'id missing from url');
 
+    let uaid;
     try {
-        await MessageId.unwrap(id);
+        uaid = await MessageId.unwrap(id);
     } catch {
         return new Response(null, { status: HTTP.status.NOT_FOUND });
     }
 
-    g_state.onDeleteNotification(id);
+    Router.remove(uaid, id);
 
     return new Response(null, { status: HTTP.status.NO_CONTENT });
 };

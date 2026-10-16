@@ -62,6 +62,12 @@ export const env = Object.freeze({
         64,
         Infinity,
     ),
+    maxMailboxBytes: getNumberClamped(
+        'MINIPUSH_MAX_MAILBOX_BYTES',
+        0,
+        256 * 1024 * 1024,
+        Infinity,
+    ),
     rateLimitWindowMs: getNumber('MINIPUSH_RATE_LIMIT_WINDOW', 60 * 1000),
     rateLimit: getNumber('MINIPUSH_RATE_LIMIT', 1000),
 

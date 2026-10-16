@@ -33,6 +33,7 @@ const handleWebsocketMessage = async (
 
             if (response.messageType === 'hello') {
                 state.ready = true;
+                g_state.onClientReady(state);
             }
         }
     } catch {
@@ -88,7 +89,7 @@ export const handleWebsocketSetup = (req: Request) => {
     if (maybeError) return maybeError;
 
     const { socket, response } = Deno.upgradeWebSocket(req);
-    const state: ConnectionState = { ws: socket };
+    const state = g_state.newConnection(socket);
     waitForHelloTimeout(state);
     handleWebsocketConnection(state);
 
