@@ -17,6 +17,7 @@ const mailbox = new Mailbox({
 });
 
 const presence = new Map<string, Presence>();
+const presenceByMember = new Map<MemberId, Set<string>>();
 
 gauge('queuedMessages', () => mailbox.count);
 gauge('queuedBytes', () => mailbox.bytes);
@@ -55,11 +56,38 @@ export const onAck = (uaid: string, versions: string[]) => {
     }
 };
 
+const setPresence = (uaid: string, where: Presence) => {
+    const previous = presence.get(uaid);
+    if (previous) {
+        presenceByMember.get(previous.member)?.delete(uaid);
+    }
+
+    presence.set(uaid, where);
+
+    let uaids = presenceByMember.get(where.member);
+    if (!uaids) {
+        uaids = new Set();
+        presenceByMember.set(where.member, uaids);
+    }
+
+    uaids.add(uaid);
+};
+
 const forget = (from: MemberId, uaid: string, conn: string) => {
     const where = presence.get(uaid);
     if (where?.member === from && where.conn === conn) {
         presence.delete(uaid);
+        presenceByMember.get(from)?.delete(uaid);
     }
+};
+
+// The member re-announces its UAs once the link is back.
+export const onMemberDown = (member: MemberId) => {
+    for (const uaid of presenceByMember.get(member) ?? []) {
+        presence.delete(uaid);
+    }
+
+    presenceByMember.delete(member);
 };
 
 export const onPresence = (
@@ -72,7 +100,7 @@ export const onPresence = (
         return forget(from, uaid, conn);
     }
 
-    presence.set(uaid, { member: from, conn });
+    setPresence(uaid, { member: from, conn });
     deliver(uaid, mailbox.get(uaid));
 };
 

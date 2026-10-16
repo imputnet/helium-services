@@ -21,6 +21,8 @@ type Inflight = {
     sentAt: number;
 };
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 const MAX_BUFFERED_BYTES = 1024 * 1024;
 
 export type ConnectionState = {
@@ -76,21 +78,67 @@ export const onClientReady = (state: ConnectionState) => {
     }
 
     connectedClients.set(uaid, state);
-
-    for (const home of Mesh.homes(uaid)) {
-        state.homes.add(home);
-    }
-
-    announce(state);
+    join(state);
 };
 
-// Tells the home members where the UA is, which makes them deliver
+const tell = (state: ConnectionState, home: MemberId) => {
+    const uaid = getUaid(state);
+    Mesh.send(home, { t: 'presence', uaid, conn: state.id, up: true });
+};
+
+// Members in `force` are told even if they were told before.
+const join = (state: ConnectionState, force?: Set<MemberId>) => {
+    for (const home of Mesh.homes(getUaid(state))) {
+        if (!state.homes.has(home) || force?.has(home)) {
+            state.homes.add(home);
+            tell(state, home);
+        }
+    }
+};
+
+// Tells all home members where the UA is, which makes them deliver
 // whatever they have for it.
 const announce = (state: ConnectionState) => {
-    const uaid = getUaid(state);
     for (const home of state.homes) {
-        Mesh.send(home, { t: 'presence', uaid, conn: state.id, up: true });
+        tell(state, home);
     }
+};
+
+let resyncing = false;
+let resyncAgain = false;
+let resyncForce = new Set<MemberId>();
+
+export const resyncPresence = (force?: MemberId) => {
+    if (force) {
+        resyncForce.add(force);
+    }
+
+    resyncAgain = true;
+    if (resyncing) {
+        return;
+    }
+
+    resyncing = true;
+    setTimeout(async () => {
+        while (resyncAgain) {
+            resyncAgain = false;
+            const force = resyncForce;
+            resyncForce = new Set();
+
+            let i = 0;
+            for (const state of [...connectedClients.values()]) {
+                if (connectedClients.get(getUaid(state)) === state) {
+                    join(state, force);
+                }
+
+                if (++i % 1000 === 0) {
+                    await sleep(0);
+                }
+            }
+        }
+
+        resyncing = false;
+    }, 50);
 };
 
 export const onClientDisconnected = (state: ConnectionState) => {
@@ -251,8 +299,6 @@ const checkAckTimeouts = () => {
 Deno.unrefTimer(
     setInterval(checkAckTimeouts, Math.min(5000, env.ackTimeoutMs / 2)),
 );
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const drain = async (ackGraceMs: number, spreadMs: number) => {
     const ackDeadline = Date.now() + ackGraceMs;

@@ -1,6 +1,7 @@
 import * as Home from '../home/home.ts';
 import * as Edge from '../ua/state.ts';
 import type { FrameHandler } from './protocol.ts';
+import type { PeerEvents } from './transport.ts';
 
 export const handleFrame: FrameHandler = (from, frame) => {
     switch (frame.t) {
@@ -23,4 +24,13 @@ export const handleFrame: FrameHandler = (from, frame) => {
         case 'removed':
             throw 'unexpected response frame';
     }
+};
+
+export const memberEvents: Omit<PeerEvents, 'frame'> = {
+    up: (id) => Edge.resyncPresence(id),
+    down: (id) => {
+        Home.onMemberDown(id);
+        Edge.resyncPresence();
+    },
+    draining: () => Edge.resyncPresence(),
 };
