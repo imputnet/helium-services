@@ -180,7 +180,12 @@ export const handleWebPushDeletion = async (
         return new Response(null, { status: HTTP.status.NOT_FOUND });
     }
 
-    Router.remove(uaid, id);
+    if (!await Router.remove(uaid, id)) {
+        return new Response(null, {
+            status: HTTP.status.SERVICE_UNAVAILABLE,
+            headers: { 'Retry-After': '30' },
+        });
+    }
 
     return new Response(null, { status: HTTP.status.NO_CONTENT });
 };

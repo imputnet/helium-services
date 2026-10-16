@@ -16,6 +16,7 @@ export type Frame =
     | { t: 'route'; msg: StoredMessage }
     | { t: 'routed'; status: RouteStatus }
     | { t: 'remove'; uaid: string; version: string }
+    | { t: 'removed' }
     | { t: 'presence'; uaid: string; conn: string; up: boolean }
     | { t: 'ack'; uaid: string; versions: string[] }
     | { t: 'undeliverable'; uaid: string; conn: string }

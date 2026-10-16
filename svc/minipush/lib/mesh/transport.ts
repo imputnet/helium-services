@@ -76,6 +76,8 @@ let nextRequestId = 1;
 
 export const peerIds = () => peers.keys();
 
+export const isLinked = (id: MemberId) => !!peers.get(id)?.ws;
+
 export const isUp = (id: MemberId) => {
     const peer = peers.get(id);
     return !!peer?.ws && !peer.draining;

@@ -25,6 +25,11 @@ const dispatch = (from: MemberId, frame: Frame) => {
 export const isAvailable = (id: MemberId) =>
     id === self ? !isDraining() : Transport.isUp(id);
 
+export const reachable = () => [
+    self,
+    ...[...Transport.peerIds()].filter(Transport.isLinked),
+];
+
 export const homes = (uaid: string): MemberId[] => {
     const out = [];
     for (const id of ring.rank(uaid)) {
