@@ -6,10 +6,14 @@ import type { PeerEvents } from './transport.ts';
 export const handleFrame: FrameHandler = (from, frame) => {
     switch (frame.t) {
         case 'route':
-            return { t: 'routed', status: Home.onRoute(frame.msg) };
+            return Promise.resolve(Home.onRoute(frame.msg))
+                .then((status) => ({ t: 'routed', status }));
         case 'remove':
-            Home.onRemove(frame.uaid, frame.version);
-            return { t: 'removed' };
+            return Promise.resolve(Home.onRemove(frame.uaid, frame.version))
+                .then(() => ({ t: 'removed' }));
+        case 'handoff':
+            Home.onHandoff(frame.entries);
+            return { t: 'handedoff' };
         case 'presence':
             return Home.onPresence(from, frame);
         case 'ack':
@@ -24,6 +28,7 @@ export const handleFrame: FrameHandler = (from, frame) => {
             return Edge.onKick(frame.uaid, frame.conn);
         case 'routed':
         case 'removed':
+        case 'handedoff':
             throw 'unexpected response frame';
     }
 };

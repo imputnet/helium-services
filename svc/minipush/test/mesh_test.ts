@@ -1,4 +1,4 @@
-import { assertEquals } from '@std/assert';
+import { assert, assertEquals } from '@std/assert';
 import { decodeBase64Url, encodeBase64Url } from '@std/encoding/base64url';
 import { Ring } from '../lib/mesh/ring.ts';
 import {
@@ -183,6 +183,53 @@ Deno.test('a new connection on another member supersedes the old one', async () 
     } finally {
         await first.close();
         await second.close();
+        await stopAll(nodes);
+    }
+});
+
+Deno.test('a draining home hands off its messages', async () => {
+    const nodes = await startCluster(['a', 'b', 'c'], {
+        MINIPUSH_DRAIN_SECONDS: '0',
+        MINIPUSH_ACK_GRACE_MS: '0',
+    });
+    const byId = (id: string) => nodes.find((n) => n.id === id)!;
+    let ua = await FakeUA.connect(nodes[0].wsUrl);
+    try {
+        const uaid = await ua.hello();
+        const { channelID, endpoint } = await ua.register();
+        await ua.close();
+
+        const [primary, secondary, edge] = new Ring(['a', 'b', 'c'])
+            .rank(internalUaid(uaid))
+            .map(byId);
+        const to = (node: Node) => via(endpoint, nodes[0], node);
+
+        ua = await FakeUA.connect(edge.wsUrl);
+        await ua.hello(uaid, [channelID]);
+
+        // stored on the primary home
+        await push(to(edge), 'acked');
+        await push(to(edge), 'unacked');
+        ua.ack(await ua.notification());
+        const unacked = await ua.notification();
+
+        // let the ack reach the primary, an ack which is still on its way
+        // when it exits gets lost (and the message redelivered)
+        await new Promise((r) => setTimeout(r, 200));
+        primary.proc.kill('SIGTERM');
+        assertEquals((await primary.exited()).code, 0);
+        assert(!primary.output().includes('undelivered'), primary.output());
+
+        await ua.close();
+        ua = await FakeUA.connect(edge.wsUrl);
+        await ua.hello(uaid, [channelID]);
+        assertEquals((await ua.notification()).version, unacked.version);
+        ua.ack(unacked);
+        await ua.none((m) => m.messageType === 'notification', 500);
+
+        await pushUntilDelivered(ua, to(secondary), secondary, 'after');
+    } finally {
+        await ua.close();
         await stopAll(nodes);
     }
 });

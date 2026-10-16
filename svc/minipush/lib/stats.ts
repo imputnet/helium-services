@@ -1,6 +1,7 @@
 export const counters = {
     dispatchedMessages: 0,
     expiredMessages: 0,
+    droppedMessages: 0,
     nackedMessages: 0,
 };
 

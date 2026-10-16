@@ -286,10 +286,17 @@ export const onDeliver = (
 
     const sentAt = Date.now();
     for (const { data } of messages) {
+        // Handed off to another home member, so acks go there now.
+        const inflight = state.inflight.get(data.version);
+        if (inflight) {
+            inflight.home = from;
+            continue;
+        }
+
         // Leave messages for channels which the UA hasn't told us about
         // (yet) with the home, it might still register them.
         const chid = data.channelID.toLowerCase();
-        if (state.inflight.has(data.version) || !state.channels.has(chid)) {
+        if (!state.channels.has(chid)) {
             continue;
         }
 

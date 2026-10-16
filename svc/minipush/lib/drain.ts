@@ -9,6 +9,8 @@ export const drain = async () => {
     Mesh.announceDraining();
     console.log('draining');
 
+    await Home.handOff();
+
     await Edge.drain(env.ackGraceMs, env.drainSeconds * 1000);
 
     const undelivered = Home.pendingMessages();

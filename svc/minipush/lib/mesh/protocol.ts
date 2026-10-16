@@ -2,6 +2,18 @@ import type { StoredMessage } from '../home/mailbox.ts';
 
 export type MemberId = string;
 
+export type Presence = {
+    member: MemberId;
+    conn: string;
+    since: number;
+};
+
+export type HandoffEntry = {
+    uaid: string;
+    msgs: StoredMessage[];
+    presence?: Presence;
+};
+
 // ok: stored by the home member
 // full: per-uaid/per-channel limits reached
 // overloaded: home member is out of memory budget
@@ -12,6 +24,7 @@ export type RouteStatus = 'ok' | 'full' | 'overloaded' | 'unavailable';
 // - ingress (webpush POST/DELETE) -> home: route, remove
 // - edge (UA websocket) -> home: presence, ack, undeliverable, unregister
 // - home -> edge: deliver, kick
+// - home -> home: handoff
 export type Frame =
     | { t: 'route'; msg: StoredMessage }
     | { t: 'routed'; status: RouteStatus }
@@ -23,7 +36,9 @@ export type Frame =
     | { t: 'undeliverable'; uaid: string; conn: string }
     | { t: 'unregister'; uaid: string; chid: string }
     | { t: 'deliver'; uaid: string; conn: string; msgs: StoredMessage[] }
-    | { t: 'kick'; uaid: string; conn: string };
+    | { t: 'kick'; uaid: string; conn: string }
+    | { t: 'handoff'; entries: HandoffEntry[] }
+    | { t: 'handedoff' };
 
 export type FrameHandler = (
     from: MemberId,
