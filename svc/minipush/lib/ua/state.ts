@@ -7,6 +7,7 @@ import type { StoredMessage } from '../home/mailbox.ts';
 import { counters, gauge } from '../stats.ts';
 import { CloseStatus } from '../rfc/6455.ts';
 import { env } from '../env.ts';
+import { isDraining } from '../lifecycle.ts';
 
 // Owns UA websockets.
 
@@ -38,19 +39,25 @@ export type ConnectionState = {
     homes: Set<MemberId>;
 };
 
+const openConnections = new Set<ConnectionState>();
 const connectedClients = new Map<UAID, ConnectionState>();
 
 const awaitingAck = new Set<ConnectionState>();
 
 gauge('connectedClients', () => connectedClients.size);
 
-export const newConnection = (ws: WebSocket): ConnectionState => ({
-    ws,
-    id: encodeBase64Url(Crypto.rand(9)),
-    channels: new Set(),
-    inflight: new Map(),
-    homes: new Set(),
-});
+export const newConnection = (ws: WebSocket) => {
+    const state: ConnectionState = {
+        ws,
+        id: encodeBase64Url(Crypto.rand(9)),
+        channels: new Set(),
+        inflight: new Map(),
+        homes: new Set(),
+    };
+
+    openConnections.add(state);
+    return state;
+};
 
 const getUaid = (state: ConnectionState) => {
     const uaid = state.uaidInternal;
@@ -87,6 +94,8 @@ const announce = (state: ConnectionState) => {
 };
 
 export const onClientDisconnected = (state: ConnectionState) => {
+    openConnections.delete(state);
+
     const uaid = state.uaidInternal;
     if (!uaid) {
         return;
@@ -198,7 +207,7 @@ export const onDeliver = (
 ) => {
     const state = connectedClients.get(uaid);
     if (
-        !state || state.id !== conn || !state.ready ||
+        !state || state.id !== conn || !state.ready || isDraining() ||
         state.ws.readyState !== WebSocket.OPEN
     ) {
         Mesh.send(from, { t: 'undeliverable', uaid, conn });
@@ -242,3 +251,35 @@ const checkAckTimeouts = () => {
 Deno.unrefTimer(
     setInterval(checkAckTimeouts, Math.min(5000, env.ackTimeoutMs / 2)),
 );
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export const drain = async (ackGraceMs: number, spreadMs: number) => {
+    const ackDeadline = Date.now() + ackGraceMs;
+    while (awaitingAck.size > 0 && Date.now() < ackDeadline) {
+        await sleep(50);
+    }
+
+    const states = [...openConnections];
+    for (let i = states.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [states[i], states[j]] = [states[j], states[i]];
+    }
+
+    const STEP_MS = 100;
+    const perStep = Math.ceil(states.length / Math.max(1, spreadMs / STEP_MS));
+    for (let i = 0; i < states.length; i += perStep) {
+        if (i > 0) {
+            await sleep(STEP_MS);
+        }
+
+        for (const state of states.slice(i, i + perStep)) {
+            state.ws.close(CloseStatus.SERVICE_RESTART, 'draining');
+        }
+    }
+
+    const closeDeadline = Date.now() + 2000;
+    while (openConnections.size > 0 && Date.now() < closeDeadline) {
+        await sleep(50);
+    }
+};

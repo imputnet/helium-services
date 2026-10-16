@@ -24,6 +24,7 @@ export type Node = {
     proc: Deno.ChildProcess;
     output: () => string;
     stop: (signal?: Deno.Signal) => Promise<Deno.CommandStatus>;
+    exited: () => Promise<Deno.CommandStatus>;
 };
 
 export const waitFor = async (
@@ -119,6 +120,7 @@ export const startNode = async (
         proc,
         output: () => output,
         stop,
+        exited: () => status,
     };
 };
 

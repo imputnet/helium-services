@@ -86,6 +86,8 @@ export const env = Object.freeze({
         60_000,
         Infinity,
     ),
+    ackGraceMs: getNumberClamped('MINIPUSH_ACK_GRACE_MS', 0, 2000, Infinity),
+    drainSeconds: getNumberClamped('MINIPUSH_DRAIN_SECONDS', 0, 30, Infinity),
     rateLimitWindowMs: getNumber('MINIPUSH_RATE_LIMIT_WINDOW', 60 * 1000),
     rateLimitPerChannel: getNumber('MINIPUSH_RATE_LIMIT_PER_CHANNEL', 300),
     rateLimitConnectsPerIp: getNumber(

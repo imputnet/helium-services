@@ -9,6 +9,7 @@ import { getConnInfo } from '@hono/hono/deno';
 import type { Context } from '@hono/hono';
 import { RateLimiter } from './util/ratelimit.ts';
 import * as HTTP from './util/http.ts';
+import { isDraining } from './lifecycle.ts';
 
 type ServerParameters = {
     signal: AbortSignal;
@@ -33,7 +34,15 @@ export const startServer = async (params: ServerParameters) => {
         return getConnInfo(c).remote.address || '';
     };
 
+    const unavailable = () =>
+        new Response(null, { status: HTTP.status.SERVICE_UNAVAILABLE });
+
     app.get('/', (c) => {
+        // Let the proxy in front of us pick another instance.
+        if (isDraining()) {
+            return unavailable();
+        }
+
         if (!connectLimiter.take(clientAddress(c))) {
             return new Response(null, {
                 status: HTTP.status.TOO_MANY_REQUESTS,
@@ -49,6 +58,10 @@ export const startServer = async (params: ServerParameters) => {
     });
 
     app.get('/healthcheck', () => {
+        if (isDraining()) {
+            return unavailable();
+        }
+
         return new Response(null, { status: 204 });
     });
 

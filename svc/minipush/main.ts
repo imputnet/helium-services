@@ -1,15 +1,25 @@
 import { startServer } from './lib/server.ts';
 import { logStats } from './lib/stats.ts';
+import { drain } from './lib/drain.ts';
+import { env } from './lib/env.ts';
 
 const abortController = new AbortController();
 let shuttingDown = false;
 
-const shutdown = () => {
-    if (!shuttingDown) {
-        shuttingDown = true;
-        abortController.abort();
-        setTimeout(() => Deno.exit(), 1000);
+const shutdown = async () => {
+    if (shuttingDown) {
+        Deno.exit(1);
     }
+
+    shuttingDown = true;
+    setTimeout(() => {
+        console.error('draining took too long, exiting anyway');
+        Deno.exit(1);
+    }, (env.ackGraceMs + env.drainSeconds * 1000) + 10_000);
+
+    await drain();
+    abortController.abort();
+    Deno.exit();
 };
 
 globalThis.addEventListener('error', (e) => {

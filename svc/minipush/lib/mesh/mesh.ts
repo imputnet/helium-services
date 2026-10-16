@@ -1,4 +1,5 @@
 import type { Frame, FrameHandler, MemberId } from './protocol.ts';
+import { isDraining } from '../lifecycle.ts';
 
 export const self: MemberId = 'self';
 
@@ -16,7 +17,7 @@ const dispatch = (from: MemberId, frame: Frame) => {
 };
 
 // Members which store messages for `uaid`, most preferred first.
-export const homes = (_uaid: string): MemberId[] => [self];
+export const homes = (_uaid: string): MemberId[] => isDraining() ? [] : [self];
 
 // Fire and forget.
 export const send = (_to: MemberId, frame: Frame) => {
