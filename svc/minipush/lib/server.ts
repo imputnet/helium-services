@@ -1,6 +1,8 @@
 import { env } from './env.ts';
 import * as UA from './ua/server.ts';
 import * as Webpush from './webpush/server.ts';
+import * as Mesh from './mesh/mesh.ts';
+import { handleFrame } from './mesh/dispatch.ts';
 
 import { Hono } from '@hono/hono';
 import { getConnInfo } from '@hono/hono/deno';
@@ -11,6 +13,7 @@ type ServerParameters = {
 };
 
 export const startServer = async (params: ServerParameters) => {
+    Mesh.setHandler(handleFrame);
     const app = new Hono();
 
     app.use(rateLimiter({

@@ -19,7 +19,6 @@ const handleHello: Handler<C.ClientHello> = async (state, msg) => {
     const uaid = msg.uaid ? msg.uaid : await UAID.generate();
 
     state.uaidInternal = await UAID.unwrap(uaid);
-    g_state.onClientConnected(state);
 
     if (msg.channelIDs) {
         if (msg.channelIDs.length > 1024) {
@@ -82,13 +81,19 @@ const handleBroadcastSubscribe: Handler<C.ClientBroadcastSubscribe> = (
     return null;
 };
 
-const handleAck: Handler<C.ClientAck> = (_state, _msg) => {
-    // We don't care.
+const handleAck: Handler<C.ClientAck> = (state, msg) => {
+    if (state.uaidInternal) {
+        g_state.onClientAck(state, msg.updates.map((u) => u.version));
+    }
+
     return null;
 };
 
-const handleNack: Handler<C.ClientNack> = (_, msg) => {
-    g_state.onNackNotification(msg.version);
+const handleNack: Handler<C.ClientNack> = (state, msg) => {
+    if (state.uaidInternal) {
+        g_state.onClientNack(state, msg.version);
+    }
+
     return null;
 };
 
