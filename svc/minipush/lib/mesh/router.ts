@@ -23,8 +23,11 @@ export const route = async (msg: StoredMessage): Promise<RouteStatus> => {
     return 'unavailable';
 };
 
-export const remove = (uaid: string, version: string) => {
-    for (const home of Mesh.homes(uaid)) {
-        Mesh.send(home, { t: 'remove', uaid, version });
-    }
+// Waits for every reachable home, so the message can't show up afterwards.
+export const remove = async (uaid: string, version: string) => {
+    await Promise.allSettled(
+        Mesh.homes(uaid).map((home) =>
+            Mesh.request(home, { t: 'remove', uaid, version })
+        ),
+    );
 };

@@ -180,7 +180,7 @@ export const handleWebPushDeletion = async (
         return new Response(null, { status: HTTP.status.NOT_FOUND });
     }
 
-    Router.remove(uaid, id);
+    await Router.remove(uaid, id);
 
     return new Response(null, { status: HTTP.status.NO_CONTENT });
 };

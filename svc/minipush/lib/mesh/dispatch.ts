@@ -7,7 +7,8 @@ export const handleFrame: FrameHandler = (from, frame) => {
         case 'route':
             return { t: 'routed', status: Home.onRoute(frame.msg) };
         case 'remove':
-            return Home.onRemove(frame.uaid, frame.version);
+            Home.onRemove(frame.uaid, frame.version);
+            return { t: 'removed' };
         case 'presence':
             return Home.onPresence(from, frame.uaid, frame.conn, frame.up);
         case 'ack':
@@ -19,6 +20,7 @@ export const handleFrame: FrameHandler = (from, frame) => {
         case 'deliver':
             return Edge.onDeliver(from, frame.uaid, frame.conn, frame.msgs);
         case 'routed':
+        case 'removed':
             throw 'unexpected response frame';
     }
 };
