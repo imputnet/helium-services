@@ -6,6 +6,12 @@ import type { StoredMessage } from '../home/mailbox.ts';
 import * as HTTP from '../util/http.ts';
 import * as MessageId from './message-id.ts';
 import * as Router from '../mesh/router.ts';
+import { RateLimiter } from '../util/ratelimit.ts';
+
+const channelLimiter = new RateLimiter(
+    env.rateLimitPerChannel,
+    env.rateLimitWindowMs,
+);
 
 const getTtl = (req: Request) => {
     const max = env.maxTtlSeconds;
@@ -64,6 +70,15 @@ export const handleWebPushRequest = async (
 
     const { uaid, chid } = unwrapped;
     assert(uaid && chid, 'could not unwrap uaid/chid');
+
+    if (!channelLimiter.take(`${uaid}:${chid}`)) {
+        return new Response(null, {
+            status: HTTP.status.TOO_MANY_REQUESTS,
+            headers: {
+                'Retry-After': String(Math.ceil(env.rateLimitWindowMs / 1000)),
+            },
+        });
+    }
 
     const maxPayloadBytes = 4096;
     const bodyTimeoutMs = 10_000;

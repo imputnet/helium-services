@@ -54,7 +54,6 @@ export const startNode = async (
             ...sharedSecrets(),
             MINIPUSH_PORT: String(port),
             MINIPUSH_BASE_URL: url,
-            MINIPUSH_RATE_LIMIT: '100000',
             ...env,
         },
         stdout: 'piped',

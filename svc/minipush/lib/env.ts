@@ -87,7 +87,12 @@ export const env = Object.freeze({
         Infinity,
     ),
     rateLimitWindowMs: getNumber('MINIPUSH_RATE_LIMIT_WINDOW', 60 * 1000),
-    rateLimit: getNumber('MINIPUSH_RATE_LIMIT', 1000),
+    rateLimitPerChannel: getNumber('MINIPUSH_RATE_LIMIT_PER_CHANNEL', 300),
+    rateLimitConnectsPerIp: getNumber(
+        'MINIPUSH_RATE_LIMIT_CONNECTS_PER_IP',
+        600,
+    ),
+    trustProxy: getBoolean('MINIPUSH_TRUST_PROXY', false),
 
     // TODO: this is not actually implemented.
     requireVapid: getBoolean('MINIPUSH_REQUIRE_VAPID', false),

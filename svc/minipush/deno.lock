@@ -1,21 +1,13 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@hono-rate-limiter/hono-rate-limiter@~0.4.2": "0.4.2",
     "jsr:@hono/hono@^4.12.9": "4.12.9",
-    "jsr:@hono/hono@^4.6.12": "4.12.9",
     "jsr:@std/assert@1": "1.0.18",
     "jsr:@std/encoding@^1.0.10": "1.0.10",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@zod/zod@^4.3.6": "4.3.6"
   },
   "jsr": {
-    "@hono-rate-limiter/hono-rate-limiter@0.4.2": {
-      "integrity": "028c2ded3d21be30fb787044ddac3e656b24a9d3a06e42241a5a693409210217",
-      "dependencies": [
-        "jsr:@hono/hono@^4.6.12"
-      ]
-    },
     "@hono/hono@4.12.9": {
       "integrity": "53c2b0a721c1d782e6a347ad5bf15a3235ff624b98859c21f779b7ee2f5e040e"
     },
@@ -37,7 +29,6 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@hono-rate-limiter/hono-rate-limiter@~0.4.2",
       "jsr:@hono/hono@^4.12.9",
       "jsr:@std/assert@1",
       "jsr:@std/encoding@^1.0.10",

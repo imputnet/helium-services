@@ -6,7 +6,9 @@ import { handleFrame } from './mesh/dispatch.ts';
 
 import { Hono } from '@hono/hono';
 import { getConnInfo } from '@hono/hono/deno';
-import { rateLimiter } from '@hono-rate-limiter/hono-rate-limiter';
+import type { Context } from '@hono/hono';
+import { RateLimiter } from './util/ratelimit.ts';
+import * as HTTP from './util/http.ts';
 
 type ServerParameters = {
     signal: AbortSignal;
@@ -16,14 +18,33 @@ export const startServer = async (params: ServerParameters) => {
     Mesh.setHandler(handleFrame);
     const app = new Hono();
 
-    app.use(rateLimiter({
-        windowMs: env.rateLimitWindowMs,
-        limit: env.rateLimit,
-        standardHeaders: 'draft-6',
-        keyGenerator: (c) => getConnInfo(c).remote.address || '',
-    }));
+    const connectLimiter = new RateLimiter(
+        env.rateLimitConnectsPerIp,
+        env.rateLimitWindowMs,
+    );
+
+    const clientAddress = (c: Context) => {
+        const forwarded = c.req.header('x-forwarded-for');
+        if (env.trustProxy && forwarded) {
+            // Only the last address was added by our proxy.
+            return forwarded.split(',').at(-1)!.trim();
+        }
+
+        return getConnInfo(c).remote.address || '';
+    };
 
     app.get('/', (c) => {
+        if (!connectLimiter.take(clientAddress(c))) {
+            return new Response(null, {
+                status: HTTP.status.TOO_MANY_REQUESTS,
+                headers: {
+                    'Retry-After': String(
+                        Math.ceil(env.rateLimitWindowMs / 1000),
+                    ),
+                },
+            });
+        }
+
         return UA.handleWebsocketSetup(c.req.raw);
     });
 
