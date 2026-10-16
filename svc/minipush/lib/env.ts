@@ -74,6 +74,18 @@ export const env = Object.freeze({
         256 * 1024 * 1024,
         Infinity,
     ),
+    idleTimeoutSeconds: getNumberClamped(
+        'MINIPUSH_IDLE_TIMEOUT_SECONDS',
+        5,
+        60,
+        3600,
+    ),
+    ackTimeoutMs: getNumberClamped(
+        'MINIPUSH_ACK_TIMEOUT_MS',
+        100,
+        60_000,
+        Infinity,
+    ),
     rateLimitWindowMs: getNumber('MINIPUSH_RATE_LIMIT_WINDOW', 60 * 1000),
     rateLimit: getNumber('MINIPUSH_RATE_LIMIT', 1000),
 

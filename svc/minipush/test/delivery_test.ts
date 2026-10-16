@@ -1,4 +1,4 @@
-import { assertEquals } from '@std/assert';
+import { assert, assertEquals } from '@std/assert';
 import { decodeBase64Url } from '@std/encoding/base64url';
 import { FakeUA, push, startNode } from './helpers.ts';
 
@@ -235,6 +235,112 @@ Deno.test('does not redeliver expired messages', async () => {
 
         ua = await reconnect(node.wsUrl, uaid, [channelID]);
         await ua.none((m) => m.messageType === 'notification');
+    } finally {
+        await ua.close();
+        await node.stop();
+    }
+});
+
+Deno.test('closes connections which do not ack in time', async () => {
+    const node = await startNode({ MINIPUSH_ACK_TIMEOUT_MS: '500' });
+    let ua = await FakeUA.connect(node.wsUrl);
+    try {
+        const uaid = await ua.hello();
+        const { channelID, endpoint } = await ua.register();
+
+        await push(endpoint, 'x');
+        const n = await ua.notification();
+        assertEquals((await ua.closed).code, 3008);
+
+        ua = await reconnect(node.wsUrl, uaid, [channelID]);
+        assertEquals((await ua.notification()).version, n.version);
+        ua.ack(n);
+        await ua.none(undefined, 1000);
+        assertEquals(ua.ws.readyState, WebSocket.OPEN);
+    } finally {
+        await ua.close();
+        await node.stop();
+    }
+});
+
+Deno.test('holds back messages until the client catches up', async () => {
+    const node = await startNode({
+        MINIPUSH_MAX_QUEUED_PER_CHANNEL: '1000',
+        MINIPUSH_RATE_LIMIT_PER_CHANNEL: '1000',
+    });
+    let ua = await FakeUA.connect(node.wsUrl);
+    try {
+        const uaid = await ua.hello();
+        const { channelID, endpoint } = await ua.register();
+        await ua.close();
+
+        // about twice as much as the server buffers per connection
+        const total = 400;
+        for (let i = 0; i < total; i++) {
+            assertEquals((await push(endpoint, 'x'.repeat(4000))).status, 201);
+        }
+
+        ua = await reconnect(node.wsUrl, uaid, [channelID]);
+        const receiveAll = async () => {
+            const received = [];
+            try {
+                while (true) {
+                    received.push(await ua.notification(500));
+                }
+            } catch (e) {
+                if (
+                    !(e instanceof Error) || !e.message.startsWith('timed out')
+                ) {
+                    throw e;
+                }
+            }
+            return received;
+        };
+
+        let received = await receiveAll();
+        assert(received.length < total, `got all ${total} without acking`);
+
+        let count = 0;
+        while (received.length > 0) {
+            count += received.length;
+            ua.ack(...received);
+            received = await receiveAll();
+        }
+        assertEquals(count, total);
+    } finally {
+        await ua.close();
+        await node.stop();
+    }
+});
+
+Deno.test('keeps delivering after unregistering a held back channel', async () => {
+    const node = await startNode({
+        MINIPUSH_MAX_QUEUED_PER_CHANNEL: '1000',
+        MINIPUSH_RATE_LIMIT_PER_CHANNEL: '1000',
+    });
+    let ua = await FakeUA.connect(node.wsUrl);
+    try {
+        const uaid = await ua.hello();
+        const a = await ua.register();
+        const b = await ua.register();
+        await ua.close();
+
+        for (let i = 0; i < 400; i++) {
+            assertEquals(
+                (await push(a.endpoint, 'x'.repeat(4000))).status,
+                201,
+            );
+        }
+        await push(b.endpoint, 'b');
+
+        ua = await reconnect(node.wsUrl, uaid, [a.channelID, b.channelID]);
+        await ua.notification();
+        ua.send({ messageType: 'unregister', channelID: a.channelID });
+
+        const n = await ua.next((m) =>
+            m.messageType === 'notification' && m.channelID === b.channelID
+        );
+        assertEquals(text(n.data), 'b');
     } finally {
         await ua.close();
         await node.stop();

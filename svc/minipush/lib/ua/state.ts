@@ -17,7 +17,10 @@ type MessageVersion = string;
 type Inflight = {
     home: MemberId;
     chid: CHID;
+    sentAt: number;
 };
+
+const MAX_BUFFERED_BYTES = 1024 * 1024;
 
 export type ConnectionState = {
     ws: WebSocket;
@@ -25,6 +28,8 @@ export type ConnectionState = {
     helloTimeoutId?: ReturnType<typeof setTimeout>;
     uaidInternal?: UAID;
     ready?: true;
+    // more is sent once the UA has acked what it got so far
+    throttled?: true;
     channels: Set<CHID>;
     // messages sent to the UA which it hasn't acked yet, and which member
     // to forward the ack to
@@ -34,6 +39,8 @@ export type ConnectionState = {
 };
 
 const connectedClients = new Map<UAID, ConnectionState>();
+
+const awaitingAck = new Set<ConnectionState>();
 
 gauge('connectedClients', () => connectedClients.size);
 
@@ -95,6 +102,7 @@ export const onClientDisconnected = (state: ConnectionState) => {
 
     state.homes.clear();
     state.inflight.clear();
+    awaitingAck.delete(state);
 };
 
 export const onChannelRegistered = (state: ConnectionState, chid: CHID) => {
@@ -131,6 +139,21 @@ export const onChannelUnregistered = (state: ConnectionState, chid: CHID) => {
     for (const home of state.homes) {
         Mesh.send(home, { t: 'unregister', uaid, chid });
     }
+
+    onInflightRemoved(state);
+};
+
+const onInflightRemoved = (state: ConnectionState) => {
+    if (state.inflight.size > 0) {
+        return;
+    }
+
+    awaitingAck.delete(state);
+
+    if (state.throttled) {
+        delete state.throttled;
+        announce(state);
+    }
 };
 
 const ackToHomes = (
@@ -151,6 +174,8 @@ const ackToHomes = (
     for (const [home, versions] of byHome) {
         Mesh.send(home, { t: 'ack', uaid: getUaid(state), versions });
     }
+
+    onInflightRemoved(state);
 };
 
 export const onClientAck = (
@@ -180,6 +205,7 @@ export const onDeliver = (
         return;
     }
 
+    const sentAt = Date.now();
     for (const { data } of messages) {
         // Leave messages for channels which the UA hasn't told us about
         // (yet) with the home, it might still register them.
@@ -188,8 +214,31 @@ export const onDeliver = (
             continue;
         }
 
-        state.inflight.set(data.version, { home: from, chid });
+        if (state.ws.bufferedAmount > MAX_BUFFERED_BYTES) {
+            state.throttled = true;
+            continue;
+        }
+
+        state.inflight.set(data.version, { home: from, chid, sentAt });
         state.ws.send(JSON.stringify(data));
+        awaitingAck.add(state);
         counters.dispatchedMessages++;
     }
 };
+
+const checkAckTimeouts = () => {
+    const cutoff = Date.now() - env.ackTimeoutMs;
+    for (const state of awaitingAck) {
+        const oldest = state.inflight.values().next().value;
+        if (!oldest) {
+            awaitingAck.delete(state);
+        } else if (oldest.sentAt < cutoff) {
+            awaitingAck.delete(state);
+            state.ws.close(CloseStatus.TIMED_OUT, 'ack timeout');
+        }
+    }
+};
+
+Deno.unrefTimer(
+    setInterval(checkAckTimeouts, Math.min(5000, env.ackTimeoutMs / 2)),
+);
