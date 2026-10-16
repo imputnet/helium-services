@@ -12,6 +12,15 @@ const shutdown = () => {
     }
 };
 
+globalThis.addEventListener('error', (e) => {
+    e.preventDefault();
+    console.error('uncaught error:', e.error);
+});
+globalThis.addEventListener('unhandledrejection', (e) => {
+    e.preventDefault();
+    console.error('unhandled rejection:', e.reason);
+});
+
 Deno.addSignalListener('SIGINT', shutdown);
 Deno.addSignalListener('SIGTERM', shutdown);
 Deno.unrefTimer(setInterval(logStats, 5 * 60 * 1000));
