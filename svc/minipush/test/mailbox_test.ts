@@ -130,3 +130,13 @@ Deno.test('mailbox removes all messages of a channel', () => {
     assertEquals(box.add(message('u', 'a')), 'ok');
     assertEquals(box.add(message('u', 'a')), 'ok');
 });
+
+Deno.test('mailbox ignores messages it already has', () => {
+    const box = new Mailbox(limits, T0);
+    const a = message('u');
+    assertEquals(box.add(a), 'ok');
+    const bytes = box.bytes;
+    assertEquals(box.add(a), 'ok');
+    assertEquals(box.count, 1);
+    assertEquals(box.bytes, bytes);
+});

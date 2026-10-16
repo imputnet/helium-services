@@ -1,16 +1,18 @@
 import { env } from '../env.ts';
+import { isDraining } from '../lifecycle.ts';
+import * as Router from '../mesh/router.ts';
 import { counters, gauge } from '../stats.ts';
 import * as Mesh from '../mesh/mesh.ts';
-import type { Frame, MemberId, RouteStatus } from '../mesh/protocol.ts';
+import type {
+    Frame,
+    HandoffEntry,
+    MemberId,
+    Presence,
+    RouteStatus,
+} from '../mesh/protocol.ts';
 import { Mailbox, type StoredMessage } from './mailbox.ts';
 
 // Stores messages until they're acked, and knows where their UA is.
-
-type Presence = {
-    member: MemberId;
-    conn: string;
-    since: number;
-};
 
 const mailbox = new Mailbox({
     perChannel: env.maxQueuedPerChannel,
@@ -35,7 +37,13 @@ const deliver = (uaid: string, messages: StoredMessage[]) => {
     }
 };
 
-export const onRoute = (msg: StoredMessage): RouteStatus => {
+export const onRoute = (
+    msg: StoredMessage,
+): RouteStatus | Promise<RouteStatus> => {
+    if (isDraining()) {
+        return Router.route(msg);
+    }
+
     const result = mailbox.add(msg);
     if (result === 'over-budget') {
         return 'overloaded';
@@ -47,13 +55,31 @@ export const onRoute = (msg: StoredMessage): RouteStatus => {
     return 'ok';
 };
 
-export const onRemove = (uaid: string, version: string) => {
+export const onRemove = async (uaid: string, version: string) => {
     mailbox.remove(uaid, version);
+
+    const homes = Mesh.homes(uaid);
+    if (homes.includes(Mesh.self)) {
+        return;
+    }
+
+    // Follows any handoff of the message on the same link.
+    if (!await Router.remove(uaid, version, homes)) {
+        throw 'could not pass on removal';
+    }
 };
 
 export const onAck = (uaid: string, versions: string[]) => {
     for (const version of versions) {
         mailbox.remove(uaid, version);
+    }
+
+    // Follows any handoff of the messages on the same link.
+    const homes = Mesh.homes(uaid);
+    if (!homes.includes(Mesh.self)) {
+        for (const home of homes) {
+            Mesh.send(home, { t: 'ack', uaid, versions });
+        }
     }
 };
 
@@ -132,6 +158,74 @@ export const onUnregister = (uaid: string, chid: string) => {
 };
 
 export const pendingMessages = () => mailbox.count;
+
+export const onHandoff = (entries: HandoffEntry[]) => {
+    for (const { uaid, msgs, presence: where } of entries) {
+        for (const msg of msgs) {
+            if (mailbox.add(msg) !== 'ok') {
+                counters.droppedMessages++;
+            }
+        }
+
+        const current = presence.get(uaid);
+        if (where && (!current || isNewer(where, current))) {
+            setPresence(uaid, where);
+        }
+
+        deliver(uaid, mailbox.get(uaid));
+    }
+
+    // The sender didn't know yet that we're draining.
+    if (isDraining()) {
+        handOff();
+    }
+};
+
+const HANDOFF_BATCH = 500;
+
+// Moves messages to the current homes of their UA, unless we're one of them.
+const moveMessages = async () => {
+    const byTarget = new Map<MemberId, string[]>();
+    for (const uaid of [...mailbox.uaids()]) {
+        const homes = Mesh.homes(uaid);
+        if (homes[0] && !homes.includes(Mesh.self)) {
+            const uaids = byTarget.get(homes[0]) ?? [];
+            byTarget.set(homes[0], uaids);
+            uaids.push(uaid);
+        }
+    }
+
+    await Promise.all([...byTarget].map(async ([target, uaids]) => {
+        for (let i = 0; i < uaids.length; i += HANDOFF_BATCH) {
+            const entries = uaids.slice(i, i + HANDOFF_BATCH).map((uaid) => ({
+                uaid,
+                msgs: mailbox.get(uaid),
+                presence: presence.get(uaid),
+            }));
+
+            try {
+                await Mesh.request(target, { t: 'handoff', entries });
+            } catch (e) {
+                console.error(`handoff to ${target} failed:`, e);
+                continue;
+            }
+
+            for (const { uaid, msgs } of entries) {
+                for (const { data } of msgs) {
+                    mailbox.remove(uaid, data.version);
+                }
+            }
+        }
+    }));
+};
+
+let lastPass = Promise.resolve();
+
+// One pass at a time, or a pass could copy messages an earlier one is still moving.
+export const handOff = () => {
+    lastPass = lastPass.then(moveMessages, moveMessages);
+    return lastPass;
+};
 
 Deno.unrefTimer(setInterval(() => {
     counters.expiredMessages += mailbox.expire();

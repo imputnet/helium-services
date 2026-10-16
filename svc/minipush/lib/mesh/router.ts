@@ -25,9 +25,13 @@ export const route = async (msg: StoredMessage): Promise<RouteStatus> => {
 
 // Goes to every member, since one that isn't home to the UA anymore might
 // still store the message. Only true once all of them confirmed it.
-export const remove = async (uaid: string, version: string) => {
+export const remove = async (
+    uaid: string,
+    version: string,
+    to = Mesh.reachable(),
+) => {
     const results = await Promise.allSettled(
-        Mesh.reachable().map((member) =>
+        to.map((member) =>
             Mesh.request(member, { t: 'remove', uaid, version })
         ),
     );

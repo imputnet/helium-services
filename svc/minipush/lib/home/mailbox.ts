@@ -70,6 +70,10 @@ export class Mailbox {
 
         const chid = msg.data.channelID;
         let box = this.#boxes.get(msg.uaid);
+        if (box?.entries.has(msg.data.version)) {
+            return 'ok';
+        }
+
         const inChannel = box?.channels.get(chid) ?? 0;
         if (inChannel >= this.#limits.perChannel) {
             return 'full';
