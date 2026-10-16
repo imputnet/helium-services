@@ -4,6 +4,7 @@ import { env } from '../env.ts';
 import { encodeBase64Url } from '@std/encoding/base64url';
 import { NotificationInternal } from './notification.ts';
 import * as HTTP from '../util/http.ts';
+import * as MessageId from './message-id.ts';
 import * as g_state from '../ua/state.ts';
 
 const getTtl = (req: Request) => {
@@ -82,7 +83,7 @@ export const handleWebPushRequest = async (
     const hasBody = body.byteLength > 0;
 
     const timestamp = Date.now();
-    const id = crypto.randomUUID();
+    const id = await MessageId.make(uaid);
 
     const ttl = getTtl(request);
 
@@ -138,7 +139,7 @@ export const handleWebPushRequest = async (
     });
 };
 
-export const handleWebPushDeletion = (
+export const handleWebPushDeletion = async (
     request: Request,
     params: URLPatternResult,
 ) => {
@@ -149,6 +150,13 @@ export const handleWebPushDeletion = (
 
     const { id } = params.pathname.groups;
     assert(id, 'id missing from url');
+
+    try {
+        await MessageId.unwrap(id);
+    } catch {
+        return new Response(null, { status: HTTP.status.NOT_FOUND });
+    }
+
     g_state.onDeleteNotification(id);
 
     return new Response(null, { status: HTTP.status.NO_CONTENT });
