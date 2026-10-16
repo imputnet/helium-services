@@ -16,11 +16,13 @@ const handleHello: Handler<C.ClientHello> = async (state, msg) => {
         throw 'hello already handled';
     }
 
-    const uaid = msg.uaid ? msg.uaid : await UAID.generate();
+    let uaid = msg.uaid;
+    let uaidInternal = uaid && await UAID.unwrap(uaid).catch(() => undefined);
 
-    state.uaidInternal = await UAID.unwrap(uaid);
-
-    if (msg.channelIDs) {
+    if (!uaid || !uaidInternal) {
+        uaid = await UAID.generate();
+        uaidInternal = await UAID.unwrap(uaid);
+    } else if (msg.channelIDs) {
         if (msg.channelIDs.length > 1024) {
             throw 'too many channel IDs';
         }
@@ -29,6 +31,8 @@ const handleHello: Handler<C.ClientHello> = async (state, msg) => {
             g_state.onChannelRegistered(state, channel);
         }
     }
+
+    state.uaidInternal = uaidInternal;
 
     // TODO: handle registration for msg.broadcasts
     return {

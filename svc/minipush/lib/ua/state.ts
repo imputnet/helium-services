@@ -5,6 +5,7 @@ import * as Mesh from '../mesh/mesh.ts';
 import type { MemberId } from '../mesh/protocol.ts';
 import type { StoredMessage } from '../home/mailbox.ts';
 import { counters, gauge } from '../stats.ts';
+import { CloseStatus } from '../rfc/6455.ts';
 
 // Owns UA websockets.
 
@@ -53,6 +54,12 @@ const getUaid = (state: ConnectionState) => {
 // Called once the hello response has been sent to the UA.
 export const onClientReady = (state: ConnectionState) => {
     const uaid = getUaid(state);
+
+    const previous = connectedClients.get(uaid);
+    if (previous && previous !== state) {
+        previous.ws.close(CloseStatus.GOING_AWAY, 'superseded');
+    }
+
     connectedClients.set(uaid, state);
 
     for (const home of Mesh.homes(uaid)) {

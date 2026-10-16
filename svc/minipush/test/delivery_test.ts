@@ -168,7 +168,8 @@ Deno.test('keeps delivering to the newest connection of a client', async () => {
         assertEquals(await ua.hello(uaid), uaid);
         const { endpoint } = await ua.register();
 
-        await old.register();
+        // It's being closed, but might still get a register through.
+        old.send({ messageType: 'register', channelID: crypto.randomUUID() });
         await push(endpoint, 'x');
         assertEquals(text((await ua.notification()).data), 'x');
     } finally {
