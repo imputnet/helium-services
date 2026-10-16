@@ -33,6 +33,8 @@ export type ConnectionState = {
     ready?: true;
     // more is sent once the UA has acked what it got so far
     throttled?: true;
+    // when the connection became ready
+    since: number;
     channels: Set<CHID>;
     // messages sent to the UA which it hasn't acked yet, and which member
     // to forward the ack to
@@ -52,6 +54,7 @@ export const newConnection = (ws: WebSocket) => {
     const state: ConnectionState = {
         ws,
         id: encodeBase64Url(Crypto.rand(9)),
+        since: 0,
         channels: new Set(),
         inflight: new Map(),
         homes: new Set(),
@@ -77,13 +80,19 @@ export const onClientReady = (state: ConnectionState) => {
         previous.ws.close(CloseStatus.GOING_AWAY, 'superseded');
     }
 
+    state.since = Date.now();
     connectedClients.set(uaid, state);
     join(state);
 };
 
 const tell = (state: ConnectionState, home: MemberId) => {
-    const uaid = getUaid(state);
-    Mesh.send(home, { t: 'presence', uaid, conn: state.id, up: true });
+    Mesh.send(home, {
+        t: 'presence',
+        uaid: getUaid(state),
+        conn: state.id,
+        up: true,
+        since: state.since,
+    });
 };
 
 // Members in `force` are told even if they were told before.
@@ -154,12 +163,25 @@ export const onClientDisconnected = (state: ConnectionState) => {
     }
 
     for (const home of state.homes) {
-        Mesh.send(home, { t: 'presence', uaid, conn: state.id, up: false });
+        Mesh.send(home, {
+            t: 'presence',
+            uaid,
+            conn: state.id,
+            up: false,
+            since: state.since,
+        });
     }
 
     state.homes.clear();
     state.inflight.clear();
     awaitingAck.delete(state);
+};
+
+export const onKick = (uaid: UAID, conn: string) => {
+    const state = connectedClients.get(uaid);
+    if (state?.id === conn) {
+        state.ws.close(CloseStatus.GOING_AWAY, 'superseded');
+    }
 };
 
 export const onChannelRegistered = (state: ConnectionState, chid: CHID) => {

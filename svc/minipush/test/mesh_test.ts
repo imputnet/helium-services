@@ -165,3 +165,24 @@ Deno.test('keeps delivering while home members restart', async () => {
         await stopAll(nodes);
     }
 });
+
+Deno.test('a new connection on another member supersedes the old one', async () => {
+    const nodes = await startCluster(['a', 'b']);
+    const [a, b] = nodes;
+    const first = await FakeUA.connect(a.wsUrl);
+    const second = await FakeUA.connect(b.wsUrl);
+    try {
+        const uaid = await first.hello();
+        const { channelID, endpoint } = await first.register();
+
+        await second.hello(uaid, [channelID]);
+        assertEquals((await first.closed).code, 1001);
+
+        await push(endpoint, 'x');
+        await second.notification();
+    } finally {
+        await first.close();
+        await second.close();
+        await stopAll(nodes);
+    }
+});

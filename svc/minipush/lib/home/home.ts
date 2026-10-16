@@ -1,7 +1,7 @@
 import { env } from '../env.ts';
 import { counters, gauge } from '../stats.ts';
 import * as Mesh from '../mesh/mesh.ts';
-import type { MemberId, RouteStatus } from '../mesh/protocol.ts';
+import type { Frame, MemberId, RouteStatus } from '../mesh/protocol.ts';
 import { Mailbox, type StoredMessage } from './mailbox.ts';
 
 // Stores messages until they're acked, and knows where their UA is.
@@ -9,6 +9,7 @@ import { Mailbox, type StoredMessage } from './mailbox.ts';
 type Presence = {
     member: MemberId;
     conn: string;
+    since: number;
 };
 
 const mailbox = new Mailbox({
@@ -90,17 +91,29 @@ export const onMemberDown = (member: MemberId) => {
     presenceByMember.delete(member);
 };
 
+const kick = ({ member, conn }: Presence, uaid: string) => {
+    Mesh.send(member, { t: 'kick', uaid, conn });
+};
+
 export const onPresence = (
     from: MemberId,
-    uaid: string,
-    conn: string,
-    up: boolean,
+    { uaid, conn, up, since }: Extract<Frame, { t: 'presence' }>,
 ) => {
     if (!up) {
         return forget(from, uaid, conn);
     }
 
-    setPresence(uaid, { member: from, conn });
+    const current = presence.get(uaid);
+    const announced = { member: from, conn, since };
+    if (current && (current.member !== from || current.conn !== conn)) {
+        if (current.since > since) {
+            return kick(announced, uaid);
+        }
+
+        kick(current, uaid);
+    }
+
+    setPresence(uaid, announced);
     deliver(uaid, mailbox.get(uaid));
 };
 
