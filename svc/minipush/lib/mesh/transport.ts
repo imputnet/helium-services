@@ -4,6 +4,7 @@ import * as z from '@zod/zod';
 import { env } from '../env.ts';
 import * as Crypto from '../util/crypto.ts';
 import type { Frame, MemberId } from './protocol.ts';
+import { gauge } from '../stats.ts';
 
 const PROTOCOL_VERSION = 1;
 const HEARTBEAT_MS = 5_000;
@@ -69,6 +70,9 @@ const peers = new Map<MemberId, Peer>(
             reconnectDelay: 0,
         }]),
 );
+
+gauge('peers', () => peers.size);
+gauge('reachablePeers', () => [...peers.values()].filter((p) => p.ws).length);
 
 let events: PeerEvents | undefined;
 let selfDraining = false;

@@ -11,6 +11,7 @@ import type { Context } from '@hono/hono';
 import { RateLimiter } from './util/ratelimit.ts';
 import * as HTTP from './util/http.ts';
 import { isDraining } from './lifecycle.ts';
+import { renderMetrics } from './stats.ts';
 
 type ServerParameters = {
     signal: AbortSignal;
@@ -23,8 +24,13 @@ export const startServer = async (params: ServerParameters) => {
         signal: params.signal,
         onListen: () => {},
     }, (req) => {
-        if (new URL(req.url).pathname === '/mesh') {
+        const { pathname } = new URL(req.url);
+        if (pathname === '/mesh') {
             return Transport.accept(req);
+        } else if (pathname === '/metrics') {
+            return new Response(renderMetrics(), {
+                headers: { 'content-type': 'text/plain; version=0.0.4' },
+            });
         }
 
         return new Response(null, { status: HTTP.status.NOT_FOUND });

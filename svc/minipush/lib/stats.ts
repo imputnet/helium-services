@@ -12,8 +12,10 @@ export const gauge = (name: string, read: () => number) => {
 
 let _lastStats: string;
 
-const kebabify = (name: string) =>
-    name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
+const separate = (name: string, separator: string) =>
+    name.replace(/[A-Z]/g, (char) => `${separator}${char.toLowerCase()}`);
+
+const kebabify = (name: string) => separate(name, '-');
 
 const computeStats = () =>
     [
@@ -29,4 +31,20 @@ export const logStats = () => {
 
     _lastStats = statStr;
     console.log(`[${new Date().toISOString()}] ${statStr}`);
+};
+
+// Prometheus text exposition format.
+export const renderMetrics = () => {
+    const lines = [];
+    for (const [name, read] of gauges) {
+        const metric = `minipush_${separate(name, '_')}`;
+        lines.push(`# TYPE ${metric} gauge`, `${metric} ${read()}`);
+    }
+
+    for (const [name, value] of Object.entries(counters)) {
+        const metric = `minipush_${separate(name, '_')}_total`;
+        lines.push(`# TYPE ${metric} counter`, `${metric} ${value}`);
+    }
+
+    return lines.join('\n') + '\n';
 };
