@@ -1,4 +1,6 @@
 import { ServerMessage } from './server-schema.ts';
+import { env } from '../env.ts';
+import { HTTPStatus } from '../rfc/7231.ts';
 
 import * as UAID from './uaid.ts';
 import * as g_state from './state.ts';
@@ -19,14 +21,13 @@ const handleHello: Handler<C.ClientHello> = async (state, msg) => {
     let uaid = msg.uaid;
     let uaidInternal = uaid && await UAID.unwrap(uaid).catch(() => undefined);
 
-    if (!uaid || !uaidInternal) {
+    if (
+        !uaid || !uaidInternal ||
+        (msg.channelIDs?.length ?? 0) > env.maxChannelsPerUaid
+    ) {
         uaid = await UAID.generate();
         uaidInternal = await UAID.unwrap(uaid);
     } else if (msg.channelIDs) {
-        if (msg.channelIDs.length > 1024) {
-            throw 'too many channel IDs';
-        }
-
         for (const channel of msg.channelIDs) {
             g_state.onChannelRegistered(state, channel);
         }
@@ -49,7 +50,13 @@ const handleRegister: Handler<C.ClientRegister> = async (state, msg) => {
         return null;
     }
 
-    g_state.onChannelRegistered(state, msg.channelID);
+    if (!g_state.onChannelRegistered(state, msg.channelID)) {
+        return {
+            messageType: 'register',
+            channelID: msg.channelID,
+            status: HTTPStatus.PAYLOAD_TOO_LARGE,
+        };
+    }
 
     return {
         messageType: 'register',

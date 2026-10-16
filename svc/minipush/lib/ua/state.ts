@@ -6,6 +6,7 @@ import type { MemberId } from '../mesh/protocol.ts';
 import type { StoredMessage } from '../home/mailbox.ts';
 import { counters, gauge } from '../stats.ts';
 import { CloseStatus } from '../rfc/6455.ts';
+import { env } from '../env.ts';
 
 // Owns UA websockets.
 
@@ -99,7 +100,9 @@ export const onClientDisconnected = (state: ConnectionState) => {
 export const onChannelRegistered = (state: ConnectionState, chid: CHID) => {
     chid = chid.toLowerCase();
     if (state.channels.has(chid)) {
-        return;
+        return true;
+    } else if (state.channels.size >= env.maxChannelsPerUaid) {
+        return false;
     }
 
     state.channels.add(chid);
@@ -109,6 +112,8 @@ export const onChannelRegistered = (state: ConnectionState, chid: CHID) => {
     if (state.ready && connectedClients.get(getUaid(state)) === state) {
         announce(state);
     }
+
+    return true;
 };
 
 export const onChannelUnregistered = (state: ConnectionState, chid: CHID) => {

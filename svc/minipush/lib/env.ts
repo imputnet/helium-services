@@ -62,6 +62,12 @@ export const env = Object.freeze({
         64,
         Infinity,
     ),
+    maxChannelsPerUaid: getNumberClamped(
+        'MINIPUSH_MAX_CHANNELS_PER_UAID',
+        1,
+        1024,
+        Infinity,
+    ),
     maxMailboxBytes: getNumberClamped(
         'MINIPUSH_MAX_MAILBOX_BYTES',
         0,
