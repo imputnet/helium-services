@@ -1,14 +1,14 @@
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { decodeBase64Url, encodeBase64Url } from '@std/encoding/base64url';
 import * as z from '@zod/zod';
 import { env } from '../env.ts';
-import * as Buf from '../util/buffer.ts';
+import * as Crypto from '../util/crypto.ts';
 import type { Frame, MemberId } from './protocol.ts';
 
 const PROTOCOL_VERSION = 1;
 const HEARTBEAT_MS = 5_000;
 const DEAD_AFTER_MS = 3 * HEARTBEAT_MS;
 const HANDSHAKE_TIMEOUT_MS = 5_000;
-const MAX_CLOCK_SKEW_MS = 60_000;
 const FLUSH_DELAY_MS = 2;
 const MAX_BATCH = 512;
 const MAX_BUFFERED_BYTES = 16 * 1024 * 1024;
@@ -81,66 +81,69 @@ export const isUp = (id: MemberId) => {
     return !!peer?.ws && !peer.draining;
 };
 
-const meshKey = env.peers.length > 0
-    ? await crypto.subtle.importKey(
-        'raw',
-        Buf.toBytes(env.meshSecret),
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign', 'verify'],
-    )
-    : undefined;
-
 const hello = z.object({
     v: z.literal(PROTOCOL_VERSION),
     from: z.string(),
     to: z.string(),
     draining: z.boolean(),
-    ts: z.number(),
+    challenge: z.string().optional(),
     mac: z.base64url(),
 });
 
 type Hello = z.infer<typeof hello>;
 
-const helloPayload = (h: Omit<Hello, 'mac'>) =>
-    Buf.toBytes([h.v, h.from, h.to, h.ts].join('\n'));
+const newChallenge = () => encodeBase64Url(Crypto.rand(16));
 
-const makeHello = async (to: MemberId): Promise<Hello> => {
+// Both sides sign each other's challenge, so hellos can't be replayed.
+const sign = (h: Omit<Hello, 'mac'>, answering: string) =>
+    createHmac('sha256', env.meshSecret)
+        .update(
+            [h.v, h.from, h.to, h.draining, h.challenge ?? '', answering]
+                .join('\n'),
+        )
+        .digest();
+
+const makeHello = (
+    to: MemberId,
+    answering: string,
+    challenge?: string,
+): Hello => {
     const h = {
         v: PROTOCOL_VERSION as typeof PROTOCOL_VERSION,
         from: env.nodeId,
         to,
         draining: selfDraining,
-        ts: Date.now(),
+        challenge,
     };
 
-    const mac = await crypto.subtle.sign('HMAC', meshKey!, helloPayload(h));
-    return { ...h, mac: encodeBase64Url(mac) };
+    return { ...h, mac: encodeBase64Url(sign(h, answering)) };
 };
 
-const verifyHello = async (data: unknown) => {
+const verifyHello = (data: unknown, challenge: string) => {
     const parsed = hello.safeParse(data);
-    if (!parsed.success || !meshKey) {
+    if (!parsed.success) {
         return;
     }
 
     const h = parsed.data;
     const peer = peers.get(h.from);
-    if (
-        !peer || h.to !== env.nodeId ||
-        Math.abs(Date.now() - h.ts) > MAX_CLOCK_SKEW_MS
-    ) {
+    if (!peer || h.to !== env.nodeId) {
         return;
     }
 
-    const valid = await crypto.subtle.verify(
-        'HMAC',
-        meshKey,
-        decodeBase64Url(h.mac),
-        helloPayload(h),
-    );
+    const mac = decodeBase64Url(h.mac);
+    const expected = sign(h, challenge);
+    if (mac.length === expected.length && timingSafeEqual(mac, expected)) {
+        return { peer, hello: h };
+    }
+};
 
-    return valid ? { peer, hello: h } : undefined;
+const parse = (data: unknown) => {
+    try {
+        return JSON.parse(String(data));
+    } catch {
+        return undefined;
+    }
 };
 
 const failPending = (peer: Peer, retryable: boolean) => {
@@ -195,35 +198,43 @@ const dial = (peer: Peer) => {
         return scheduleReconnect(peer);
     }
 
-    let done = false;
-    const timeout = setTimeout(() => ws.close(), HANDSHAKE_TIMEOUT_MS);
+    const challenge = newChallenge();
+    let linked = false;
 
-    ws.addEventListener('open', async () => {
-        ws.send(JSON.stringify({ hello: await makeHello(peer.id) }));
-    });
+    const fail = (why: string) => {
+        console.error(`mesh: link to ${peer.id} failed: ${why}`);
+        ws.close();
+    };
 
-    ws.addEventListener('message', async (e) => {
-        if (done) {
-            return;
+    const timeout = setTimeout(
+        () => fail('handshake timed out'),
+        HANDSHAKE_TIMEOUT_MS,
+    );
+
+    ws.addEventListener('message', (e) => {
+        const theirs = parse(e.data)?.challenge;
+        if (typeof theirs !== 'string') {
+            return fail('bad challenge');
         }
 
-        done = true;
-        clearTimeout(timeout);
+        ws.send(
+            JSON.stringify({ hello: makeHello(peer.id, theirs, challenge) }),
+        );
+        ws.addEventListener('message', (e) => {
+            const verified = verifyHello(parse(e.data)?.hello, challenge);
+            if (verified?.peer !== peer) {
+                return fail('bad hello');
+            }
 
-        const verified = await verifyHello(JSON.parse(e.data)?.hello)
-            .catch(() => undefined);
-        if (verified?.peer !== peer) {
-            console.error(`mesh: bad hello from ${peer.url}`);
-            ws.close();
-            return;
-        }
-
-        onLinkUp(peer, ws, verified.hello);
+            clearTimeout(timeout);
+            linked = true;
+            onLinkUp(peer, ws, verified.hello);
+        }, { once: true });
     }, { once: true });
 
     ws.addEventListener('close', () => {
         clearTimeout(timeout);
-        if (!done) {
+        if (!linked) {
             scheduleReconnect(peer);
         }
     });
@@ -251,22 +262,27 @@ export const accept = (req: Request) => {
     }
 
     const { socket: ws, response } = Deno.upgradeWebSocket(req);
+    const challenge = newChallenge();
     const timeout = setTimeout(() => ws.close(), HANDSHAKE_TIMEOUT_MS);
 
-    ws.addEventListener('message', async (e) => {
-        clearTimeout(timeout);
+    ws.addEventListener('open', () => {
+        ws.send(JSON.stringify({ challenge }));
+    });
 
-        const verified = await verifyHello(JSON.parse(e.data)?.hello)
-            .catch(() => undefined);
-        if (!verified || dialsTo(verified.peer)) {
+    ws.addEventListener('message', (e) => {
+        const verified = verifyHello(parse(e.data)?.hello, challenge);
+        const theirs = verified?.hello.challenge;
+        if (!verified || !theirs || dialsTo(verified.peer)) {
             ws.close();
             return;
         }
 
-        ws.send(JSON.stringify({ hello: await makeHello(verified.peer.id) }));
+        clearTimeout(timeout);
+        ws.send(JSON.stringify({ hello: makeHello(verified.peer.id, theirs) }));
         onLinkUp(verified.peer, ws, verified.hello);
     }, { once: true });
 
+    ws.addEventListener('close', () => clearTimeout(timeout));
     return response;
 };
 
@@ -275,17 +291,15 @@ const respond = (peer: Peer, re: number, f: Frame | void) => {
 };
 
 // Handlers run synchronously and in order, only responses may come later.
-const onMessage = (peer: Peer, ws: WebSocket, data: string) => {
+const onMessage = (peer: Peer, ws: WebSocket, data: unknown) => {
     if (peer.ws !== ws) {
         return;
     }
 
     peer.lastSeen = Date.now();
 
-    let batch: Wire[];
-    try {
-        batch = JSON.parse(data);
-    } catch {
+    const batch: Wire[] = parse(data);
+    if (!Array.isArray(batch)) {
         ws.close();
         return;
     }

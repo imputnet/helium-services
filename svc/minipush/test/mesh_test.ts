@@ -85,23 +85,6 @@ Deno.test('acks are forwarded to the member storing the message', async () => {
     }
 });
 
-Deno.test('members with the wrong mesh secret are not let in', async () => {
-    const nodes = await startCluster(['a', 'b'], {}, {
-        b: { MINIPUSH_MESH_SECRET: 'wrong' },
-    });
-    const [a, b] = nodes;
-    const ua = await FakeUA.connect(a.wsUrl);
-    try {
-        await ua.hello();
-        const { endpoint } = await ua.register();
-        await push(via(endpoint, a, b), 'x');
-        await ua.none((m) => m.messageType === 'notification', 500);
-    } finally {
-        await ua.close();
-        await stopAll(nodes);
-    }
-});
-
 // Pushes via `node` until the UA gets it, since it might take a moment
 // for the mesh to settle after members come or go.
 const pushUntilDelivered = async (
@@ -125,6 +108,58 @@ const pushUntilDelivered = async (
 
     throw new Error(`push via ${node.id} never arrived`);
 };
+
+Deno.test('members with the wrong mesh secret are not let in', async () => {
+    const nodes = await startCluster(['a', 'b'], {}, {
+        b: { MINIPUSH_MESH_SECRET: 'wrong' },
+    });
+    const [a, b] = nodes;
+    const ua = await FakeUA.connect(a.wsUrl);
+    try {
+        await ua.hello();
+        const { endpoint } = await ua.register();
+        await push(via(endpoint, a, b), 'x');
+        await ua.none((m) => m.messageType === 'notification', 500);
+
+        // once the secret is fixed, the link comes up
+        await nodes[1].stop();
+        nodes[1] = await restartNode({
+            ...b,
+            env: { ...b.env, MINIPUSH_MESH_SECRET: a.env.MINIPUSH_MESH_SECRET },
+        });
+        await pushUntilDelivered(ua, via(endpoint, a, b), nodes[1], 'y');
+    } finally {
+        await ua.close();
+        await stopAll(nodes);
+    }
+});
+
+Deno.test('the mesh listener hangs up on garbage', async () => {
+    const nodes = await startCluster(['a', 'b']);
+    const meshUrl = `ws://127.0.0.1:${nodes[0].env.MINIPUSH_MESH_PORT}/mesh`;
+    try {
+        for (const garbage of ['{', '[]', '{"hello":{"v":1}}']) {
+            const ws = new WebSocket(meshUrl);
+            const closed = new Promise((r) => ws.onclose = r);
+            const challenge = await new Promise<string>((r) =>
+                ws.onmessage = (e) => r(JSON.parse(e.data).challenge)
+            );
+            assertEquals(typeof challenge, 'string');
+            ws.send(garbage);
+            await closed;
+        }
+
+        // and still works
+        const ua = await FakeUA.connect(nodes[0].wsUrl);
+        await ua.hello();
+        const { endpoint } = await ua.register();
+        await push(via(endpoint, nodes[0], nodes[1]), 'x');
+        await ua.notification();
+        await ua.close();
+    } finally {
+        await stopAll(nodes);
+    }
+});
 
 // The UAID which the home members are picked by.
 const internalUaid = (uaid: string) =>
