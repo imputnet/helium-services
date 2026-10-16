@@ -5,8 +5,10 @@ daemon off;
 error_log /dev/null crit;
 pid /tmp/nginx.pid;
 
+worker_rlimit_nofile 65536; 
+
 events {
-    worker_connections 1024;
+    worker_connections 10240;
 }
 
 http {
@@ -121,7 +123,6 @@ http {
         }
 
         location = /ext/proxy {
-            proxy_buffering off;
             proxy_pass http://exts/proxy;
         }
 

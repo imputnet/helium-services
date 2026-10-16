@@ -17,6 +17,10 @@ services:
     ports:
       - 80:80/tcp
       - 443:443/tcp
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     restart: unless-stopped
 
   ubo_proxy:
