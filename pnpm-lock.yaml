@@ -24,6 +24,12 @@ importers:
 
   lib/common: {}
 
+  util/release-collector:
+    dependencies:
+      '@helium-services/common':
+        specifier: workspace:*
+        version: link:../../lib/common
+
   util/sparkler:
     dependencies:
       7z-wasm:

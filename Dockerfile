@@ -16,6 +16,11 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
         pnpm --filter "./$dir" deploy --prod "/out/$(basename "$dir")"; \
     done
 
+FROM base AS release-collector
+USER node
+COPY --from=build /out/release-collector ./
+ENTRYPOINT ["node", "--conditions=production", "main.ts"]
+
 FROM base AS sparkler
 USER node
 COPY --from=build /out/sparkler ./
