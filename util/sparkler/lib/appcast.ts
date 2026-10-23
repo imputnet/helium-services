@@ -1,14 +1,15 @@
-import { parse, stringify } from 'jsr:@libs/xml';
+import { readFile } from 'node:fs/promises';
+import { basename } from 'node:path';
+import { parse, stringify } from '@libs/xml';
 
 import { getMinimumVersion, getSignature } from './cache.ts';
 import { getReleases } from './github.ts';
 import { env } from './env.ts';
+import { exists } from './util.ts';
 
-import { Appcast, AppcastRelease, Enclosure } from '../types/appcast.ts';
-import { Asset, CPUArchitecture } from '../types/assets.ts';
-import { Release } from '../types/github.ts';
-import { exists } from 'jsr:@std/fs/exists';
-import { basename } from 'jsr:@std/path';
+import type { Appcast, AppcastRelease, Enclosure } from '../types/appcast.ts';
+import type { Asset, CPUArchitecture } from '../types/assets.ts';
+import type { Release } from '../types/github.ts';
 
 const getUrlForAsset = (asset: Asset) => {
     if (env.shouldServeAssets) {
@@ -108,7 +109,7 @@ export const getSignaturesAndVersions = async (appcastPath: string) => {
         return [];
     }
 
-    const text = await Deno.readTextFile(appcastPath);
+    const text = await readFile(appcastPath, 'utf8');
     const data = parse(text) as unknown as Appcast;
 
     return (data.rss.channel.item ?? []).flatMap((item) => [

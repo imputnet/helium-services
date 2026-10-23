@@ -1,12 +1,13 @@
-import * as path from 'jsr:@std/path';
-import { exists } from 'jsr:@std/fs/exists';
-import { decodeHex, encodeHex } from 'jsr:@std/encoding/hex';
+import { readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import * as path from 'node:path';
 
-import { beq, sleep } from './util.ts';
-import { env, headers } from './env.ts';
+import { fetchGithub } from '@helium-services/common/github';
+
+import { exists } from './util.ts';
+import { env } from './env.ts';
 import { getReleases } from './github.ts';
 
-import { Asset } from '../types/assets.ts';
+import type { Asset } from '../types/assets.ts';
 
 const pathTo = (asset: Asset) => path.join(env.assetDirectory, asset.name);
 
@@ -15,30 +16,16 @@ export const downloadAsset = async (asset: Asset): Promise<void> => {
         throw new Error('name contains slashes');
     }
 
-    const response = await fetch(asset.machine_url, {
-        headers: {
-            ...headers,
-            Accept: 'application/octet-stream',
+    const response = await fetchGithub(
+        asset.machine_url,
+        {
+            headers: { Accept: 'application/octet-stream' },
+            redirect: 'follow',
         },
-        redirect: 'follow',
-    });
+        10_000,
+    );
 
-    if (response.status === 429) {
-        await sleep(10000);
-        return downloadAsset(asset);
-    }
-
-    if (!response.ok) {
-        console.log(response);
-        throw new Error(`response is not ok`);
-    }
-
-    const output = await Deno.open(pathTo(asset), {
-        createNew: true,
-        write: true,
-    });
-
-    await response.body!.pipeTo(output.writable);
+    await writeFile(pathTo(asset), response.body!, { flag: 'wx' });
 };
 
 export const hasAsset = (asset: Asset | string) => {
@@ -53,8 +40,8 @@ export const cleanup = async () => {
     const releases = await getReleases();
     const existingFiles = new Set<string>();
 
-    for await (const file of Deno.readDir(env.assetDirectory)) {
-        existingFiles.add(file.name);
+    for (const file of await readdir(env.assetDirectory)) {
+        existingFiles.add(file);
     }
 
     const downloadables = releases
@@ -68,12 +55,12 @@ export const cleanup = async () => {
 
     for (const file of existingFiles) {
         console.log(`[c] removing ${file}`);
-        await Deno.remove(path.join(env.assetDirectory, file));
+        await rm(path.join(env.assetDirectory, file));
     }
 };
 
 export const read = async (asset: Asset) => {
-    return await Deno.readFile(pathTo(asset));
+    return await readFile(pathTo(asset));
 };
 
 export const verify = async (asset: Asset) => {
@@ -82,11 +69,13 @@ export const verify = async (asset: Asset) => {
         await read(asset),
     );
 
-    if (!beq(decodeHex(asset.digest).buffer, actualDigest)) {
+    if (
+        !Buffer.from(asset.digest, 'hex').equals(new Uint8Array(actualDigest))
+    ) {
         throw new Error(
-            `digest for ${asset.name} is not matching: ${encodeHex(
+            `digest for ${asset.name} is not matching: ${Buffer.from(
                 actualDigest,
-            )} != ${asset.digest}`,
+            ).toString('hex')} != ${asset.digest}`,
         );
     }
 };

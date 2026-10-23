@@ -2,7 +2,7 @@ import { signAndVerifyAsset } from './eddsa.ts';
 import { getMinimumSystemVersionFor } from './dmg.ts';
 import { getSignaturesAndVersions } from './appcast.ts';
 
-import { Asset } from '../types/assets.ts';
+import type { Asset } from '../types/assets.ts';
 
 const _signatureCache: Record<string, string> = {};
 const _minimumVersionCache: Record<string, string> = {};

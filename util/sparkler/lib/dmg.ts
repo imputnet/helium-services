@@ -1,5 +1,5 @@
-import SevenZip from 'npm:7z-wasm@1.2.0';
-import { parse } from 'npm:@plist/parse@1.1.0';
+import SevenZip from '7z-wasm';
+import { parse } from '@plist/parse';
 import { decode } from './util.ts';
 import { read } from './assets.ts';
 import type { Asset } from '../types/assets.ts';
