@@ -1,4 +1,5 @@
-import { assert, assertEquals } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 
 import { _test, crawlArtifactsOnce } from '../src/artifact-crawler.ts';
 import { makeTestEnv } from './helpers.ts';
@@ -59,9 +60,9 @@ function singleArtifactFetch(
     };
 }
 
-Deno.test('crawler classifies platform build artifacts and symbol archives', () => {
+test('crawler classifies platform build artifacts and symbol archives', () => {
     const symbols = /symbols/i;
-    assertEquals(
+    assert.deepStrictEqual(
         _test.artifactKind(
             'imputnet/helium-macos',
             'github_build_artifact_arm64',
@@ -69,7 +70,7 @@ Deno.test('crawler classifies platform build artifacts and symbol archives', () 
         ),
         'mac-build',
     );
-    assertEquals(
+    assert.deepStrictEqual(
         _test.artifactKind(
             'imputnet/helium-windows',
             'build-artifact-x86_64',
@@ -77,7 +78,7 @@ Deno.test('crawler classifies platform build artifacts and symbol archives', () 
         ),
         'windows-build',
     );
-    assertEquals(
+    assert.deepStrictEqual(
         _test.artifactKind(
             'imputnet/helium-linux',
             'helium-1.2.3-x86_64-symbols',
@@ -85,13 +86,13 @@ Deno.test('crawler classifies platform build artifacts and symbol archives', () 
         ),
         'symbols',
     );
-    assertEquals(
+    assert.deepStrictEqual(
         _test.artifactKind('imputnet/helium-windows', 'helium-x86_64', symbols),
         null,
     );
 });
 
-Deno.test('crawler stops the pass when GitHub is rate limited', async () => {
+test('crawler stops the pass when GitHub is rate limited', async () => {
     const env = await makeTestEnv({
         githubArtifactToken: 'github-artifact-token',
     });
@@ -111,13 +112,13 @@ Deno.test('crawler stops the pass when GitHub is rate limited', async () => {
                 );
             },
         });
-        assertEquals(requests, 1);
+        assert.equal(requests, 1);
     } finally {
         await env.cleanup();
     }
 });
 
-Deno.test('crawler resumes a rate-limited symbol artifact download', async () => {
+test('crawler resumes a rate-limited symbol artifact download', async () => {
     const env = await makeTestEnv({
         githubArtifactToken: 'github-artifact-token',
     });
@@ -132,7 +133,7 @@ Deno.test('crawler resumes a rate-limited symbol artifact download', async () =>
                     : input.url,
             );
             if (url.origin === 'https://api.test') {
-                assertEquals(
+                assert.deepStrictEqual(
                     new Headers(init?.headers).get('authorization'),
                     'Bearer github-artifact-token',
                 );
@@ -254,10 +255,10 @@ Deno.test('crawler resumes a rate-limited symbol artifact download', async () =>
                 kind: string,
             ) => {
                 uploads++;
-                assertEquals(product, 'helium');
-                assertEquals(version, '1.2.3.4');
-                assertEquals(kind, 'symbols');
-                assertEquals(
+                assert.equal(product, 'helium');
+                assert.equal(version, '1.2.3.4');
+                assert.equal(kind, 'symbols');
+                assert.deepStrictEqual(
                     [...new Uint8Array(await new Response(body).arrayBuffer())],
                     [80, 75, 3, 4],
                 );
@@ -276,13 +277,13 @@ Deno.test('crawler resumes a rate-limited symbol artifact download', async () =>
         now += env.config.artifactCrawlerPollMs;
         await crawlArtifactsOnce(deps);
 
-        assertEquals(uploads, 1);
+        assert.equal(uploads, 1);
         const row = env.db.getArtifactIngest('imputnet/helium-linux', 42);
         assert(row);
-        assertEquals(row.status, 'ingested');
-        assertEquals(row.release_tag, '1.2.3.4');
-        assertEquals(row.attempts, 1);
-        assertEquals(
+        assert.equal(row.status, 'ingested');
+        assert.equal(row.release_tag, '1.2.3.4');
+        assert.equal(row.attempts, 1);
+        assert.deepStrictEqual(
             env.db.getArtifactIngest('imputnet/helium-linux', 45),
             null,
         );
@@ -291,7 +292,7 @@ Deno.test('crawler resumes a rate-limited symbol artifact download', async () =>
     }
 });
 
-Deno.test('crawler ignores artifacts from runs without a successful release job', async () => {
+test('crawler ignores artifacts from runs without a successful release job', async () => {
     const env = await makeTestEnv({
         githubArtifactToken: 'github-artifact-token',
     });
@@ -302,7 +303,7 @@ Deno.test('crawler ignores artifacts from runs without a successful release job'
             fetchFn: singleArtifactFetch(100, 'skipped'),
             githubApiUrl: 'https://api.test',
         });
-        assertEquals(
+        assert.deepStrictEqual(
             env.db.getArtifactIngest('imputnet/helium-linux', 7),
             null,
         );
@@ -311,7 +312,7 @@ Deno.test('crawler ignores artifacts from runs without a successful release job'
     }
 });
 
-Deno.test('crawler ignores artifacts larger than its configured download size', async () => {
+test('crawler ignores artifacts larger than its configured download size', async () => {
     const env = await makeTestEnv({
         githubArtifactToken: 'github-artifact-token',
         artifactCrawlerMaxBytes: 100,
@@ -327,7 +328,7 @@ Deno.test('crawler ignores artifacts larger than its configured download size', 
 
         await crawlArtifactsOnce(deps);
         await crawlArtifactsOnce(deps);
-        assertEquals(
+        assert.deepStrictEqual(
             env.db.getArtifactIngest('imputnet/helium-linux', 7),
             null,
         );

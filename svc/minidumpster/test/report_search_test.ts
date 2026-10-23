@@ -1,10 +1,11 @@
-import { assertEquals } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 
 import { indexReportResponse } from '../src/report-search.ts';
 import type { SymbolicatorResponse } from '../src/signature.ts';
 import { makeTestEnv } from './helpers.ts';
 
-Deno.test('report search indexes symbolicated function names', async () => {
+test('report search indexes symbolicated function names', async () => {
     const env = await makeTestEnv();
     try {
         const id = crypto.randomUUID();
@@ -38,13 +39,13 @@ Deno.test('report search indexes symbolicated function names', async () => {
         );
         env.db.markProcessed(id, groupId, 'Windows', Date.now(), true, 1);
 
-        assertEquals(env.db.searchReports('LocalFrame'), []);
+        assert.deepStrictEqual(env.db.searchReports('LocalFrame'), []);
         indexReportResponse(env.db, id, response);
-        assertEquals(
+        assert.deepStrictEqual(
             env.db.searchReports('LocalFrame').map((report) => report.id),
             [id],
         );
-        assertEquals(
+        assert.deepStrictEqual(
             env.db
                 .searchReports('LocalFrame_Navigate')
                 .map((report) => report.id),
@@ -53,7 +54,7 @@ Deno.test('report search indexes symbolicated function names', async () => {
         indexReportResponse(env.db, id, response);
 
         env.db.deleteReport(id);
-        assertEquals(env.db.searchReports('LocalFrame'), []);
+        assert.deepStrictEqual(env.db.searchReports('LocalFrame'), []);
     } finally {
         await env.cleanup();
     }

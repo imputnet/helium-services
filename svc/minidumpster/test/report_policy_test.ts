@@ -1,4 +1,5 @@
-import { assertEquals } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 
 import { crashDiscardReason } from '../src/report-policy.ts';
 import type { SymbolicatorResponse } from '../src/signature.ts';
@@ -15,7 +16,7 @@ function response(...functions: string[]): SymbolicatorResponse {
     };
 }
 
-Deno.test('non-actionable Chromium crash helpers are discarded', () => {
+test('non-actionable Chromium crash helpers are discarded', () => {
     const cases = [
         [
             "content::`anonymous namespace'::IntentionallyCrashBrowserForUnusableGpuProcess()",
@@ -44,22 +45,22 @@ Deno.test('non-actionable Chromium crash helpers are discarded', () => {
     ] as const;
 
     for (const [fn, reason] of cases) {
-        assertEquals(crashDiscardReason(response(fn)), reason);
+        assert.deepStrictEqual(crashDiscardReason(response(fn)), reason);
     }
 
     const windowsOom = response('RaiseException');
     windowsOom.crash_reason = 'Out of Memory / 0x7ff9a2f31ada';
-    assertEquals(crashDiscardReason(windowsOom), 'out of memory');
+    assert.equal(crashDiscardReason(windowsOom), 'out of memory');
 });
 
-Deno.test('ordinary crashes are retained', () => {
-    assertEquals(
+test('ordinary crashes are retained', () => {
+    assert.deepStrictEqual(
         crashDiscardReason(
             response('content::RenderWidgetHostImpl::OnKeyboardEvent()'),
         ),
         null,
     );
-    assertEquals(
+    assert.deepStrictEqual(
         crashDiscardReason(response('gpu::HandleOutOfMemory()')),
         null,
     );

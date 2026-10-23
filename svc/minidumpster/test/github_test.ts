@@ -1,4 +1,5 @@
-import { assertEquals, assertFalse } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 
 import type { GroupRow, ReportRow } from '../src/db.ts';
 import { githubIssueUrl } from '../src/github.ts';
@@ -33,7 +34,7 @@ const group: GroupRow = {
     report_count: 1,
 };
 
-Deno.test('GitHub issue URL prefills the Helium bug report safely', () => {
+test('GitHub issue URL prefills the Helium bug report safely', () => {
     const response: SymbolicatorResponse = {
         status: 'completed',
         crash_reason: 'EXCEPTION_ACCESS_VIOLATION',
@@ -65,27 +66,27 @@ Deno.test('GitHub issue URL prefills the Helium bug report safely', () => {
         ),
     );
 
-    assertEquals(
+    assert.deepStrictEqual(
         url.origin + url.pathname,
         'https://github.com/imputnet/helium/issues/new',
     );
-    assertEquals(url.searchParams.get('template'), 'bug-report.yml');
-    assertEquals(url.searchParams.get('os'), 'Windows');
-    assertEquals(url.searchParams.get('version'), '1.2.3');
-    assertEquals(
+    assert.equal(url.searchParams.get('template'), 'bug-report.yml');
+    assert.equal(url.searchParams.get('os'), 'Windows');
+    assert.equal(url.searchParams.get('version'), '1.2.3');
+    assert.deepStrictEqual(
         url.searchParams.get('description'),
         'content::RenderWidgetHostImpl::Crash()',
     );
 
     const additional = url.searchParams.get('additional')!;
-    assertEquals(
+    assert.deepStrictEqual(
         additional.includes(
             'content::RenderWidgetHostImpl::Crash() (content/host.cc:42, helium.dll)',
         ),
         true,
     );
-    assertFalse(additional.includes('secret'));
-    assertFalse(additional.includes('private-guid'));
-    assertFalse(additional.includes('0x12345678'));
-    assertFalse(additional.includes('do not export'));
+    assert.ok(!additional.includes('secret'));
+    assert.ok(!additional.includes('private-guid'));
+    assert.ok(!additional.includes('0x12345678'));
+    assert.ok(!additional.includes('do not export'));
 });

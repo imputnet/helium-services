@@ -1,16 +1,20 @@
-import { assert, assertEquals, assertMatch } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { readFile } from 'node:fs/promises';
 
 import { buildApp } from '../src/app.ts';
 import { dumpPath } from '../src/paths.ts';
 import { encodeMultipart, gzipBytes, makeTestEnv } from './helpers.ts';
 
-// What Deno.serve hands app.fetch for an unproxied connection; app.request()
-// forwards it as c.env, where the rate limiter's getConnInfo() reads it.
+// The bindings @hono/node-server hands app.fetch for an unproxied connection;
+// app.request() forwards them as c.env, where getConnInfo() reads them.
 const directConn = {
-    remoteAddr: {
-        transport: 'tcp',
-        hostname: '203.0.113.9',
-        port: 51234,
+    incoming: {
+        socket: {
+            remoteAddress: '203.0.113.9',
+            remotePort: 51234,
+            remoteFamily: 'IPv4',
+        },
     },
 } as const;
 
@@ -33,7 +37,7 @@ function crashpadForm(dump: Uint8Array): FormData {
     return form;
 }
 
-Deno.test('POST /crash accepts a gzipped Crashpad multipart upload', async () => {
+test('POST /crash accepts a gzipped Crashpad multipart upload', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
@@ -56,31 +60,31 @@ Deno.test('POST /crash accepts a gzipped Crashpad multipart upload', async () =>
             },
             directConn,
         );
-        assertEquals(res.status, 200);
+        assert.equal(res.status, 200);
         const id = (await res.text()).trim();
-        assertMatch(id, UUID_RE);
+        assert.match(id, UUID_RE);
 
-        const written = await Deno.readFile(dumpPath(env.dir, id));
-        assertEquals(written, dump);
+        const written = new Uint8Array(await readFile(dumpPath(env.dir, id)));
+        assert.deepStrictEqual(written, dump);
 
         const row = env.db.getReport(id);
         assert(row);
-        assertEquals(row.status, 'pending');
-        assertEquals(row.product, 'MyBrowser');
-        assertEquals(row.version, '138.0.1.0');
-        assertEquals(row.ptype, 'renderer');
-        assertEquals(row.channel, 'stable');
+        assert.equal(row.status, 'pending');
+        assert.equal(row.product, 'MyBrowser');
+        assert.equal(row.version, '138.0.1.0');
+        assert.equal(row.ptype, 'renderer');
+        assert.equal(row.channel, 'stable');
         const annotations = JSON.parse(row.annotations) as Record<
             string,
             string
         >;
-        assertEquals(annotations['switch-1'], '--type=renderer');
+        assert.equal(annotations['switch-1'], '--type=renderer');
     } finally {
         await env.cleanup();
     }
 });
 
-Deno.test('POST /crash accepts an uncompressed multipart upload', async () => {
+test('POST /crash accepts an uncompressed multipart upload', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
@@ -97,14 +101,14 @@ Deno.test('POST /crash accepts an uncompressed multipart upload', async () => {
             },
             directConn,
         );
-        assertEquals(res.status, 200);
-        assertMatch((await res.text()).trim(), UUID_RE);
+        assert.equal(res.status, 200);
+        assert.match((await res.text()).trim(), UUID_RE);
     } finally {
         await env.cleanup();
     }
 });
 
-Deno.test('POST /crash rejects non-multipart bodies', async () => {
+test('POST /crash rejects non-multipart bodies', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
@@ -117,14 +121,14 @@ Deno.test('POST /crash rejects non-multipart bodies', async () => {
             },
             directConn,
         );
-        assertEquals(res.status, 415);
+        assert.equal(res.status, 415);
         await res.body?.cancel();
     } finally {
         await env.cleanup();
     }
 });
 
-Deno.test('POST /crash rejects multipart without upload_file_minidump', async () => {
+test('POST /crash rejects multipart without upload_file_minidump', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
@@ -140,14 +144,14 @@ Deno.test('POST /crash rejects multipart without upload_file_minidump', async ()
             },
             directConn,
         );
-        assertEquals(res.status, 400);
+        assert.equal(res.status, 400);
         await res.body?.cancel();
     } finally {
         await env.cleanup();
     }
 });
 
-Deno.test('POST /crash enforces the max body size', async () => {
+test('POST /crash enforces the max body size', async () => {
     const env = await makeTestEnv({ maxDumpSizeBytes: 1024 });
     try {
         const app = buildApp({ config: env.config, db: env.db });
@@ -163,14 +167,14 @@ Deno.test('POST /crash enforces the max body size', async () => {
             },
             directConn,
         );
-        assertEquals(res.status, 413);
+        assert.equal(res.status, 413);
         await res.body?.cancel();
     } finally {
         await env.cleanup();
     }
 });
 
-Deno.test('POST /crash with no attributable client address is an error', async () => {
+test('POST /crash with no attributable client address is an error', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
@@ -185,14 +189,14 @@ Deno.test('POST /crash with no attributable client address is an error', async (
             headers: { 'content-type': contentType },
             body: bytes,
         });
-        assertEquals(res.status, 500);
+        assert.equal(res.status, 500);
         await res.body?.cancel();
     } finally {
         await env.cleanup();
     }
 });
 
-Deno.test('POST /crash rate limits per client IP', async () => {
+test('POST /crash rate limits per client IP', async () => {
     const env = await makeTestEnv({ rateLimitPerMinute: 2 });
     try {
         const app = buildApp({ config: env.config, db: env.db });
@@ -206,13 +210,13 @@ Deno.test('POST /crash rate limits per client IP', async () => {
                 headers: { 'content-type': contentType, 'x-forwarded-for': ip },
                 body: bytes,
             });
-        assertEquals((await post('1.2.3.4')).status, 200);
-        assertEquals((await post('1.2.3.4')).status, 200);
+        assert.equal((await post('1.2.3.4')).status, 200);
+        assert.equal((await post('1.2.3.4')).status, 200);
         const limited = await post('1.2.3.4');
-        assertEquals(limited.status, 429);
+        assert.equal(limited.status, 429);
         await limited.body?.cancel();
         // A different client is unaffected.
-        assertEquals((await post('5.6.7.8')).status, 200);
+        assert.equal((await post('5.6.7.8')).status, 200);
     } finally {
         await env.cleanup();
     }

@@ -1,12 +1,14 @@
-import { assertEquals } from '@std/assert';
-import { join } from '@std/path';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { rm } from 'node:fs/promises';
+import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 import { Db } from '../src/db.ts';
-import { makeTestEnv } from './helpers.ts';
+import { makeTempDir, makeTestEnv } from './helpers.ts';
 
-Deno.test('database migration removes the legacy dump_deleted column', async () => {
-    const dir = await Deno.makeTempDir();
+test('database migration removes the legacy dump_deleted column', async () => {
+    const dir = await makeTempDir();
     const path = join(dir, 'db.sqlite');
     try {
         const legacy = new DatabaseSync(path);
@@ -51,7 +53,7 @@ Deno.test('database migration removes the legacy dump_deleted column', async () 
 
         const db = new Db(path);
         try {
-            assertEquals(db.getReport('legacy-report')?.status, 'processed');
+            assert.equal(db.getReport('legacy-report')?.status, 'processed');
         } finally {
             db.close();
         }
@@ -65,7 +67,7 @@ Deno.test('database migration removes the legacy dump_deleted column', async () 
                 WHERE name = 'dump_deleted'
             `)
                 .get();
-            assertEquals(legacyColumn, undefined);
+            assert.equal(legacyColumn, undefined);
             const trigger = migrated
                 .prepare(`
                 SELECT sql
@@ -73,8 +75,8 @@ Deno.test('database migration removes the legacy dump_deleted column', async () 
                 WHERE type = 'trigger' AND name = 'reports_search_delete'
             `)
                 .get() as { sql: string };
-            assertEquals(/rowid\s*=\s*old\.rowid/i.test(trigger.sql), true);
-            assertEquals(
+            assert.equal(/rowid\s*=\s*old\.rowid/i.test(trigger.sql), true);
+            assert.deepStrictEqual(
                 (
                     migrated.prepare('PRAGMA user_version').get() as {
                         user_version: number;
@@ -86,11 +88,11 @@ Deno.test('database migration removes the legacy dump_deleted column', async () 
             migrated.close();
         }
     } finally {
-        await Deno.remove(dir, { recursive: true }).catch(() => {});
+        await rm(dir, { recursive: true }).catch(() => {});
     }
 });
 
-Deno.test('groups can be filtered by process type', async () => {
+test('groups can be filtered by process type', async () => {
     const env = await makeTestEnv();
     try {
         const addReport = (
@@ -122,15 +124,18 @@ Deno.test('groups can be filtered by process type', async () => {
         const browserGroup = addReport('browser-signature', 'browser', 1);
         const rendererGroup = addReport('renderer-signature', 'renderer', 2);
 
-        assertEquals(
+        assert.deepStrictEqual(
             env.db.listGroups({ ptype: 'renderer' }).map((group) => group.id),
             [rendererGroup],
         );
-        assertEquals(
+        assert.deepStrictEqual(
             env.db.listGroups({ ptype: 'browser' }).map((group) => group.id),
             [browserGroup],
         );
-        assertEquals(env.db.filterOptions().ptypes, ['browser', 'renderer']);
+        assert.deepStrictEqual(env.db.filterOptions().ptypes, [
+            'browser',
+            'renderer',
+        ]);
     } finally {
         await env.cleanup();
     }

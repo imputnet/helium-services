@@ -1,8 +1,9 @@
-import { assert, assertEquals } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 import { buildApp } from '../src/app.ts';
 import { makeTestEnv, testSessionCookie } from './helpers.ts';
 
-Deno.test('daily charts aggregate breakdowns, filters, and entire groups', async () => {
+test('daily charts aggregate breakdowns, filters, and entire groups', async () => {
     const env = await makeTestEnv();
     try {
         const today = Date.parse(new Date().toISOString().slice(0, 10));
@@ -39,15 +40,19 @@ Deno.test('daily charts aggregate breakdowns, filters, and entire groups', async
         add('old', 'Linux', groupId, today - 14 * 86400_000);
         env.db.recountGroups([groupId, otherId]);
 
-        assertEquals(env.db.reportsPerDay(today), [
+        // node:sqlite rows have a null prototype, which deepStrictEqual checks.
+        const perDay = (...args: Parameters<typeof env.db.reportsPerDay>) =>
+            env.db.reportsPerDay(...args).map((row) => ({ ...row }));
+
+        assert.deepStrictEqual(perDay(today), [
             {
                 day,
                 n: 54,
                 segment: null,
             },
         ]);
-        assertEquals(
-            env.db.reportsPerDay(today, {
+        assert.deepStrictEqual(
+            perDay(today, {
                 groupId,
                 breakdown: 'version',
             }),
@@ -56,8 +61,8 @@ Deno.test('daily charts aggregate breakdowns, filters, and entire groups', async
                 { day, n: 1, segment: '2.0' },
             ],
         );
-        assertEquals(
-            env.db.reportsPerDay(today, {
+        assert.deepStrictEqual(
+            perDay(today, {
                 breakdown: 'platform',
                 filter: {
                     product: 'Helium',
@@ -73,7 +78,7 @@ Deno.test('daily charts aggregate breakdowns, filters, and entire groups', async
         const cookie = await testSessionCookie(env);
         const page = async (path: string) => {
             const response = await app.request(path, { headers: { cookie } });
-            assertEquals(response.status, 200);
+            assert.equal(response.status, 200);
             return response.text();
         };
         const overview = await page(
@@ -88,7 +93,7 @@ Deno.test('daily charts aggregate breakdowns, filters, and entire groups', async
         assert(group.includes('1.0 (51)'));
         assert(group.includes('2.0 (1)'));
         assert(!group.includes('old (1)'));
-        assertEquals((group.match(/class="bar"/g) ?? []).length, 14);
+        assert.equal((group.match(/class="bar"/g) ?? []).length, 14);
         const unknown = await page('/?breakdown=platform');
         assert(unknown.includes('Unknown (1)'));
         const fallback = await page(`/groups/${groupId}?breakdown=invalid`);

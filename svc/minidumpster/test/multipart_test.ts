@@ -1,11 +1,13 @@
-import { join } from '@std/path';
-import { assertEquals, assertRejects } from '@std/assert';
+import { join } from 'node:path';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { readFile, rm } from 'node:fs/promises';
 
-import { chunked, encodeMultipart } from './helpers.ts';
+import { chunked, encodeMultipart, makeTempDir } from './helpers.ts';
 import { streamMultipartToDisk } from '../src/multipart.ts';
 
-Deno.test('streaming multipart parser writes files to disk and collects fields', async () => {
-    const dir = await Deno.makeTempDir();
+test('streaming multipart parser writes files to disk and collects fields', async () => {
+    const dir = await makeTempDir();
     try {
         const payload = new Uint8Array(10_000);
         for (let i = 0; i < payload.length; i++) {
@@ -24,26 +26,29 @@ Deno.test('streaming multipart parser writes files to disk and collects fields',
                 contentType,
                 () => dest,
             );
-            assertEquals(result.fields['product'], 'mybrowser');
-            assertEquals(result.fields['version'], '138.0.1.0');
-            assertEquals(result.files.length, 1);
-            assertEquals(result.files[0].field, 'file');
-            assertEquals(result.files[0].filename, 'symbols.zip');
-            assertEquals(result.files[0].size, payload.length);
-            assertEquals(await Deno.readFile(dest), payload);
+            assert.equal(result.fields['product'], 'mybrowser');
+            assert.equal(result.fields['version'], '138.0.1.0');
+            assert.equal(result.files.length, 1);
+            assert.equal(result.files[0].field, 'file');
+            assert.equal(result.files[0].filename, 'symbols.zip');
+            assert.deepStrictEqual(result.files[0].size, payload.length);
+            assert.deepStrictEqual(
+                new Uint8Array(await readFile(dest)),
+                payload,
+            );
         }
     } finally {
-        await Deno.remove(dir, { recursive: true });
+        await rm(dir, { recursive: true });
     }
 });
 
-Deno.test('streaming multipart parser rejects truncated bodies', async () => {
-    const dir = await Deno.makeTempDir();
+test('streaming multipart parser rejects truncated bodies', async () => {
+    const dir = await makeTempDir();
     try {
         const form = new FormData();
         form.append('file', new Blob([new Uint8Array(100)]), 'x.zip');
         const { bytes, contentType } = await encodeMultipart(form);
-        await assertRejects(() =>
+        await assert.rejects(() =>
             streamMultipartToDisk(
                 chunked(bytes.slice(0, bytes.length - 20), 16),
                 contentType,
@@ -51,12 +56,12 @@ Deno.test('streaming multipart parser rejects truncated bodies', async () => {
             ),
         );
     } finally {
-        await Deno.remove(dir, { recursive: true });
+        await rm(dir, { recursive: true });
     }
 });
 
-Deno.test('streaming multipart parser rejects a missing boundary', async () => {
-    await assertRejects(() =>
+test('streaming multipart parser rejects a missing boundary', async () => {
+    await assert.rejects(() =>
         streamMultipartToDisk(
             chunked(new Uint8Array(10), 10),
             'multipart/form-data',
@@ -65,8 +70,8 @@ Deno.test('streaming multipart parser rejects a missing boundary', async () => {
     );
 });
 
-Deno.test('streaming multipart parser does not cap the complete body', async () => {
-    const dir = await Deno.makeTempDir();
+test('streaming multipart parser does not cap the complete body', async () => {
+    const dir = await makeTempDir();
     try {
         const form = new FormData();
         form.append(
@@ -80,8 +85,8 @@ Deno.test('streaming multipart parser does not cap the complete body', async () 
             contentType,
             () => join(dir, 'large.bin'),
         );
-        assertEquals(result.files[0].size, 16 * 1024 * 1024);
+        assert.deepStrictEqual(result.files[0].size, 16 * 1024 * 1024);
     } finally {
-        await Deno.remove(dir, { recursive: true });
+        await rm(dir, { recursive: true });
     }
 });

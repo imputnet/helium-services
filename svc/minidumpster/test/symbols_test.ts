@@ -1,10 +1,11 @@
-import { assertEquals, assertRejects } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 
 import { buildApp } from '../src/app.ts';
 import { makeTestEnv } from './helpers.ts';
 import { _test } from '../src/symbols.ts';
 
-Deno.test('POST /api/symbols requires the bearer token', async () => {
+test('POST /api/symbols requires the bearer token', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
@@ -15,8 +16,8 @@ Deno.test('POST /api/symbols requires the bearer token', async () => {
                 body: new Uint8Array([1, 2, 3]),
             },
         );
-        assertEquals(anon.status, 401);
-        assertEquals(await anon.json(), {
+        assert.equal(anon.status, 401);
+        assert.deepStrictEqual(await anon.json(), {
             ok: false,
             error: 'missing or invalid bearer token',
         });
@@ -29,8 +30,8 @@ Deno.test('POST /api/symbols requires the bearer token', async () => {
                 body: new Uint8Array([1, 2, 3]),
             },
         );
-        assertEquals(wrong.status, 401);
-        assertEquals(await wrong.json(), {
+        assert.equal(wrong.status, 401);
+        assert.deepStrictEqual(await wrong.json(), {
             ok: false,
             error: 'missing or invalid bearer token',
         });
@@ -43,8 +44,8 @@ Deno.test('POST /api/symbols requires the bearer token', async () => {
                 body: new Uint8Array([1, 2, 3]),
             },
         );
-        assertEquals(malformed.status, 400);
-        assertEquals(await malformed.json(), {
+        assert.equal(malformed.status, 400);
+        assert.deepStrictEqual(await malformed.json(), {
             ok: false,
             error: 'missing or invalid bearer token',
         });
@@ -53,7 +54,7 @@ Deno.test('POST /api/symbols requires the bearer token', async () => {
     }
 });
 
-Deno.test('POST /api/symbols requires product and version', async () => {
+test('POST /api/symbols requires product and version', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
@@ -64,23 +65,22 @@ Deno.test('POST /api/symbols requires product and version', async () => {
             },
             body: new Uint8Array([1, 2, 3]),
         });
-        assertEquals(res.status, 400);
+        assert.equal(res.status, 400);
         const body = (await res.json()) as { error: string };
-        assertEquals(body.error.includes('product'), true);
+        assert.equal(body.error.includes('product'), true);
     } finally {
         await env.cleanup();
     }
 });
 
-Deno.test('symsorter enforces a timeout', async () => {
-    await assertRejects(
+test('symsorter enforces a timeout', async () => {
+    await assert.rejects(
         () =>
             _test.runSymsorter(
-                Deno.execPath(),
-                ['eval', 'await new Promise(r => setTimeout(r, 5000))'],
+                process.execPath,
+                ['-e', 'setTimeout(() => {}, 5000)'],
                 50,
             ),
-        Error,
-        'symsorter exceeded timeout',
+        { message: /symsorter exceeded timeout/ },
     );
 });

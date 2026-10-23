@@ -1,4 +1,5 @@
-import { assert, assertEquals } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 
 import {
     collapseCppName,
@@ -10,14 +11,14 @@ import {
 const MONSTER =
     'base::internal::Invoker<base::internal::FunctorTraits<base::IgnoreArgs<tabs::TabInterface*, , void>(base::RepeatingCallback<void ()>)::{lambda(base::RepeatingCallback<void ()> const, tabs::TabInterface*)#1}&, base::RepeatingCallback<void ()> const&>, base::internal::BindState<false, false, false, base::IgnoreArgs<tabs::TabInterface*, , void>(base::RepeatingCallback<void ()>)::{lambda(base::RepeatingCallback<void ()>, tabs::TabInterface*)#1}, base::RepeatingCallback<void ()> >, void (tabs::TabInterface*)>::Run(base::internal::BindStateBase*, tabs::TabInterface*)';
 
-Deno.test('collapseCppName folds huge template arguments', () => {
-    assertEquals(
+test('collapseCppName folds huge template arguments', () => {
+    assert.deepStrictEqual(
         collapseCppName(MONSTER),
         'base::internal::Invoker<\u{2026}>::Run(base::internal::BindStateBase*, tabs::TabInterface*)',
     );
 });
 
-Deno.test('collapseCppName keeps short and simple names untouched', () => {
+test('collapseCppName keeps short and simple names untouched', () => {
     for (const name of [
         'main',
         'content::HandleDebugURL(GURL const&, ui::PageTransition, bool)',
@@ -25,20 +26,20 @@ Deno.test('collapseCppName keeps short and simple names untouched', () => {
         '-[NSApplication run]',
         'content::(anonymous namespace)::CrashBrowserProcessIntentionally()',
     ]) {
-        assertEquals(collapseCppName(name), name);
+        assert.deepStrictEqual(collapseCppName(name), name);
     }
 });
 
-Deno.test('collapseCppName folds long lambda bodies', () => {
+test('collapseCppName folds long lambda bodies', () => {
     const name =
         'SomeVeryLongClassNameIndeed::Method()::{lambda(base::RepeatingCallback<void ()> const&, tabs::TabInterface*)#1}::operator()(int) const';
-    assertEquals(
+    assert.deepStrictEqual(
         collapseCppName(name),
         'SomeVeryLongClassNameIndeed::Method()::{lambda}::operator()(int) const',
     );
 });
 
-Deno.test('collapseCppName is not fooled by comparison operators', () => {
+test('collapseCppName is not fooled by comparison operators', () => {
     const name =
         'bool std::operator<(std::pair<AVeryLongTypeNameForTesting, AVeryLongTypeNameForTesting> const&, std::pair<AVeryLongTypeNameForTesting, AVeryLongTypeNameForTesting> const&)';
     const out = collapseCppName(name);
@@ -46,16 +47,16 @@ Deno.test('collapseCppName is not fooled by comparison operators', () => {
     assert(out.includes('std::pair<\u{2026}>'));
 });
 
-Deno.test('collapseCppName leaves unbalanced input untouched', () => {
+test('collapseCppName leaves unbalanced input untouched', () => {
     const broken =
         'base::internal::Invoker<base::OnceCallback<void (SomeExtremelyLongTypeName, AnotherExtremelyLongTypeName'
         + '::Run(base::internal::BindStateBase*)';
-    assertEquals(collapseCppName(broken), broken);
+    assert.deepStrictEqual(collapseCppName(broken), broken);
 });
 
 // Renders the one page no HTTP test exercises with populated rows; catches
 // template-compile errors (Eta pastes <% %> blocks verbatim into a function).
-Deno.test('groupsPage renders populated rows', () => {
+test('groupsPage renders populated rows', () => {
     const html = groupsPage(
         {
             groups: [
@@ -101,7 +102,7 @@ Deno.test('groupsPage renders populated rows', () => {
     );
 });
 
-Deno.test('stackHtml folds consecutive crash machinery frames', () => {
+test('stackHtml folds consecutive crash machinery frames', () => {
     const html = stackHtml(
         {
             status: 'completed',
@@ -146,7 +147,7 @@ Deno.test('stackHtml folds consecutive crash machinery frames', () => {
     assert(html.includes('content::ActualCrashOrigin()'));
 });
 
-Deno.test('stackHtml does not fold mid-stack crash machinery frames', () => {
+test('stackHtml does not fold mid-stack crash machinery frames', () => {
     const html = stackHtml(
         {
             status: 'completed',
@@ -172,7 +173,7 @@ Deno.test('stackHtml does not fold mid-stack crash machinery frames', () => {
     assert(html.includes('InvokeCallback()'));
 });
 
-Deno.test('symbolsPage renders release and installed bundle state', () => {
+test('symbolsPage renders release and installed bundle state', () => {
     const html = symbolsPage(
         {
             artifacts: [
