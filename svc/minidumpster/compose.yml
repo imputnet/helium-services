@@ -1,6 +1,8 @@
 services:
     app:
-        build: .
+        build:
+            context: ../..
+            target: minidumpster
         restart: unless-stopped
         user: '${APP_UID:-1000}:${APP_GID:-1000}'
         read_only: true

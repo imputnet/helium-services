@@ -26,6 +26,20 @@ HEALTHCHECK --start-period=3s --start-interval=5s --interval=5m --timeout=10s \
         CMD curl -f "http://localhost:8000/?response=redirect&x=id%3Daeblfdkhhhdcdjpifhhbdiojplfjncoa%26uc"
 CMD ["node", "--conditions=production", "main.ts"]
 
+FROM service AS minidumpster
+RUN apk add --no-cache ca-certificates gcompat libgcc
+ARG SYMSORTER_VERSION=26.6.0
+ARG TARGETARCH
+RUN arch="x86_64"; [ "$TARGETARCH" = "arm64" ] && arch="aarch64"; \
+  curl -fsSL -o /usr/local/bin/symsorter \
+  "https://github.com/getsentry/symbolicator/releases/download/${SYMSORTER_VERSION}/symsorter-Linux-${arch}" \
+  && chmod +x /usr/local/bin/symsorter \
+  && /usr/local/bin/symsorter --version
+USER node
+COPY --from=build /out/minidumpster ./
+EXPOSE 8080
+CMD ["node", "src/main.ts"]
+
 FROM service AS minipush
 USER node
 COPY --from=build /out/minipush ./
