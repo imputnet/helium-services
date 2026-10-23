@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import type { Db, ReportRow } from './db.ts';
@@ -42,7 +43,7 @@ export async function processReport(
             pollIntervalMs: deps.pollIntervalMs,
             signal: deps.signal,
         };
-        const raw = await Deno.readFile(dumpPath(config.dataDir, report.id));
+        const raw = await readFile(dumpPath(config.dataDir, report.id));
         const resp =
             report.kind === 'apple'
                 ? await symbolicateAppleCrashReport(

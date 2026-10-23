@@ -1,4 +1,5 @@
-import { basename } from '@std/path/windows';
+import { createHash } from 'node:crypto';
+import { basename } from 'node:path/win32';
 
 export interface SymFrame {
     status?: string;
@@ -271,10 +272,8 @@ function applyAnchoredSignatureRule(frames: SymFrame[]): SymFrame[] {
     return frames;
 }
 
-async function sha256Hex(text: string): Promise<string> {
-    return new Uint8Array(
-        await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)),
-    ).toHex();
+function sha256Hex(text: string): string {
+    return createHash('sha256').update(text).digest('hex');
 }
 
 export async function computeSignature(
@@ -303,7 +302,7 @@ export async function computeSignature(
     ).slice(0, topN);
 
     const labels = chosen.map((f) => frameLabel(f, resp.modules));
-    const signature = await sha256Hex(labels.join('\n'));
+    const signature = sha256Hex(labels.join('\n'));
     const symbolicated = chosen.every((f) => f.status === 'symbolicated');
 
     return { signature, title: labels[0], symbolicated };
@@ -313,7 +312,7 @@ export async function fallbackSignature(
     resp: SymbolicatorResponse,
 ): Promise<SignatureResult> {
     const reason = resp.crash_reason?.trim() || 'no stacktrace';
-    const signature = await sha256Hex(`reason:${reason}`);
+    const signature = sha256Hex(`reason:${reason}`);
 
     return { signature, title: reason, symbolicated: false };
 }

@@ -1,4 +1,4 @@
-import { basename } from '@std/path/windows';
+import { basename } from 'node:path/win32';
 
 import type { GroupRow, ReportRow } from './db.ts';
 import {
@@ -128,15 +128,13 @@ export async function checkOrgMembership(
 }
 
 export class GithubHttpError extends Error {
+    readonly status: number;
     readonly rateLimited: boolean;
 
-    constructor(
-        message: string,
-        readonly status: number,
-        headers: Headers,
-    ) {
+    constructor(message: string, status: number, headers: Headers) {
         super(message);
         this.name = 'GithubHttpError';
+        this.status = status;
         this.rateLimited =
             status === 429
             || headers.get('x-ratelimit-remaining') === '0'

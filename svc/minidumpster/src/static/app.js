@@ -1,5 +1,3 @@
-// deno-lint-ignore-file
-
 document.addEventListener('submit', (event) => {
     const message = event.target.dataset.confirm;
     if (message && !globalThis.confirm(message)) {

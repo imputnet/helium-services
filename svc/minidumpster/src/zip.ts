@@ -1,11 +1,15 @@
-import { dirname, join, normalize } from '@std/path';
-import { configure, Reader, ZipReader } from '@zip-js/zip-js';
+import { type FileHandle, mkdir, open } from 'node:fs/promises';
+import { dirname, join, normalize } from 'node:path';
+import { configure, Reader, ZipReader } from '@zip.js/zip.js';
 
 configure({ useWebWorkers: false });
 
-export class DenoFileReader extends Reader<Deno.FsFile> {
-    constructor(private file: Deno.FsFile) {
+export class FileHandleReader extends Reader<FileHandle> {
+    private file: FileHandle;
+
+    constructor(file: FileHandle) {
         super(file);
+        this.file = file;
     }
 
     override async init(): Promise<void> {
@@ -16,26 +20,49 @@ export class DenoFileReader extends Reader<Deno.FsFile> {
         index: number,
         length: number,
     ): Promise<Uint8Array> {
-        await this.file.seek(index, Deno.SeekMode.Start);
         const buf = new Uint8Array(length);
         let off = 0;
         while (off < length) {
-            const n = await this.file.read(buf.subarray(off));
-            if (n === null) {
+            const { bytesRead } = await this.file.read(
+                buf,
+                off,
+                length - off,
+                index + off,
+            );
+            if (bytesRead === 0) {
                 break;
             }
-            off += n;
+            off += bytesRead;
         }
         return buf.subarray(0, off);
     }
+}
+
+// not Writable.toWeb(), which queues 64k chunks instead of waiting for disk
+export async function fileWritable(
+    path: string,
+): Promise<WritableStream<Uint8Array>> {
+    const file = await open(path, 'w');
+    return new WritableStream({
+        async write(chunk) {
+            try {
+                await file.writeFile(chunk);
+            } catch (err) {
+                await file.close();
+                throw err;
+            }
+        },
+        close: () => file.close(),
+        abort: () => file.close(),
+    });
 }
 
 export async function extractZip(
     zipPath: string,
     destDir: string,
 ): Promise<number> {
-    const file = await Deno.open(zipPath, { read: true });
-    const zipReader = new ZipReader(new DenoFileReader(file));
+    await using file = await open(zipPath, 'r');
+    const zipReader = new ZipReader(new FileHandleReader(file));
     let count = 0;
     try {
         for await (const entry of zipReader.getEntriesGenerator()) {
@@ -51,35 +78,15 @@ export async function extractZip(
 
             const dest = join(destDir, rel);
             if (entry.directory) {
-                await Deno.mkdir(dest, { recursive: true });
+                await mkdir(dest, { recursive: true });
                 continue;
             }
-            await Deno.mkdir(dirname(dest), { recursive: true });
-            const out = await Deno.open(dest, {
-                write: true,
-                create: true,
-                truncate: true,
-            });
-            try {
-                // getData closes the writable stream (and thereby the file) itself.
-                await entry.getData!(out.writable);
-            } catch (err) {
-                try {
-                    out.close();
-                } catch {
-                    // already closed by the failed stream
-                }
-                throw err;
-            }
+            await mkdir(dirname(dest), { recursive: true });
+            await entry.getData!(await fileWritable(dest));
             count++;
         }
     } finally {
         await zipReader.close().catch(() => {});
-        try {
-            file.close();
-        } catch {
-            // already closed
-        }
     }
     return count;
 }

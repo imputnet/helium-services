@@ -1,4 +1,5 @@
-import { dirname, join } from '@std/path';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 
 export function dumpPath(dataDir: string, id: string): string {
     return join(dataDir, 'dumps', id.slice(0, 2), `${id}.dmp`);
@@ -27,7 +28,7 @@ export async function ensureDataDirs(dataDir: string): Promise<void> {
         symbolsDir(dataDir),
         tmpDir(dataDir),
     ]) {
-        await Deno.mkdir(d, { recursive: true });
+        await mkdir(d, { recursive: true });
     }
 }
 
@@ -35,10 +36,10 @@ export async function writeFileWithDirs(
     path: string,
     data: Uint8Array | string,
 ): Promise<void> {
-    await Deno.mkdir(dirname(path), { recursive: true });
-    if (typeof data === 'string') {
-        await Deno.writeTextFile(path, data);
-    } else {
-        await Deno.writeFile(path, data);
-    }
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, data);
+}
+
+export function isNotFound(err: unknown): boolean {
+    return (err as NodeJS.ErrnoException | null)?.code === 'ENOENT';
 }

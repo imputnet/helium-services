@@ -1,3 +1,6 @@
+import { readFile } from 'node:fs/promises';
+import { rmSync } from 'node:fs';
+
 import type { Config } from './config.ts';
 import type { Db, NewReport } from './db.ts';
 import { logError } from './log.ts';
@@ -18,16 +21,8 @@ export async function readProcessedResponse(
     reportId: string,
 ): Promise<SymbolicatorResponse> {
     return JSON.parse(
-        await Deno.readTextFile(processedPath(dataDir, reportId)),
+        await readFile(processedPath(dataDir, reportId), 'utf8'),
     ) as SymbolicatorResponse;
-}
-
-function removeIfExists(path: string): void {
-    try {
-        Deno.removeSync(path);
-    } catch (err) {
-        if (!(err instanceof Deno.errors.NotFound)) throw err;
-    }
 }
 
 /**
@@ -43,7 +38,7 @@ export function insertReportForStoredDump(
         db.insertReport(report);
     } catch (err) {
         try {
-            removeIfExists(dumpPath(config.dataDir, report.id));
+            rmSync(dumpPath(config.dataDir, report.id), { force: true });
         } catch (deleteErr) {
             logError('report_insert_cleanup_error', deleteErr, {
                 report_id: report.id,
@@ -74,7 +69,7 @@ export function deleteReportPayloads(
             ['processed', processedPath(config.dataDir, reportId)],
         ] as const) {
             try {
-                removeIfExists(path);
+                rmSync(path, { force: true });
             } catch (err) {
                 logError('report_payload_delete_error', err, {
                     report_id: reportId,

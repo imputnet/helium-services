@@ -1,4 +1,4 @@
-import { getConnInfo } from 'hono/deno';
+import { getConnInfo } from '@hono/node-server/conninfo';
 import { bearerAuth } from 'hono/bearer-auth';
 import { rateLimiter } from 'hono-rate-limiter';
 import { type Context, Hono } from 'hono';

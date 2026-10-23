@@ -1,11 +1,14 @@
-import { join } from '@std/path';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+import { mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { logEvent } from './log.ts';
 import { extractZip } from './zip.ts';
 import { HttpError } from './crash.ts';
 import type { Config } from './config.ts';
 import type { Db } from './db.ts';
-import { symbolsDir, tmpDir } from './paths.ts';
+import { isNotFound, symbolsDir, tmpDir } from './paths.ts';
 import { streamMultipartToDisk } from './multipart.ts';
 
 const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -42,53 +45,30 @@ function requireValidNames(product: string, version: string): void {
     }
 }
 
-async function streamToFile(
-    stream: ReadableStream<Uint8Array>,
-    path: string,
-): Promise<void> {
-    const file = await Deno.open(path, {
-        write: true,
-        create: true,
-        truncate: true,
-        mode: 0o600,
-    });
-    await stream.pipeTo(file.writable);
-}
-
 async function runSymsorter(
     bin: string,
     args: string[],
     timeoutMs: number,
 ): Promise<{ code: number; output: string }> {
-    const proc = new Deno.Command(bin, {
-        args,
-        stdout: 'piped',
-        stderr: 'piped',
-    }).spawn();
+    const proc = spawn(bin, args, {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: timeoutMs,
+        killSignal: 'SIGKILL',
+    });
+    const stdout: Buffer[] = [];
+    const stderr: Buffer[] = [];
+    proc.stdout.on('data', (chunk: Buffer) => stdout.push(chunk));
+    proc.stderr.on('data', (chunk: Buffer) => stderr.push(chunk));
 
-    let timedOut = false;
-    const timer = setTimeout(() => {
-        timedOut = true;
-        try {
-            proc.kill('SIGKILL');
-        } catch {
-            // Process already exited.
-        }
-    }, timeoutMs);
-    try {
-        const { code, stdout, stderr } = await proc.output();
-        if (timedOut) {
-            throw new Error(`symsorter exceeded timeout of ${timeoutMs}ms`);
-        }
-        return {
-            code,
-            output:
-                new TextDecoder().decode(stdout)
-                + new TextDecoder().decode(stderr),
-        };
-    } finally {
-        clearTimeout(timer);
+    const [code] = await once(proc, 'close');
+    if (proc.killed) {
+        throw new Error(`symsorter exceeded timeout of ${timeoutMs}ms`);
     }
+    return {
+        code: code ?? 1,
+        output:
+            Buffer.concat(stdout).toString() + Buffer.concat(stderr).toString(),
+    };
 }
 
 async function sortSymbolDirectory(
@@ -126,7 +106,7 @@ async function sortSymbolDirectory(
             SYMSORTER_TIMEOUT_MS,
         );
     } catch (err) {
-        if (err instanceof Deno.errors.NotFound) {
+        if (isNotFound(err)) {
             throw new HttpError(
                 500,
                 'symsorter is not installed on the server',
@@ -173,19 +153,19 @@ async function processSymbolZip(
 ): Promise<SymbolIngestResult> {
     requireValidNames(product, version);
 
-    const stat = await Deno.stat(zipPath).catch(() => null);
-    if (!stat || stat.size === 0) {
+    const zipStat = await stat(zipPath).catch(() => null);
+    if (!zipStat || zipStat.size === 0) {
         throw new HttpError(400, 'empty upload');
     }
 
     logEvent('symbols_upload_spooled', {
         product,
         version,
-        zip_bytes: stat.size,
+        zip_bytes: zipStat.size,
     });
 
     const extractDir = join(workDir, 'extracted');
-    await Deno.mkdir(extractDir, { mode: 0o700 });
+    await mkdir(extractDir, { mode: 0o700 });
 
     let filesExtracted: number;
     try {
@@ -209,7 +189,7 @@ async function processSymbolZip(
         filesExtracted,
         config,
         opts,
-        stat.size,
+        zipStat.size,
     );
 }
 
@@ -227,11 +207,8 @@ async function handleSymbolUpload(
     let product = url.searchParams.get('product') ?? '';
     let version = url.searchParams.get('version') ?? '';
 
-    await Deno.mkdir(tmpDir(config.dataDir), { recursive: true });
-    const workDir = await Deno.makeTempDir({
-        dir: tmpDir(config.dataDir),
-        prefix: 'symbols-',
-    });
+    await mkdir(tmpDir(config.dataDir), { recursive: true });
+    const workDir = await mkdtemp(join(tmpDir(config.dataDir), 'symbols-'));
     const zipPath = join(workDir, 'upload.zip');
 
     logEvent('symbols_upload_started', {
@@ -259,7 +236,7 @@ async function handleSymbolUpload(
                 throw new HttpError(400, 'no file part in multipart body');
             }
         } else {
-            await streamToFile(body, zipPath);
+            await writeFile(zipPath, body, { mode: 0o600 });
         }
 
         return await processSymbolZip(
@@ -271,7 +248,7 @@ async function handleSymbolUpload(
             opts,
         );
     } finally {
-        await Deno.remove(workDir, { recursive: true }).catch(() => {});
+        await rm(workDir, { recursive: true }).catch(() => {});
     }
 }
 
@@ -326,11 +303,8 @@ export async function ingestSymbolArchive(
     db: Db,
     opts: SymbolsOptions = {},
 ): Promise<SymbolIngestAndRequeueResult> {
-    await Deno.mkdir(tmpDir(config.dataDir), { recursive: true });
-    const workDir = await Deno.makeTempDir({
-        dir: tmpDir(config.dataDir),
-        prefix: 'symbols-',
-    });
+    await mkdir(tmpDir(config.dataDir), { recursive: true });
+    const workDir = await mkdtemp(join(tmpDir(config.dataDir), 'symbols-'));
     const zipPath = join(workDir, 'upload.zip');
     logEvent('symbols_upload_started', {
         product,
@@ -339,7 +313,7 @@ export async function ingestSymbolArchive(
     });
 
     try {
-        await streamToFile(body, zipPath);
+        await writeFile(zipPath, body, { mode: 0o600 });
         const result = await processSymbolZip(
             zipPath,
             workDir,
@@ -350,7 +324,7 @@ export async function ingestSymbolArchive(
         );
         return requeueSymbolResult(result, db);
     } finally {
-        await Deno.remove(workDir, { recursive: true }).catch(() => {});
+        await rm(workDir, { recursive: true }).catch(() => {});
     }
 }
 

@@ -1,3 +1,4 @@
+import { serve } from '@hono/node-server';
 import type { MiddlewareHandler } from 'hono';
 
 import * as App from './app.ts';
@@ -7,7 +8,7 @@ import { Db } from './db.ts';
 import * as Paths from './paths.ts';
 
 if (import.meta.main) {
-    const config = devConfig(Deno.env.toObject());
+    const config = devConfig(process.env);
     await Paths.ensureDataDirs(config.dataDir);
     const db = new Db(Paths.dbPath(config.dataDir));
     const seeded = await seedDevData(db, config);
@@ -19,7 +20,7 @@ if (import.meta.main) {
         await next();
     };
     const app = App.buildApp({ config, db, webAuth: mockAuth });
-    const server = Deno.serve({ port: config.port }, app.fetch);
+    const server = serve({ fetch: app.fetch, port: config.port });
 
     console.log(
         `mock dev server: ${config.publicBaseUrl} `
@@ -31,10 +32,10 @@ if (import.meta.main) {
     const shutdown = async () => {
         if (shuttingDown) return;
         shuttingDown = true;
-        await server.shutdown();
+        await new Promise((resolve) => server.close(resolve));
         db.close();
-        Deno.exit(0);
+        process.exit(0);
     };
-    Deno.addSignalListener('SIGINT', shutdown);
-    Deno.addSignalListener('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
 }

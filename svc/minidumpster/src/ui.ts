@@ -1,6 +1,6 @@
+import { basename } from 'node:path/win32';
+import { fileURLToPath } from 'node:url';
 import { Eta } from 'eta';
-import { fromFileUrl } from '@std/path';
-import { basename } from '@std/path/windows';
 
 import type {
     ArtifactIngestRow,
@@ -120,7 +120,7 @@ function fmtTime(ms: number | null): string {
 }
 
 const eta = new Eta({
-    views: fromFileUrl(new URL('./templates/', import.meta.url)),
+    views: fileURLToPath(new URL('./templates/', import.meta.url)),
     cache: true,
 });
 

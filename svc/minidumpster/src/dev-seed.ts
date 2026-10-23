@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+
 import { type Config, devConfig } from './config.ts';
 import { Db } from './db.ts';
 import {
@@ -204,12 +206,12 @@ export async function seedDevData(
     now = Date.now(),
 ) {
     const windows = JSON.parse(
-        await Deno.readTextFile(WINDOWS_RESPONSE),
+        await readFile(WINDOWS_RESPONSE, 'utf8'),
     ) as SymbolicatorResponse;
     const apple = JSON.parse(
-        await Deno.readTextFile(APPLE_RESPONSE),
+        await readFile(APPLE_RESPONSE, 'utf8'),
     ) as SymbolicatorResponse;
-    const appleDump = await Deno.readTextFile(APPLE_REPORT);
+    const appleDump = await readFile(APPLE_REPORT, 'utf8');
     const groupIds = new Map<MockReport['group'], number>();
     let reportsCreated = 0;
 
@@ -321,7 +323,7 @@ export async function seedDevData(
 }
 
 if (import.meta.main) {
-    const config = devConfig(Deno.env.toObject());
+    const config = devConfig(process.env);
     await ensureDataDirs(config.dataDir);
     const db = new Db(dbPath(config.dataDir));
     try {
