@@ -1,4 +1,5 @@
 packages:
+  - lib/common
   - svc/extension-proxy
   - svc/minidumpster
   - svc/minipush

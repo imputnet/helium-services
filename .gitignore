@@ -17,3 +17,6 @@ svc/minidumpster/.dev-data/
 
 # node dependencies
 node_modules/
+
+# compiled shared package
+lib/common/dist/
