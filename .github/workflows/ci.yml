@@ -1,0 +1,53 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm fmt --check
+      - run: pnpm test
+
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: extension-proxy
+          - target: minidumpster
+          - target: minipush
+          - target: ubo
+          - target: release-collector
+          - target: sparkler
+          - name: nginx
+            context: svc
+            dockerfile: nginx/Dockerfile
+            args: SERVICES_HOSTNAME=services.example.com
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - name: build ${{ matrix.target || matrix.name }}
+        working-directory: ${{ matrix.context || '.' }}
+        run: >-
+          docker buildx build
+          --file ${{ matrix.dockerfile || 'Dockerfile' }}
+          ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
+          ${{ matrix.args && format('--build-arg {0}', matrix.args) || '' }}
+          .
