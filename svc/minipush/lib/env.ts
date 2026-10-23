@@ -1,55 +1,23 @@
+import { bool, number, optional, required } from '@helium-services/common/env';
+
 import * as Util from './util.ts';
-
-const get = (name: string, fallback?: string): string => {
-    if (!name.startsWith('MINIPUSH_')) {
-        throw 'env name must start with MINIPUSH_';
-    }
-
-    const value = Deno.env.get(name);
-    if (value) {
-        return value;
-    } else if (fallback) {
-        return fallback;
-    }
-
-    throw `${name} is required, but missing in envs`;
-};
-
-const getNumber = (name: string, fallback?: number) => {
-    const valueStr = get(name, fallback ? String(fallback) : undefined);
-    if (valueStr === undefined) {
-        throw `${name} is required, but missing in envs`;
-    }
-
-    const value = +valueStr;
-    if (!Number.isFinite(value)) {
-        throw `invalid numeric value for ${name}: ${value}`;
-    }
-
-    return value;
-};
 
 const getNumberClamped = (
     name: string,
     min: number,
     fallback: number,
     max: number,
-) => Util.clamp(getNumber(name, fallback), min, max);
+) => Util.clamp(number(name, fallback), min, max);
 
-const getBoolean = (name: string, byDefault = false) => {
-    const value = get(name, String(byDefault));
-    return ['y', '1', 'true', 't', 'yes'].includes(value.toLowerCase());
-};
-
-const getHostname = () => get('MINIPUSH_BIND_HOSTNAME', '127.0.0.1');
-const getPort = () => getNumber('MINIPUSH_PORT', 10001);
+const hostname = optional('MINIPUSH_BIND_HOSTNAME') ?? '127.0.0.1';
+const port = number('MINIPUSH_PORT', 10001);
 
 export const env = Object.freeze({
-    bindHostname: getHostname(),
-    port: getPort(),
-    baseUrl: get('MINIPUSH_BASE_URL', `http://${getHostname()}:${getPort()}/`),
-    hmacSecret: get('MINIPUSH_HMAC_SECRET'),
-    endpointSecret: get('MINIPUSH_ENDPOINT_SECRET'),
+    bindHostname: hostname,
+    port,
+    baseUrl: optional('MINIPUSH_BASE_URL') ?? `http://${hostname}:${port}/`,
+    hmacSecret: required('MINIPUSH_HMAC_SECRET'),
+    endpointSecret: required('MINIPUSH_ENDPOINT_SECRET'),
     maxTtlSeconds: getNumberClamped(
         'MINIPUSH_MAX_TTL_SECONDS',
         0,
@@ -68,11 +36,11 @@ export const env = Object.freeze({
         256 * 1024 * 1024,
         Infinity,
     ),
-    rateLimitWindowMs: getNumber('MINIPUSH_RATE_LIMIT_WINDOW', 60 * 1000),
-    rateLimit: getNumber('MINIPUSH_RATE_LIMIT', 1000),
+    rateLimitWindowMs: number('MINIPUSH_RATE_LIMIT_WINDOW', 60 * 1000),
+    rateLimit: number('MINIPUSH_RATE_LIMIT', 1000),
 
     // TODO: this is not actually implemented.
-    requireVapid: getBoolean('MINIPUSH_REQUIRE_VAPID', false),
+    requireVapid: bool('MINIPUSH_REQUIRE_VAPID'),
 
     log: function () {
         console.log(

@@ -1,10 +1,12 @@
-import { encodeBase64Url } from '@std/encoding/base64url';
-import { assert } from '@std/assert/assert';
+import * as Buf from '../util/buffer.ts';
 import * as Crypto from '../util/crypto.ts';
 import * as Mesh from '../mesh/mesh.ts';
 import type { MemberId } from '../mesh/protocol.ts';
 import type { StoredMessage } from '../home/mailbox.ts';
 import { counters, gauge } from '../stats.ts';
+
+import assert from 'node:assert/strict';
+import { WebSocket } from 'ws';
 
 // Owns UA websockets.
 
@@ -37,7 +39,7 @@ gauge('connectedClients', () => connectedClients.size);
 
 export const newConnection = (ws: WebSocket): ConnectionState => ({
     ws,
-    id: encodeBase64Url(Crypto.rand(9)),
+    id: Buf.toBase64Url(Crypto.rand(9)),
     channels: new Set(),
     inflight: new Map(),
     homes: new Set(),

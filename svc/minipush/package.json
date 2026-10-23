@@ -1,0 +1,26 @@
+{
+    "name": "minipush",
+    "private": true,
+    "license": "AGPL-3.0",
+    "type": "module",
+    "scripts": {
+        "start": "node main.ts",
+        "dev": "node --watch main.ts",
+        "gen": "node generate-secrets.ts",
+        "test": "node --test 'test/*_test.ts'",
+        "typecheck": "tsc",
+        "lint": "oxlint",
+        "fmt": "oxfmt"
+    },
+    "dependencies": {
+        "@helium-services/common": "workspace:*",
+        "@hono/node-server": "^1.19.17",
+        "hono": "^4.13.13",
+        "hono-rate-limiter": "~0.4.2",
+        "ws": "^8.22.0",
+        "zod": "^4.6.7"
+    },
+    "devDependencies": {
+        "@types/ws": "^8.18.2"
+    }
+}

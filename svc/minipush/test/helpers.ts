@@ -1,17 +1,21 @@
-import { assert } from '@std/assert';
-import { encodeBase64Url } from '@std/encoding/base64url';
+import assert from 'node:assert/strict';
+import { type ChildProcess, spawn } from 'node:child_process';
+import { once } from 'node:events';
+import { type AddressInfo, createServer } from 'node:net';
+import * as Buf from '../lib/util/buffer.ts';
 
 const ROOT = new URL('../', import.meta.url).pathname;
 
-export const freePort = () => {
-    const listener = Deno.listen({ hostname: '127.0.0.1', port: 0 });
-    const { port } = listener.addr as Deno.NetAddr;
+export const freePort = async () => {
+    const listener = createServer().listen(0, '127.0.0.1');
+    await once(listener, 'listening');
+    const { port } = listener.address() as AddressInfo;
     listener.close();
     return port;
 };
 
 const secret = () =>
-    encodeBase64Url(crypto.getRandomValues(new Uint8Array(24)));
+    Buf.toBase64Url(crypto.getRandomValues(new Uint8Array(24)));
 
 export const sharedSecrets = () => ({
     MINIPUSH_HMAC_SECRET: secret(),
@@ -21,9 +25,9 @@ export const sharedSecrets = () => ({
 export type Node = {
     url: string;
     wsUrl: string;
-    proc: Deno.ChildProcess;
+    proc: ChildProcess;
     output: () => string;
-    stop: (signal?: Deno.Signal) => Promise<Deno.CommandStatus>;
+    stop: (signal?: NodeJS.Signals) => Promise<number | null>;
 };
 
 export const waitFor = async (
@@ -45,45 +49,34 @@ export const waitFor = async (
 export const startNode = async (
     env: Record<string, string> = {},
 ): Promise<Node> => {
-    const port = freePort();
+    const port = await freePort();
     const url = `http://127.0.0.1:${port}/`;
-    const proc = new Deno.Command(Deno.execPath(), {
-        args: ['run', '-A', 'main.ts'],
+    const proc = spawn(process.execPath, ['main.ts'], {
         cwd: ROOT,
         env: {
+            ...process.env,
             ...sharedSecrets(),
             MINIPUSH_PORT: String(port),
             MINIPUSH_BASE_URL: url,
             MINIPUSH_RATE_LIMIT: '100000',
             ...env,
         },
-        stdout: 'piped',
-        stderr: 'piped',
-    }).spawn();
-
-    let output = '';
-    const decoder = new TextDecoder();
-    const collect = async (stream: ReadableStream<Uint8Array>) => {
-        for await (const chunk of stream) {
-            output += decoder.decode(chunk);
-        }
-    };
-    const collected = Promise.all([collect(proc.stdout), collect(proc.stderr)]);
-
-    let exited = false;
-    const status = proc.status.then(async (s) => {
-        exited = true;
-        await collected;
-        return s;
     });
 
-    const stop = async (signal: Deno.Signal = 'SIGKILL') => {
+    let output = '';
+    for (const stream of [proc.stdout, proc.stderr]) {
+        stream.setEncoding('utf8').on('data', (chunk) => (output += chunk));
+    }
+
+    let exited = false;
+    const status = once(proc, 'close').then(([code]) => {
+        exited = true;
+        return code as number | null;
+    });
+
+    const stop = async (signal: NodeJS.Signals = 'SIGKILL') => {
         if (!exited) {
-            try {
-                proc.kill(signal);
-            } catch {
-                // already gone
-            }
+            proc.kill(signal);
         }
         return await status;
     };
@@ -120,7 +113,6 @@ export const startNode = async (
     };
 };
 
-// deno-lint-ignore no-explicit-any
 type Json = any;
 
 export class FakeUA {

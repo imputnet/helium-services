@@ -1,4 +1,3 @@
-import { decodeBase64Url, encodeBase64Url } from '@std/encoding/base64url';
 import { env } from '../env.ts';
 import * as Crypto from '../util/crypto.ts';
 import * as Buf from '../util/buffer.ts';
@@ -21,11 +20,11 @@ export const generate = async () => {
     const cat = new Uint8Array(unsigned.byteLength + signature.byteLength);
     cat.set(unsigned, 0);
     cat.set(signature, unsigned.byteLength);
-    return encodeBase64Url(cat);
+    return Buf.toBase64Url(cat);
 };
 
 export const unwrap = async (signed_uaid: string) => {
-    const bytes = decodeBase64Url(signed_uaid);
+    const bytes = Buf.fromBase64Url(signed_uaid);
     const uaid_bytes = bytes.subarray(0, UAID_LEN_UNSIGNED);
     const signature = bytes.subarray(UAID_LEN_UNSIGNED);
 
@@ -35,5 +34,5 @@ export const unwrap = async (signed_uaid: string) => {
         throw 'HMAC verification failed';
     }
 
-    return encodeBase64Url(uaid_bytes);
+    return Buf.toBase64Url(uaid_bytes);
 };

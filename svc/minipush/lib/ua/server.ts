@@ -3,17 +3,16 @@ import * as HTTP from '../util/http.ts';
 import { CloseStatus } from '../rfc/6455.ts';
 import { handleMessage } from './handlers.ts';
 import type { ConnectionState } from './state.ts';
-import { ServerMessage } from './server-schema.ts';
+import type { ServerMessage } from './server-schema.ts';
 import { type ClientMessage, clientMessage } from './client-schema.ts';
 
-import { assert } from '@std/assert';
+import assert from 'node:assert/strict';
+import { WebSocket } from 'ws';
 
 const waitForHelloTimeout = (state: ConnectionState) => {
     state.helloTimeoutId = setTimeout(() => {
         state.ws.close(CloseStatus.TIMED_OUT, 'timed out waiting for hello');
-    }, 10_000);
-
-    Deno.unrefTimer(state.helloTimeoutId);
+    }, 10_000).unref();
 };
 
 const send = (state: ConnectionState, message: ServerMessage) =>
@@ -34,8 +33,11 @@ const handleWebsocketMessage = async (
             }
         }
     } catch {
-        const { CLOSED, CLOSING, readyState } = state.ws;
-        if (readyState === CLOSED || readyState === CLOSING) {
+        const { readyState } = state.ws;
+        if (
+            readyState === WebSocket.CLOSED
+            || readyState === WebSocket.CLOSING
+        ) {
             return;
         }
 
@@ -43,42 +45,49 @@ const handleWebsocketMessage = async (
     }
 };
 
-const handleWebsocketConnection = (state: ConnectionState) => {
-    const { ws } = state;
+const handleWebsocketData = async (state: ConnectionState, raw: unknown) => {
+    let success = false,
+        data;
+    try {
+        const obj = JSON.parse(raw as string);
+        const parsed = await clientMessage.safeParseAsync(obj);
+        success = parsed.success;
+        data = parsed.data;
+    } catch {
+        // fail via !success
+    }
 
-    ws.addEventListener('message', async (event) => {
-        let success = false,
-            data;
-        try {
-            const obj = JSON.parse(event.data);
-            const parsed = await clientMessage.safeParseAsync(obj);
-            success = parsed.success;
-            data = parsed.data;
-        } catch {
-            // fail via !success
-        }
+    if (!success) {
+        state.ws.close(CloseStatus.PROTOCOL_ERROR, 'invalid data');
+        return;
+    }
 
-        if (!success) {
-            ws.close(CloseStatus.PROTOCOL_ERROR, 'invalid data');
-            return;
-        }
+    assert(data);
 
-        assert(data);
+    if (data.messageType === 'hello' && state.helloTimeoutId) {
+        clearTimeout(state.helloTimeoutId);
+        delete state.helloTimeoutId;
+    }
 
-        if (data.messageType === 'hello' && state.helloTimeoutId) {
-            clearTimeout(state.helloTimeoutId);
-            delete state.helloTimeoutId;
-        }
-
-        await handleWebsocketMessage(state, data);
-    });
-
-    ws.addEventListener('close', () => {
-        g_state.onClientDisconnected(state);
-    });
+    await handleWebsocketMessage(state, data);
 };
 
-export const handleWebsocketSetup = (req: Request) => {
+export const handleWebsocketConnection = (ws: WebSocket) => {
+    const state = g_state.newConnection(ws);
+    waitForHelloTimeout(state);
+
+    ws.on('message', (data, isBinary) =>
+        handleWebsocketData(state, isBinary ? undefined : String(data)),
+    );
+    ws.on('close', () => g_state.onClientDisconnected(state));
+    // 'close' follows any error, and ws would throw without a listener
+    ws.on('error', () => {});
+};
+
+export const handleWebsocketSetup = (
+    req: Request,
+    acceptUpgrade?: () => void,
+) => {
     if (req.headers.get('Upgrade') !== 'websocket') {
         return new Response(null, { status: HTTP.status.UPGRADE_REQUIRED });
     }
@@ -86,10 +95,10 @@ export const handleWebsocketSetup = (req: Request) => {
     const maybeError = HTTP.checkMethod(req, 'GET');
     if (maybeError) return maybeError;
 
-    const { socket, response } = Deno.upgradeWebSocket(req);
-    const state = g_state.newConnection(socket);
-    waitForHelloTimeout(state);
-    handleWebsocketConnection(state);
+    if (!acceptUpgrade) {
+        return new Response(null, { status: HTTP.status.UPGRADE_REQUIRED });
+    }
 
-    return response;
+    acceptUpgrade();
+    return new Response(null);
 };

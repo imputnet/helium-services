@@ -1,4 +1,4 @@
-import * as z from '@zod/zod';
+import * as z from 'zod';
 
 const channelId = z.uuid();
 const broadcastMap = z.record(z.string(), z.string());

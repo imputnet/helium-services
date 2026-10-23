@@ -1,4 +1,3 @@
-import { decodeBase64Url, encodeBase64Url } from '@std/encoding/base64url';
 import { env } from '../env.ts';
 import * as Buf from '../util/buffer.ts';
 import * as Crypto from '../util/crypto.ts';
@@ -40,16 +39,16 @@ export const make = async (uaid: string) => {
     const encrypted = await crypto.subtle.encrypt(
         { name: 'AES-GCM', iv },
         key,
-        Buf.cat(decodeBase64Url(uaid), Crypto.rand(NONCE_LEN)),
+        Buf.cat(Buf.fromBase64Url(uaid), Crypto.rand(NONCE_LEN)),
     );
 
-    return encodeBase64Url(Buf.cat(iv, encrypted));
+    return Buf.toBase64Url(Buf.cat(iv, encrypted));
 };
 
 // Returns the UAID the message belongs to, throws if the id was not
 // issued by us.
 export const unwrap = async (id: string) => {
-    const bytes = decodeBase64Url(id);
+    const bytes = Buf.fromBase64Url(id);
     const plain = await crypto.subtle.decrypt(
         { name: 'AES-GCM', iv: bytes.subarray(0, IV_LEN) },
         key,
@@ -57,5 +56,5 @@ export const unwrap = async (id: string) => {
     );
 
     const [uaid] = Buf.split(plain, [UAID_LEN_UNSIGNED, NONCE_LEN]);
-    return encodeBase64Url(uaid);
+    return Buf.toBase64Url(uaid);
 };

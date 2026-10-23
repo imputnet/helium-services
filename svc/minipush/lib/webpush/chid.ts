@@ -3,7 +3,6 @@ import * as Uuid from '../util/uuid.ts';
 import * as Buf from '../util/buffer.ts';
 import * as Crypto from '../util/crypto.ts';
 import { UAID_LEN_UNSIGNED } from '../ua/uaid.ts';
-import { decodeBase64Url, encodeBase64Url } from '@std/encoding/base64url';
 
 const BASE_WITH_TRAILING_SLASH = (() => {
     const url = new URL(env.baseUrl);
@@ -39,9 +38,9 @@ export const makeEndpoint = async (
 
     const iv = Crypto.rand(CHID_LEN);
     const plain = Buf.cat(
-        decodeBase64Url(uaid),
+        Buf.fromBase64Url(uaid),
         Uuid.toBytes(chid),
-        key ? await Crypto.sha256(decodeBase64Url(key)) : new Uint8Array(),
+        key ? await Crypto.sha256(Buf.fromBase64Url(key)) : new Uint8Array(),
     );
 
     const encrypted = await crypto.subtle.encrypt(
@@ -50,7 +49,7 @@ export const makeEndpoint = async (
         plain,
     );
 
-    url.pathname += encodeBase64Url(Buf.cat(encrypted, iv));
+    url.pathname += Buf.toBase64Url(Buf.cat(encrypted, iv));
     return url.toString();
 };
 
@@ -76,7 +75,7 @@ const unwrapFromBytes = async (
     ]);
 
     const chid = Uuid.fromBytes(chidBytes);
-    const uaid = encodeBase64Url(uaidBytes);
+    const uaid = Buf.toBase64Url(uaidBytes);
     let vapidKey;
 
     if (version === 'v2') {
@@ -84,7 +83,7 @@ const unwrapFromBytes = async (
             throw 'v2 format is missing vapid key';
         }
 
-        vapidKey = encodeBase64Url(keyBytes);
+        vapidKey = Buf.toBase64Url(keyBytes);
     } else if (version === 'v1' && keyBytes.byteLength > 0) {
         throw 'v1 format has unexpected key';
     }
@@ -101,6 +100,6 @@ export const unwrap = (version: string, token: string) => {
         throw `invalid version: ${version}`;
     }
 
-    const bytes = decodeBase64Url(token);
+    const bytes = Buf.fromBase64Url(token);
     return unwrapFromBytes(version, bytes);
 };

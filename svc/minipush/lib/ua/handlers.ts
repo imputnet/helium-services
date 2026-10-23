@@ -1,4 +1,4 @@
-import { ServerMessage } from './server-schema.ts';
+import type { ServerMessage } from './server-schema.ts';
 
 import * as UAID from './uaid.ts';
 import * as g_state from './state.ts';

@@ -36,3 +36,19 @@ export const split = (buf: ArrayBuffer, lengths: number[]) => {
 
     return out;
 };
+
+const asBuffer = (buf: ArrayBuffer | Uint8Array) =>
+    ArrayBuffer.isView(buf)
+        ? Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength)
+        : Buffer.from(buf);
+
+export const fromBase64Url = (s: string) =>
+    new Uint8Array(Buffer.from(s, 'base64url'));
+
+export const toBase64Url = (buf: ArrayBuffer | Uint8Array) =>
+    asBuffer(buf).toString('base64url');
+
+export const fromHex = (s: string) => new Uint8Array(Buffer.from(s, 'hex'));
+
+export const toHex = (buf: ArrayBuffer | Uint8Array) =>
+    asBuffer(buf).toString('hex');
