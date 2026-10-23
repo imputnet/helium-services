@@ -97,7 +97,6 @@ export const SAFE_RESPONSE_HEADERS = [
     'etag',
     'last-modified',
     'accept-ranges',
-    'content-length',
     'vary',
     'content-range',
 ];
