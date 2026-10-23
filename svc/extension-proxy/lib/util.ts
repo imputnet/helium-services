@@ -54,20 +54,6 @@ export const respond = (
     return new Response(response, { status, headers });
 };
 
-export const respondWithError = (e: unknown) => {
-    if (typeof e === 'string') {
-        e = { status: 400, text: e };
-    }
-
-    if (e instanceof Object) {
-        if ('status' in e && 'text' in e) {
-            return respond(e.status as number, `error ${e.status}: ${e.text}`);
-        }
-    }
-
-    return respond(500, 'server error');
-};
-
 export const parseURLStrict = (url_: unknown) => {
     if (url_ instanceof URL) {
         return;

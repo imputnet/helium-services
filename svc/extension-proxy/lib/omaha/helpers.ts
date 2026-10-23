@@ -99,7 +99,7 @@ const handlePost = async (request: Request): Promise<RequestData> => {
 
     let body: { request: OmahaRequest };
     try {
-        body = await request.json();
+        body = (await request.json()) as { request: OmahaRequest };
     } catch {
         throw 'invalid body';
     }

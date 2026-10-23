@@ -24,6 +24,18 @@ importers:
 
   lib/common: {}
 
+  svc/extension-proxy:
+    dependencies:
+      '@helium-services/common':
+        specifier: workspace:*
+        version: link:../../lib/common
+      '@hono/node-server':
+        specifier: ^1.19.17
+        version: 1.19.17(hono@4.13.13)
+      '@libs/xml':
+        specifier: jsr:^6.0.8
+        version: '@jsr/libs__xml@6.0.8'
+
   util/release-collector:
     dependencies:
       '@helium-services/common':
@@ -54,6 +66,12 @@ packages:
     resolution: {integrity: sha512-AZjtWXFleAe5nQ27JYISs70cICjO0zZr4LU45I9pXKcrhG0qiEWgq3Vjwr9JHHihFLuqgc7uSHYVn/z3vXCjdw==}
     engines: {node: '>=8.0.0'}
     hasBin: true
+
+  '@hono/node-server@1.19.17':
+    resolution: {integrity: sha512-dSneS5qhiauZWGDCeK4o695Xd9nUNjviSZCMQrj10eetr8Uln1ucn6bbphOM6UynAMMtNIzZNSpL9vnASJwrPQ==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      hono: ^4
 
   '@jsr/libs__xml@6.0.8':
     resolution: {integrity: sha512-1ZufNFIHsZViWVYh/4FYtcks8ZaJwTHW6conILM4dfIiZ30r2DLjenZfvEwszL7+GeC2i9L/R9fADHY2s6tKRg==, tarball: https://npm.jsr.io/~/11/@jsr/libs__xml/6.0.8.tgz}
@@ -455,6 +473,10 @@ packages:
     resolution: {integrity: sha512-a6Qh1RMCNbSrU1+sAyAAZH3rTe+OaWJbNZIq0S+ifZciUUOQtlVxBJwoTUE2bYhysmG/RYyI5WJFIKdBahJdrQ==}
     hasBin: true
 
+  hono@4.13.13:
+    resolution: {integrity: sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA==}
+    engines: {node: '>=16.9.0'}
+
   oxfmt@0.74.0:
     resolution: {integrity: sha512-G4OP7FgwGYZR5ttRpCOOfJdyRsSyvtn34vSXnjDq6Oqed5Dufg5mB44mank+51nAdHOKuTJ0lj0mksY7L+N61A==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -508,6 +530,10 @@ snapshots:
   7z-wasm@1.2.0:
     dependencies:
       readline-sync: 1.4.10
+
+  '@hono/node-server@1.19.17(hono@4.13.13)':
+    dependencies:
+      hono: 4.13.13
 
   '@jsr/libs__xml@6.0.8': {}
 
@@ -723,6 +749,8 @@ snapshots:
   fast-xml-parser@4.5.7:
     dependencies:
       strnum: 1.1.2
+
+  hono@4.13.13: {}
 
   oxfmt@0.74.0:
     dependencies:

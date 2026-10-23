@@ -1,12 +1,19 @@
-import * as Util from './lib/util.ts';
+import { serve } from '@hono/node-server';
+import { respondWithError } from '@helium-services/common/http';
+
 import * as Handlers from './lib/handlers.ts';
 
-export default {
-    async fetch(request: Request) {
-        try {
-            return await Handlers.handle(request);
-        } catch (e) {
-            return Util.respondWithError(e);
-        }
-    },
+const handleRequest = async (request: Request) => {
+    try {
+        return await Handlers.handle(request);
+    } catch (e) {
+        return respondWithError(
+            e,
+            (status, text) => `error ${status}: ${text}`,
+        );
+    }
 };
+
+if (import.meta.main) {
+    serve({ fetch: handleRequest, port: 8000 });
+}

@@ -1,12 +1,12 @@
+import { optional } from '@helium-services/common/env';
+
 import { decodeBase64, encodeBase64 } from './base64url.ts';
 import * as Util from './util.ts';
 
 const _get_secret = () => {
-    if (Deno.env.has('HMAC_SECRET')) {
-        const secret = Deno.env.get('HMAC_SECRET')!;
-        if (secret.length >= 32) {
-            return new TextEncoder().encode(secret);
-        }
+    const secret = optional('HMAC_SECRET');
+    if (secret !== undefined && secret.length >= 32) {
+        return new TextEncoder().encode(secret);
     }
 
     console.error(
@@ -15,12 +15,13 @@ const _get_secret = () => {
 };
 
 const _get_base_origin = () => {
-    if (!Deno.env.has('PROXY_BASE_URL')) {
+    const baseUrl = optional('PROXY_BASE_URL');
+    if (baseUrl === undefined) {
         console.error(
             'PROXY_BASE_URL is not set, CRX requests will not be proxied',
         );
     } else {
-        return new URL(Deno.env.get('PROXY_BASE_URL')!);
+        return new URL(baseUrl);
     }
 };
 
