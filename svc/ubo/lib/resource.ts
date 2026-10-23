@@ -1,4 +1,3 @@
-/// <reference types="@types/node" />
 import z from 'node:zlib';
 
 export function compress(s: string) {

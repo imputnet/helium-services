@@ -4,7 +4,7 @@ import * as Allowlist from './allowlist.ts';
 import * as AssetsInfo from './assets-info.ts';
 import { env } from './env.ts';
 
-import * as Path from '@std/path/posix';
+import { posix as Path } from 'node:path';
 
 type Asset = {
     content: 'internal' | 'filters';

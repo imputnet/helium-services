@@ -26,6 +26,13 @@ HEALTHCHECK --start-period=3s --start-interval=5s --interval=5m --timeout=10s \
         CMD curl -f "http://localhost:8000/?response=redirect&x=id%3Daeblfdkhhhdcdjpifhhbdiojplfjncoa%26uc"
 CMD ["node", "--conditions=production", "main.ts"]
 
+FROM service AS ubo
+USER node
+COPY --from=build /out/ubo ./
+HEALTHCHECK --start-period=3s --start-interval=5s --interval=5m --timeout=10s \
+        CMD curl --compressed -f "http://localhost:8000/assets.json"
+CMD ["node", "--conditions=production", "main.ts"]
+
 FROM base AS release-collector
 USER node
 COPY --from=build /out/release-collector ./

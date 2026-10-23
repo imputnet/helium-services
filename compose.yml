@@ -26,7 +26,9 @@ services:
   ubo_proxy:
     container_name: ubo_proxy
     read_only: true
-    build: ./svc/ubo
+    build:
+      context: .
+      target: ubo
     restart: unless-stopped
     environment:
       - UBO_PROXY_BASE_URL=${UBO_PROXY_BASE_URL}

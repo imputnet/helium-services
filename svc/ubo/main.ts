@@ -1,5 +1,7 @@
+import { serve } from '@hono/node-server';
+import { respondWithError } from '@helium-services/common/http';
+
 import * as Assets from './lib/ublock.ts';
-import * as Util from './lib/util.ts';
 
 const handleData = (request: Request) => {
     const url = new URL(request.url);
@@ -63,17 +65,16 @@ const handle = async (request: Request): Promise<Response> => {
     return new Response(data.stream(), { headers });
 };
 
+const handleRequest = async (request: Request) => {
+    try {
+        return await handle(request);
+    } catch (e) {
+        return respondWithError(e);
+    }
+};
+
 if (import.meta.main) {
     // try to preload assets.json before any request arrives
     Assets.handleAssets().catch(() => {});
+    serve({ fetch: handleRequest, port: 8000 });
 }
-
-export default {
-    async fetch(request: Request) {
-        try {
-            return await handle(request);
-        } catch (e) {
-            return Util.respondWithError(e);
-        }
-    },
-};

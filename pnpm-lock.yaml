@@ -36,6 +36,15 @@ importers:
         specifier: jsr:^6.0.8
         version: '@jsr/libs__xml@6.0.8'
 
+  svc/ubo:
+    dependencies:
+      '@helium-services/common':
+        specifier: workspace:*
+        version: link:../../lib/common
+      '@hono/node-server':
+        specifier: ^1.19.17
+        version: 1.19.17(hono@4.13.13)
+
   util/release-collector:
     dependencies:
       '@helium-services/common':
