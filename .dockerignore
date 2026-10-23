@@ -1,0 +1,10 @@
+**/node_modules
+.git
+**/.env
+private
+deploy
+compose.override.yml
+
+# minidumpster runtime data contains sensitive crash reports
+svc/minidumpster/data
+**/.dev-data
