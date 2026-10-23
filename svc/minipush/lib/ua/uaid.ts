@@ -15,16 +15,10 @@ export const UAID_LEN_UNSIGNED = 12;
 export const generate = async () => {
     const unsigned = Crypto.rand(UAID_LEN_UNSIGNED);
     const signature = new Uint8Array(
-        await crypto.subtle.sign(
-            'HMAC',
-            signingKey,
-            unsigned,
-        ),
+        await crypto.subtle.sign('HMAC', signingKey, unsigned),
     );
 
-    const cat = new Uint8Array(
-        unsigned.byteLength + signature.byteLength,
-    );
+    const cat = new Uint8Array(unsigned.byteLength + signature.byteLength);
     cat.set(unsigned, 0);
     cat.set(signature, unsigned.byteLength);
     return encodeBase64Url(cat);
@@ -36,12 +30,7 @@ export const unwrap = async (signed_uaid: string) => {
     const signature = bytes.subarray(UAID_LEN_UNSIGNED);
 
     if (
-        !await crypto.subtle.verify(
-            'HMAC',
-            signingKey,
-            signature,
-            uaid_bytes,
-        )
+        !(await crypto.subtle.verify('HMAC', signingKey, signature, uaid_bytes))
     ) {
         throw 'HMAC verification failed';
     }

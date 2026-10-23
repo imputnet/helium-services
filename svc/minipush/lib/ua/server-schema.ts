@@ -1,9 +1,11 @@
 // The server->client response message schema.
 // Refer to autopush-rs/autoconnect/autoconnect-common/src/protocol.rs
 
-type BroadcastMap = {
-    [key: string]: string | BroadcastMap;
-} | undefined;
+type BroadcastMap =
+    | {
+          [key: string]: string | BroadcastMap;
+      }
+    | undefined;
 
 type ServerHello = {
     messageType: 'hello';

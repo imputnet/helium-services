@@ -12,18 +12,24 @@ const VERSION = env.useHeliumAssets ? VERSION_HELIUM : VERSION_VANILLA;
 const REPO = env.useHeliumAssets ? 'imputnet/uBlock' : 'gorhill/uBlock';
 
 if (!env.useHeliumAssets && env.customAssetsChecksum) {
-    throw 'USE_ORIGINAL_UBLOCK_ASSETS and UBO_ASSETS_JSON_* '
-        + 'cannot be set at the same time';
+    throw (
+        'USE_ORIGINAL_UBLOCK_ASSETS and UBO_ASSETS_JSON_* '
+        + 'cannot be set at the same time'
+    );
 }
 
 if (!!env.customAssetsUrl !== !!env.customAssetsChecksum) {
-    throw 'one of UBO_ASSETS_JSON_{URL,SHA256} is defined, but other'
-        + 'is missing';
+    throw (
+        'one of UBO_ASSETS_JSON_{URL,SHA256} is defined, but other'
+        + 'is missing'
+    );
 }
 
-export const fileChecksum = env.customAssetsChecksum
+export const fileChecksum =
+    env.customAssetsChecksum
     || (env.useHeliumAssets ? CSUM_HELIUM : CSUM_VANILLA);
 
-export const assetsUrl = env.customAssetsUrl
-    || (`https://raw.githubusercontent.com/${REPO}/refs/tags/`
-        + `${VERSION}/assets/assets.json`);
+export const assetsUrl =
+    env.customAssetsUrl
+    || `https://raw.githubusercontent.com/${REPO}/refs/tags/`
+        + `${VERSION}/assets/assets.json`;

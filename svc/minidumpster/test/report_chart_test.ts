@@ -39,17 +39,22 @@ Deno.test('daily charts aggregate breakdowns, filters, and entire groups', async
         add('old', 'Linux', groupId, today - 14 * 86400_000);
         env.db.recountGroups([groupId, otherId]);
 
-        assertEquals(env.db.reportsPerDay(today), [{
-            day,
-            n: 54,
-            segment: null,
-        }]);
+        assertEquals(env.db.reportsPerDay(today), [
+            {
+                day,
+                n: 54,
+                segment: null,
+            },
+        ]);
         assertEquals(
             env.db.reportsPerDay(today, {
                 groupId,
                 breakdown: 'version',
             }),
-            [{ day, n: 51, segment: '1.0' }, { day, n: 1, segment: '2.0' }],
+            [
+                { day, n: 51, segment: '1.0' },
+                { day, n: 1, segment: '2.0' },
+            ],
         );
         assertEquals(
             env.db.reportsPerDay(today, {

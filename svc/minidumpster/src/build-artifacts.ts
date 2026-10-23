@@ -30,7 +30,7 @@ function zstdDecompressionStream(): TransformStream<Uint8Array, Uint8Array> {
         start(controller) {
             // fzstd reuses its output buffer after the callback returns.
             decoder = new Decompress((chunk) =>
-                controller.enqueue(chunk.slice())
+                controller.enqueue(chunk.slice()),
             );
         },
         transform(chunk) {
@@ -67,10 +67,7 @@ class SliceReader extends Reader<null> {
         if (index < 0 || length < 0 || index + length > this.sliceSize) {
             throw new Error('nested ZIP read is outside the stored entry');
         }
-        return this.parent.readUint8Array(
-            this.baseOffset + index,
-            length,
-        );
+        return this.parent.readUint8Array(this.baseOffset + index, length);
     }
 }
 
@@ -322,7 +319,7 @@ async function downloadArtifact(
                             bytes: downloaded,
                             total_bytes: artifactSize,
                             percent: Math.floor(
-                                downloaded * 100 / artifactSize,
+                                (downloaded * 100) / artifactSize,
                             ),
                             elapsed_ms: Date.now() - started,
                         });

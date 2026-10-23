@@ -44,14 +44,18 @@ Deno.test('POST /crash accepts a gzipped Crashpad multipart upload', async () =>
         );
         const gz = await gzipBytes(bytes);
 
-        const res = await app.request('/crash', {
-            method: 'POST',
-            headers: {
-                'content-type': contentType,
-                'content-encoding': 'gzip',
+        const res = await app.request(
+            '/crash',
+            {
+                method: 'POST',
+                headers: {
+                    'content-type': contentType,
+                    'content-encoding': 'gzip',
+                },
+                body: gz,
             },
-            body: gz,
-        }, directConn);
+            directConn,
+        );
         assertEquals(res.status, 200);
         const id = (await res.text()).trim();
         assertMatch(id, UUID_RE);
@@ -84,11 +88,15 @@ Deno.test('POST /crash accepts an uncompressed multipart upload', async () => {
         const { bytes, contentType } = await encodeMultipart(
             crashpadForm(dump),
         );
-        const res = await app.request('/crash', {
-            method: 'POST',
-            headers: { 'content-type': contentType },
-            body: bytes,
-        }, directConn);
+        const res = await app.request(
+            '/crash',
+            {
+                method: 'POST',
+                headers: { 'content-type': contentType },
+                body: bytes,
+            },
+            directConn,
+        );
         assertEquals(res.status, 200);
         assertMatch((await res.text()).trim(), UUID_RE);
     } finally {
@@ -100,11 +108,15 @@ Deno.test('POST /crash rejects non-multipart bodies', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
-        const res = await app.request('/crash', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ nope: true }),
-        }, directConn);
+        const res = await app.request(
+            '/crash',
+            {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ nope: true }),
+            },
+            directConn,
+        );
         assertEquals(res.status, 415);
         await res.body?.cancel();
     } finally {
@@ -119,11 +131,15 @@ Deno.test('POST /crash rejects multipart without upload_file_minidump', async ()
         const form = new FormData();
         form.append('prod', 'MyBrowser');
         const { bytes, contentType } = await encodeMultipart(form);
-        const res = await app.request('/crash', {
-            method: 'POST',
-            headers: { 'content-type': contentType },
-            body: bytes,
-        }, directConn);
+        const res = await app.request(
+            '/crash',
+            {
+                method: 'POST',
+                headers: { 'content-type': contentType },
+                body: bytes,
+            },
+            directConn,
+        );
         assertEquals(res.status, 400);
         await res.body?.cancel();
     } finally {
@@ -138,11 +154,15 @@ Deno.test('POST /crash enforces the max body size', async () => {
         const { bytes, contentType } = await encodeMultipart(
             crashpadForm(new Uint8Array(8192)),
         );
-        const res = await app.request('/crash', {
-            method: 'POST',
-            headers: { 'content-type': contentType },
-            body: bytes,
-        }, directConn);
+        const res = await app.request(
+            '/crash',
+            {
+                method: 'POST',
+                headers: { 'content-type': contentType },
+                body: bytes,
+            },
+            directConn,
+        );
         assertEquals(res.status, 413);
         await res.body?.cancel();
     } finally {

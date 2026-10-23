@@ -9,7 +9,9 @@ import { Asset } from '../types/assets.ts';
 const SIGNING_KEY = decodeBase64(env.edSigningKey);
 
 if (SIGNING_KEY.byteLength !== 32) {
-    throw new Error(`ed25519 signing key is not 32 bytes, but ${SIGNING_KEY.byteLength}`);
+    throw new Error(
+        `ed25519 signing key is not 32 bytes, but ${SIGNING_KEY.byteLength}`,
+    );
 }
 
 export const signAndVerifyAsset = async (asset: Asset) => {

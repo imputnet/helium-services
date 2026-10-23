@@ -47,7 +47,9 @@ const processRelease = (
 
 if (import.meta.main) {
     const platforms: Platforms = JSON.parse(
-        await Deno.readTextFile(path.join(import.meta.dirname!, '/platforms.json')),
+        await Deno.readTextFile(
+            path.join(import.meta.dirname!, '/platforms.json'),
+        ),
     );
 
     const manifest: Manifest = {};
@@ -57,14 +59,17 @@ if (import.meta.main) {
             const releases = await getGithubReleases(info.repository);
 
             manifest[platform] = {
-                stable: processRelease(platform, getLatestRelease(releases, false)),
-                beta: processRelease(platform, getLatestRelease(releases, true)),
+                stable: processRelease(
+                    platform,
+                    getLatestRelease(releases, false),
+                ),
+                beta: processRelease(
+                    platform,
+                    getLatestRelease(releases, true),
+                ),
             };
         }),
     );
 
-    Deno.writeTextFileSync(
-        env.outPath,
-        JSON.stringify(manifest),
-    );
+    Deno.writeTextFileSync(env.outPath, JSON.stringify(manifest));
 }

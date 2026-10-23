@@ -25,27 +25,35 @@ function singleArtifactFetch(
         }
         if (url.pathname.endsWith('/actions/artifacts')) {
             const artifacts = url.pathname.includes('/helium-linux/')
-                ? [{
-                    id: 7,
-                    name: 'helium-symbols',
-                    size_in_bytes: size,
-                    created_at: new Date().toISOString(),
-                    expired: false,
-                    workflow_run: { id: 8, head_sha: 'sha' },
-                }]
+                ? [
+                      {
+                          id: 7,
+                          name: 'helium-symbols',
+                          size_in_bytes: size,
+                          created_at: new Date().toISOString(),
+                          expired: false,
+                          workflow_run: { id: 8, head_sha: 'sha' },
+                      },
+                  ]
                 : [];
-            return Promise.resolve(json({
-                total_count: artifacts.length,
-                artifacts,
-            }));
+            return Promise.resolve(
+                json({
+                    total_count: artifacts.length,
+                    artifacts,
+                }),
+            );
         }
         if (url.pathname.endsWith('/actions/runs/8/jobs')) {
-            return Promise.resolve(json({
-                jobs: [{
-                    name: 'Create release',
-                    conclusion: jobConclusion,
-                }],
-            }));
+            return Promise.resolve(
+                json({
+                    jobs: [
+                        {
+                            name: 'Create release',
+                            conclusion: jobConclusion,
+                        },
+                    ],
+                }),
+            );
         }
         throw new Error(`unexpected request: ${url}`);
     };
@@ -78,11 +86,7 @@ Deno.test('crawler classifies platform build artifacts and symbol archives', () 
         'symbols',
     );
     assertEquals(
-        _test.artifactKind(
-            'imputnet/helium-windows',
-            'helium-x86_64',
-            symbols,
-        ),
+        _test.artifactKind('imputnet/helium-windows', 'helium-x86_64', symbols),
         null,
     );
 });
@@ -142,70 +146,80 @@ Deno.test('crawler resumes a rate-limited symbol artifact download', async () =>
                 }
                 if (url.pathname.endsWith('/actions/artifacts')) {
                     const isLinux = url.pathname.includes('/helium-linux/');
-                    return Promise.resolve(json({
-                        total_count: isLinux ? 4 : 0,
-                        artifacts: isLinux
-                            ? [
-                                {
-                                    id: 42,
-                                    name: 'helium-1.2.3.4-x86_64-symbols',
-                                    size_in_bytes: 1234,
-                                    created_at: new Date(1_000_000)
-                                        .toISOString(),
-                                    expired: false,
-                                    workflow_run: {
-                                        id: 99,
-                                        head_sha: 'release-sha',
-                                    },
-                                },
-                                {
-                                    id: 43,
-                                    name: 'helium-1.2.3.4-x86_64-AppImage',
-                                    size_in_bytes: 1234,
-                                    created_at: new Date(1_000_000)
-                                        .toISOString(),
-                                    expired: false,
-                                    workflow_run: {
-                                        id: 99,
-                                        head_sha: 'release-sha',
-                                    },
-                                },
-                                {
-                                    id: 44,
-                                    name: 'other-release-symbols',
-                                    size_in_bytes: 1234,
-                                    created_at: new Date(1_000_000)
-                                        .toISOString(),
-                                    expired: false,
-                                    workflow_run: {
-                                        id: 100,
-                                        head_sha: 'other-sha',
-                                    },
-                                },
-                                {
-                                    id: 45,
-                                    name: 'helium-old-symbols',
-                                    size_in_bytes: 1234,
-                                    created_at: new Date(
-                                        1_000_000 - 8 * 24 * 60 * 60 * 1000,
-                                    ).toISOString(),
-                                    expired: false,
-                                    workflow_run: {
-                                        id: 99,
-                                        head_sha: 'release-sha',
-                                    },
-                                },
-                            ]
-                            : [],
-                    }));
+                    return Promise.resolve(
+                        json({
+                            total_count: isLinux ? 4 : 0,
+                            artifacts: isLinux
+                                ? [
+                                      {
+                                          id: 42,
+                                          name: 'helium-1.2.3.4-x86_64-symbols',
+                                          size_in_bytes: 1234,
+                                          created_at: new Date(
+                                              1_000_000,
+                                          ).toISOString(),
+                                          expired: false,
+                                          workflow_run: {
+                                              id: 99,
+                                              head_sha: 'release-sha',
+                                          },
+                                      },
+                                      {
+                                          id: 43,
+                                          name: 'helium-1.2.3.4-x86_64-AppImage',
+                                          size_in_bytes: 1234,
+                                          created_at: new Date(
+                                              1_000_000,
+                                          ).toISOString(),
+                                          expired: false,
+                                          workflow_run: {
+                                              id: 99,
+                                              head_sha: 'release-sha',
+                                          },
+                                      },
+                                      {
+                                          id: 44,
+                                          name: 'other-release-symbols',
+                                          size_in_bytes: 1234,
+                                          created_at: new Date(
+                                              1_000_000,
+                                          ).toISOString(),
+                                          expired: false,
+                                          workflow_run: {
+                                              id: 100,
+                                              head_sha: 'other-sha',
+                                          },
+                                      },
+                                      {
+                                          id: 45,
+                                          name: 'helium-old-symbols',
+                                          size_in_bytes: 1234,
+                                          created_at: new Date(
+                                              1_000_000
+                                                  - 8 * 24 * 60 * 60 * 1000,
+                                          ).toISOString(),
+                                          expired: false,
+                                          workflow_run: {
+                                              id: 99,
+                                              head_sha: 'release-sha',
+                                          },
+                                      },
+                                  ]
+                                : [],
+                        }),
+                    );
                 }
                 if (url.pathname.endsWith('/actions/runs/99/jobs')) {
-                    return Promise.resolve(json({
-                        jobs: [{
-                            name: 'Create release',
-                            conclusion: 'success',
-                        }],
-                    }));
+                    return Promise.resolve(
+                        json({
+                            jobs: [
+                                {
+                                    name: 'Create release',
+                                    conclusion: 'success',
+                                },
+                            ],
+                        }),
+                    );
                 }
                 if (url.pathname.endsWith('/actions/artifacts/42/zip')) {
                     if (downloadRateLimited) {

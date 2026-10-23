@@ -16,12 +16,14 @@ export const startServer = async (params: ServerParameters) => {
     Mesh.setHandler(handleFrame);
     const app = new Hono();
 
-    app.use(rateLimiter({
-        windowMs: env.rateLimitWindowMs,
-        limit: env.rateLimit,
-        standardHeaders: 'draft-6',
-        keyGenerator: (c) => getConnInfo(c).remote.address || '',
-    }));
+    app.use(
+        rateLimiter({
+            windowMs: env.rateLimitWindowMs,
+            limit: env.rateLimit,
+            standardHeaders: 'draft-6',
+            keyGenerator: (c) => getConnInfo(c).remote.address || '',
+        }),
+    );
 
     app.get('/', (c) => {
         return UA.handleWebsocketSetup(c.req.raw);
@@ -43,11 +45,14 @@ export const startServer = async (params: ServerParameters) => {
         return Webpush.handleWebPushDeletion(c.req.raw, match);
     });
 
-    const server = Deno.serve({
-        hostname: env.bindHostname,
-        port: env.port,
-        signal: params.signal,
-    }, app.fetch);
+    const server = Deno.serve(
+        {
+            hostname: env.bindHostname,
+            port: env.port,
+            signal: params.signal,
+        },
+        app.fetch,
+    );
 
     env.log();
     await server.finished;

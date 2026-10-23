@@ -13,9 +13,7 @@ type NegativeCacheEntry = {
     missing: true;
 };
 
-type CacheEntry =
-    | PositiveCacheEntry
-    | NegativeCacheEntry;
+type CacheEntry = PositiveCacheEntry | NegativeCacheEntry;
 
 type Cache = Record<string, CacheEntry>;
 type Producent = () => Promise<string>;
@@ -51,11 +49,11 @@ async function set(key: string, value: string, options: Options) {
 }
 
 function has(key: string) {
-    return key in _cache
-        && (
-            typeof _cache[key].expiry === 'undefined'
-            || _cache[key].expiry > Date.now()
-        );
+    return (
+        key in _cache
+        && (typeof _cache[key].expiry === 'undefined'
+            || _cache[key].expiry > Date.now())
+    );
 }
 
 async function _materialize(
@@ -102,16 +100,14 @@ async function _materialize(
     return _materialize(key, options, null);
 }
 
-export function materialize(
-    key: string,
-    options: Options,
-    source: Producent,
-) {
+export function materialize(key: string, options: Options, source: Producent) {
     return _materialize(key, options, source);
 }
 
 export const stats = () => {
-    let count = 0, negative = 0, size = 0;
+    let count = 0,
+        negative = 0,
+        size = 0;
     for (const item of Object.values(_cache)) {
         ++count;
         if ('missing' in item) {

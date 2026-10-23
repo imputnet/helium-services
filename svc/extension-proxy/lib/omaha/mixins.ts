@@ -54,14 +54,20 @@ export const addToPool = (id: ServiceId, { appid, version }: App) => {
     pool.set(appid, { appid, version });
 };
 
-export const addToPoolFromResponse = (id: ServiceId, { response }: OmahaResponse) => {
+export const addToPoolFromResponse = (
+    id: ServiceId,
+    { response }: OmahaResponse,
+) => {
     if (response.protocol === '4.0') {
         return V4.addToPoolFromResponse(id, { response });
     } else if (response.protocol === '3.1') {
         return V3.addToPoolFromResponse(id, { response });
     }
 
-    console.warn('[warn] unknown protocol in addToPoolFromResponse', response.protocol);
+    console.warn(
+        '[warn] unknown protocol in addToPoolFromResponse',
+        response.protocol,
+    );
 };
 
 export const addRandomExtensions = (id: ServiceId, apps: readonly App[]) => {
@@ -69,7 +75,9 @@ export const addRandomExtensions = (id: ServiceId, apps: readonly App[]) => {
     const idSet = new Set(apps.map((a) => a.appid));
     const pool = getPool(id);
 
-    const candidates = [...pool.values()].filter((app) => !idSet.has(app.appid));
+    const candidates = [...pool.values()].filter(
+        (app) => !idSet.has(app.appid),
+    );
     const count = Math.min(nAppsToMixin, candidates.length);
     for (let i = 0; i < count && i < candidates.length - 1; ++i) {
         const j = i + Util.randomInt(candidates.length - i);
@@ -80,7 +88,10 @@ export const addRandomExtensions = (id: ServiceId, apps: readonly App[]) => {
     return [...apps, ...mixins];
 };
 
-export const unmixResponse = (expectedApps: readonly App[], response: OmahaResponse) => {
+export const unmixResponse = (
+    expectedApps: readonly App[],
+    response: OmahaResponse,
+) => {
     const allowedIds = new Set(expectedApps.map((a) => a.appid));
     const inner = response.response;
 

@@ -58,22 +58,28 @@ Deno.test('database migration removes the legacy dump_deleted column', async () 
 
         const migrated = new DatabaseSync(path);
         try {
-            const legacyColumn = migrated.prepare(`
+            const legacyColumn = migrated
+                .prepare(`
                 SELECT 1
                 FROM pragma_table_info('reports')
                 WHERE name = 'dump_deleted'
-            `).get();
+            `)
+                .get();
             assertEquals(legacyColumn, undefined);
-            const trigger = migrated.prepare(`
+            const trigger = migrated
+                .prepare(`
                 SELECT sql
                 FROM sqlite_master
                 WHERE type = 'trigger' AND name = 'reports_search_delete'
-            `).get() as { sql: string };
+            `)
+                .get() as { sql: string };
             assertEquals(/rowid\s*=\s*old\.rowid/i.test(trigger.sql), true);
             assertEquals(
-                (migrated.prepare('PRAGMA user_version').get() as {
-                    user_version: number;
-                }).user_version,
+                (
+                    migrated.prepare('PRAGMA user_version').get() as {
+                        user_version: number;
+                    }
+                ).user_version,
                 2,
             );
         } finally {
@@ -108,14 +114,7 @@ Deno.test('groups can be filtered by process type', async () => {
                 `${ptype} crash`,
                 receivedAt,
             );
-            env.db.markProcessed(
-                id,
-                groupId,
-                'Linux',
-                receivedAt,
-                true,
-                1,
-            );
+            env.db.markProcessed(id, groupId, 'Linux', receivedAt, true, 1);
             env.db.recountGroups([groupId]);
             return groupId;
         };

@@ -111,16 +111,18 @@ function sentinelStack(frames: [string, string][]): SymbolicatorResponse {
     return {
         status: 'completed',
         crash_reason: 'EXC_BREAKPOINT (SIGTRAP)',
-        stacktraces: [{
-            thread_id: 0,
-            is_requesting_thread: true,
-            frames: frames.map(([fn, pkg], i) => ({
-                status: 'symbolicated',
-                function: fn,
-                package: pkg,
-                instruction_addr: `0x${(0x1000 + i * 16).toString(16)}`,
-            })),
-        }],
+        stacktraces: [
+            {
+                thread_id: 0,
+                is_requesting_thread: true,
+                frames: frames.map(([fn, pkg], i) => ({
+                    status: 'symbolicated',
+                    function: fn,
+                    package: pkg,
+                    instruction_addr: `0x${(0x1000 + i * 16).toString(16)}`,
+                })),
+            },
+        ],
     };
 }
 
@@ -319,10 +321,7 @@ Deno.test('generic logging lambdas do not group unrelated fatal crashes', async 
                 'base::internal::InvokeHelper<0,base::internal::FunctorTraits<void ()>>::MakeItSo(void (*)())',
                 helium,
             ],
-            [
-                'base::internal::Invoker<...>::RunImpl(void (*)())',
-                helium,
-            ],
+            ['base::internal::Invoker<...>::RunImpl(void (*)())', helium],
             [
                 'base::internal::Invoker<...>::RunOnce(base::internal::BindStateBase*) [clone .cfi]',
                 helium,
@@ -384,21 +383,27 @@ Deno.test('signature reports symbolication completeness', async () => {
 Deno.test('unsymbolicated fallback labels are module-relative, not ASLR-absolute', async () => {
     const mk = (base: number): SymbolicatorResponse => ({
         status: 'completed',
-        modules: [{
-            debug_id: '4c4c4480-5555-3144-a1c9-68200780c659',
-            code_file: '/app/Helium',
-            image_addr: `0x${base.toString(16)}`,
-            image_size: 0x100000,
-        }],
-        stacktraces: [{
-            thread_id: 0,
-            is_requesting_thread: true,
-            frames: [{
-                status: 'missing',
-                package: '/app/Helium',
-                instruction_addr: `0x${(base + 0x1234).toString(16)}`,
-            }],
-        }],
+        modules: [
+            {
+                debug_id: '4c4c4480-5555-3144-a1c9-68200780c659',
+                code_file: '/app/Helium',
+                image_addr: `0x${base.toString(16)}`,
+                image_size: 0x100000,
+            },
+        ],
+        stacktraces: [
+            {
+                thread_id: 0,
+                is_requesting_thread: true,
+                frames: [
+                    {
+                        status: 'missing',
+                        package: '/app/Helium',
+                        instruction_addr: `0x${(base + 0x1234).toString(16)}`,
+                    },
+                ],
+            },
+        ],
     });
     const a = await computeSignature(mk(0x100000000), { topN: 5 });
     const b = await computeSignature(mk(0x2f0000000), { topN: 5 });

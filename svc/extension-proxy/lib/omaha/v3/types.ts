@@ -1,4 +1,8 @@
-import type { App, OmahaResponseAppBase, OmahaResponseInnerBase } from '../types.ts';
+import type {
+    App,
+    OmahaResponseAppBase,
+    OmahaResponseInnerBase,
+} from '../types.ts';
 import * as Util from '../../util.ts';
 
 import { REQUEST_TEMPLATE } from './constants.ts';
@@ -21,7 +25,10 @@ export type AppInternal = App & {
     updatecheck: UpdateCheck;
 };
 
-export type OmahaRequest = Omit<Util.DeepWritable<typeof REQUEST_TEMPLATE>, 'app'> & {
+export type OmahaRequest = Omit<
+    Util.DeepWritable<typeof REQUEST_TEMPLATE>,
+    'app'
+> & {
     app: AppInternal[];
 };
 
@@ -30,23 +37,23 @@ export type OmahaResponseApp = OmahaResponseAppBase & {
     updatecheck?:
         | { status: 'noupdate' }
         | {
-            status: 'ok';
-            urls: {
-                url: ({ codebase: string } | { codebasediff: string })[];
-            };
-            manifest: {
-                version: string;
-                packages: {
-                    package: {
-                        hash_sha256: string;
-                        size: number;
-                        name: string;
-                        fp: string;
-                        required: boolean;
-                    }[];
-                };
-            };
-        };
+              status: 'ok';
+              urls: {
+                  url: ({ codebase: string } | { codebasediff: string })[];
+              };
+              manifest: {
+                  version: string;
+                  packages: {
+                      package: {
+                          hash_sha256: string;
+                          size: number;
+                          name: string;
+                          fp: string;
+                          required: boolean;
+                      }[];
+                  };
+              };
+          };
 };
 
 export type OmahaResponseInner = OmahaResponseInnerBase & {

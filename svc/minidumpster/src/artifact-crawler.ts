@@ -118,7 +118,7 @@ async function githubJson<T>(
             res,
         );
     }
-    return await res.json() as T;
+    return (await res.json()) as T;
 }
 
 async function releaseShas(
@@ -142,9 +142,9 @@ async function releaseShas(
 
         const commit = await githubJson<GithubCommit>(
             fetchFn,
-            `${api}/repos/${repo}/commits/${
-                encodeURIComponent(release.tag_name)
-            }`,
+            `${api}/repos/${repo}/commits/${encodeURIComponent(
+                release.tag_name,
+            )}`,
             token,
             signal,
         );
@@ -170,7 +170,8 @@ async function repositoryArtifacts(
         );
         artifacts.push(...body.artifacts);
         if (
-            artifacts.length >= body.total_count || body.artifacts.length === 0
+            artifacts.length >= body.total_count
+            || body.artifacts.length === 0
         ) {
             break;
         }
@@ -192,8 +193,8 @@ async function runCreatedRelease(
         token,
         signal,
     );
-    return body.jobs.some((job) =>
-        job.conclusion === 'success' && /release/i.test(job.name)
+    return body.jobs.some(
+        (job) => job.conclusion === 'success' && /release/i.test(job.name),
     );
 }
 
@@ -226,8 +227,7 @@ async function ingestCandidate(
         attempt: attempts,
     });
 
-    const artifactUrl =
-        `${api}/repos/${repo}/actions/artifacts/${artifact.id}/zip`;
+    const artifactUrl = `${api}/repos/${repo}/actions/artifacts/${artifact.id}/zip`;
     let result: SymbolIngestAndRequeueResult;
     if (kind !== 'symbols') {
         result = await ingestBuildArtifact(
@@ -257,12 +257,12 @@ async function ingestCandidate(
         result = await (deps.ingestFn
             ? deps.ingestFn(download.body, 'helium', releaseTag, kind)
             : ingestSymbolArchive(
-                download.body,
-                'helium',
-                releaseTag,
-                config,
-                deps.db,
-            ));
+                  download.body,
+                  'helium',
+                  releaseTag,
+                  config,
+                  deps.db,
+              ));
     }
 
     logEvent('artifact_crawler_ingested', {
@@ -289,8 +289,8 @@ export async function crawlArtifactsOnce(
     const api = (deps.githubApiUrl ?? GITHUB_API).replace(/\/+$/, '');
     const now = deps.now ?? Date.now;
     const namePattern = new RegExp(config.artifactCrawlerNamePattern, 'i');
-    const oldestArtifact = now()
-        - config.artifactCrawlerMaxAgeDays * 24 * 60 * 60 * 1000;
+    const oldestArtifact =
+        now() - config.artifactCrawlerMaxAgeDays * 24 * 60 * 60 * 1000;
 
     for (const repo of HELIUM_REPOS) {
         try {
@@ -311,12 +311,11 @@ export async function crawlArtifactsOnce(
             const candidates = artifacts.flatMap((artifact) => {
                 const kind = artifactKind(repo, artifact.name, namePattern);
                 return !artifact.expired
-                        && Date.parse(artifact.created_at) >= oldestArtifact
-                        && artifact.workflow_run !== null
-                        && shas.has(artifact.workflow_run.head_sha)
-                        && kind !== null
-                        && artifact.size_in_bytes
-                            <= config.artifactCrawlerMaxBytes
+                    && Date.parse(artifact.created_at) >= oldestArtifact
+                    && artifact.workflow_run !== null
+                    && shas.has(artifact.workflow_run.head_sha)
+                    && kind !== null
+                    && artifact.size_in_bytes <= config.artifactCrawlerMaxBytes
                     ? [{ artifact, kind }]
                     : [];
             });
@@ -348,7 +347,8 @@ export async function crawlArtifactsOnce(
                     artifact.name,
                 );
                 if (
-                    row.status === 'ingested' || row.status === 'failed'
+                    row.status === 'ingested'
+                    || row.status === 'failed'
                     || row.next_attempt_at > now()
                 ) {
                     continue;
@@ -363,9 +363,8 @@ export async function crawlArtifactsOnce(
                     );
                     db.markArtifactIngested(repo, artifact.id, attempts, now());
                 } catch (err) {
-                    const message = err instanceof Error
-                        ? err.message
-                        : String(err);
+                    const message =
+                        err instanceof Error ? err.message : String(err);
                     if (isGithubRateLimit(err)) {
                         db.markArtifactError(
                             repo,
@@ -441,11 +440,9 @@ export function startArtifactCrawler(
                 }
             }
 
-            await delay(
-                deps.config.artifactCrawlerPollMs,
-                undefined,
-                { signal },
-            ).catch((err) => {
+            await delay(deps.config.artifactCrawlerPollMs, undefined, {
+                signal,
+            }).catch((err) => {
                 if (!signal.aborted) throw err;
             });
         }

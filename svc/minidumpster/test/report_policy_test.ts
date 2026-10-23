@@ -6,10 +6,12 @@ import type { SymbolicatorResponse } from '../src/signature.ts';
 function response(...functions: string[]): SymbolicatorResponse {
     return {
         status: 'completed',
-        stacktraces: [{
-            is_requesting_thread: true,
-            frames: functions.map((fn) => ({ function: fn })),
-        }],
+        stacktraces: [
+            {
+                is_requesting_thread: true,
+                frames: functions.map((fn) => ({ function: fn })),
+            },
+        ],
     };
 }
 

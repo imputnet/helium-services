@@ -43,13 +43,12 @@ Deno.test('streaming multipart parser rejects truncated bodies', async () => {
         const form = new FormData();
         form.append('file', new Blob([new Uint8Array(100)]), 'x.zip');
         const { bytes, contentType } = await encodeMultipart(form);
-        await assertRejects(
-            () =>
-                streamMultipartToDisk(
-                    chunked(bytes.slice(0, bytes.length - 20), 16),
-                    contentType,
-                    () => join(dir, 'trunc.bin'),
-                ),
+        await assertRejects(() =>
+            streamMultipartToDisk(
+                chunked(bytes.slice(0, bytes.length - 20), 16),
+                contentType,
+                () => join(dir, 'trunc.bin'),
+            ),
         );
     } finally {
         await Deno.remove(dir, { recursive: true });
@@ -62,7 +61,7 @@ Deno.test('streaming multipart parser rejects a missing boundary', async () => {
             chunked(new Uint8Array(10), 10),
             'multipart/form-data',
             () => '/dev/null',
-        )
+        ),
     );
 });
 

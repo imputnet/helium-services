@@ -43,13 +43,14 @@ export async function processReport(
             signal: deps.signal,
         };
         const raw = await Deno.readFile(dumpPath(config.dataDir, report.id));
-        const resp = report.kind === 'apple'
-            ? await symbolicateAppleCrashReport(
-                config.symbolicatorUrl,
-                normalizeAppleCrashReport(new TextDecoder().decode(raw)),
-                opts,
-            )
-            : await symbolicateMinidump(config.symbolicatorUrl, raw, opts);
+        const resp =
+            report.kind === 'apple'
+                ? await symbolicateAppleCrashReport(
+                      config.symbolicatorUrl,
+                      normalizeAppleCrashReport(new TextDecoder().decode(raw)),
+                      opts,
+                  )
+                : await symbolicateMinidump(config.symbolicatorUrl, raw, opts);
         if (resp.status === 'failed') {
             deleteReportAndPayload(db, config, report.id);
             logEvent('report_rejected', {
@@ -75,11 +76,11 @@ export async function processReport(
 
         const productHint = report.product?.replace(/_Mac$/i, '');
         const hints = ['chrome', ...(productHint ? [productHint] : [])];
-        const sig = (await computeSignature(resp, {
-            topN: config.signatureFrames,
-            appHints: hints,
-        }))
-            ?? (await fallbackSignature(resp));
+        const sig =
+            (await computeSignature(resp, {
+                topN: config.signatureFrames,
+                appHints: hints,
+            })) ?? (await fallbackSignature(resp));
         const now = Date.now();
         const platform = platformFromResponse(resp);
         indexReportResponse(db, report.id, resp);
@@ -158,10 +159,11 @@ export function startWorker(deps: WorkerDeps) {
             }
 
             if (!report) {
-                await delay(deps.config.workerPollMs, undefined, { signal })
-                    .catch((err) => {
-                        if (!signal.aborted) throw err;
-                    });
+                await delay(deps.config.workerPollMs, undefined, {
+                    signal,
+                }).catch((err) => {
+                    if (!signal.aborted) throw err;
+                });
                 continue;
             }
 

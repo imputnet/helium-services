@@ -14,14 +14,14 @@ const main = async () => {
 
     const arches: CPUArchitecture[] = ['arm64', 'x86_64'];
     for (const arch of arches) {
-        const appcastPath = path.join(env.appcastDirectory, `appcast-${arch}.xml`);
+        const appcastPath = path.join(
+            env.appcastDirectory,
+            `appcast-${arch}.xml`,
+        );
         await cache.loadExistingAppcast(appcastPath);
 
         console.log('[/] writing appcast for arch', arch);
-        await Deno.writeTextFile(
-            appcastPath,
-            await appcast.makeAppcast(arch),
-        );
+        await Deno.writeTextFile(appcastPath, await appcast.makeAppcast(arch));
     }
 
     await assets.cleanup();

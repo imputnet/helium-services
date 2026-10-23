@@ -121,7 +121,7 @@ export function startRetentionJob(db: Db, config: Config): () => void {
             logError('retention_error', err);
         }
         runSymbolRetention(config).catch((err) =>
-            logError('symbols_retention_error', err)
+            logError('symbols_retention_error', err),
         );
     };
 

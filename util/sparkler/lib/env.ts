@@ -9,7 +9,10 @@ const strictGet = (name: string) => {
 
 const getBool = (name: string) => {
     const val = Deno.env.get(name);
-    return typeof val === 'string' && ['1', 'true', 'yes'].includes(val.toLowerCase());
+    return (
+        typeof val === 'string'
+        && ['1', 'true', 'yes'].includes(val.toLowerCase())
+    );
 };
 
 export const env = {

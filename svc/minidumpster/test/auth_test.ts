@@ -15,10 +15,8 @@ Deno.test('session payloads round-trip and reject malformed/expired values', () 
     assert(ok);
     assertEquals(ok.login, 'jj');
 
-    const rejects = (
-        value: Parameters<typeof decodeSession>[0],
-        at = now,
-    ) => assertEquals(decodeSession(value, at), null);
+    const rejects = (value: Parameters<typeof decodeSession>[0], at = now) =>
+        assertEquals(decodeSession(value, at), null);
     rejects(undefined);
     rejects(false);
     rejects('not json');
@@ -46,11 +44,13 @@ function githubMock(membershipState: string | null): typeof fetch {
         }
         if (url === 'https://api.github.com/user/emails') {
             return Promise.resolve(
-                Response.json([{
-                    email: 'jj@example.com',
-                    primary: true,
-                    verified: true,
-                }]),
+                Response.json([
+                    {
+                        email: 'jj@example.com',
+                        primary: true,
+                        verified: true,
+                    },
+                ]),
             );
         }
         if (url.startsWith('https://api.github.com/user/memberships/orgs/')) {
@@ -137,9 +137,9 @@ Deno.test('OAuth callback grants a session to active org members', async () => {
             });
             assertEquals(home.status, 200);
             assertEquals(
-                home.headers.get('content-security-policy')?.includes(
-                    "script-src 'self' 'unsafe-inline'",
-                ),
+                home.headers
+                    .get('content-security-policy')
+                    ?.includes("script-src 'self' 'unsafe-inline'"),
                 false,
             );
             const homeHtml = await home.text();
@@ -231,15 +231,13 @@ Deno.test('UI routes redirect to login without a session', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
-        for (
-            const path of [
-                '/',
-                '/symbols',
-                '/groups/1',
-                '/reports/x',
-                '/reports/x/dump',
-            ]
-        ) {
+        for (const path of [
+            '/',
+            '/symbols',
+            '/groups/1',
+            '/reports/x',
+            '/reports/x/dump',
+        ]) {
             const res = await app.request(path);
             assertEquals(res.status, 302, `expected redirect for ${path}`);
             assertEquals(res.headers.get('location'), '/auth/login');
@@ -268,9 +266,9 @@ Deno.test('shared page assets are served without a session', async () => {
             ),
         );
         assertEquals(
-            res.headers.get('content-security-policy')?.includes(
-                "script-src 'self' 'unsafe-inline'",
-            ),
+            res.headers
+                .get('content-security-policy')
+                ?.includes("script-src 'self' 'unsafe-inline'"),
             false,
         );
         assertEquals(

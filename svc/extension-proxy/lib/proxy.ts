@@ -9,12 +9,16 @@ const _get_secret = () => {
         }
     }
 
-    console.error('HMAC_SECRET is not set or <32 chars, CRX requests will not be proxied');
+    console.error(
+        'HMAC_SECRET is not set or <32 chars, CRX requests will not be proxied',
+    );
 };
 
 const _get_base_origin = () => {
     if (!Deno.env.has('PROXY_BASE_URL')) {
-        console.error('PROXY_BASE_URL is not set, CRX requests will not be proxied');
+        console.error(
+            'PROXY_BASE_URL is not set, CRX requests will not be proxied',
+        );
     } else {
         return new URL(Deno.env.get('PROXY_BASE_URL')!);
     }
@@ -22,13 +26,15 @@ const _get_base_origin = () => {
 
 const baseOrigin = _get_base_origin();
 const secret_str = _get_secret();
-const secret = secret_str && await crypto.subtle.importKey(
-    'raw',
-    secret_str,
-    { name: 'HMAC', hash: { name: 'SHA-256' } },
-    false,
-    ['sign', 'verify'],
-);
+const secret =
+    secret_str
+    && (await crypto.subtle.importKey(
+        'raw',
+        secret_str,
+        { name: 'HMAC', hash: { name: 'SHA-256' } },
+        false,
+        ['sign', 'verify'],
+    ));
 
 const sign = async (url: string, expiry: number) => {
     Util.parseURLStrict(url); // sanity check, should throw if url is invalid
@@ -36,9 +42,7 @@ const sign = async (url: string, expiry: number) => {
     const signature = await crypto.subtle.sign(
         'HMAC',
         secret!,
-        new TextEncoder().encode(
-            JSON.stringify({ url, expiry }),
-        ),
+        new TextEncoder().encode(JSON.stringify({ url, expiry })),
     );
 
     return encodeBase64(signature);
@@ -52,9 +56,7 @@ const verify = async (url: string, exp: string, sig: string) => {
         'HMAC',
         secret!,
         signature,
-        new TextEncoder().encode(
-            JSON.stringify({ url, expiry: Number(exp) }),
-        ),
+        new TextEncoder().encode(JSON.stringify({ url, expiry: Number(exp) })),
     );
 
     if (!ok) {

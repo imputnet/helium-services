@@ -27,10 +27,7 @@ function writeOctal(
     );
 }
 
-function tarEntry(
-    name: string,
-    data: Uint8Array,
-): Uint8Array {
+function tarEntry(name: string, data: Uint8Array): Uint8Array {
     const header = new Uint8Array(512);
     writeString(header, 0, 100, name);
     writeOctal(header, 100, 8, 0o600);
@@ -43,12 +40,7 @@ function tarEntry(
     writeString(header, 257, 6, 'ustar\0');
     writeString(header, 263, 2, '00');
     const checksum = header.reduce((sum, byte) => sum + byte, 0);
-    writeString(
-        header,
-        148,
-        8,
-        checksum.toString(8).padStart(6, '0') + '\0 ',
-    );
+    writeString(header, 148, 8, checksum.toString(8).padStart(6, '0') + '\0 ');
 
     const padded = Math.ceil(data.byteLength / 512) * 512;
     const result = new Uint8Array(512 + padded);
@@ -190,10 +182,16 @@ Deno.test('artifact downloads retry transient connection failures', async () => 
 Deno.test('Windows nested artifacts extract selected files', async () => {
     const dir = await Deno.makeTempDir();
     try {
-        const nested = await makeZip([
-            ['src/out/Default/helium.pdb', new TextEncoder().encode('pdb!')],
-            ['src/out/Default/ignored.txt', new Uint8Array([1])],
-        ], 0);
+        const nested = await makeZip(
+            [
+                [
+                    'src/out/Default/helium.pdb',
+                    new TextEncoder().encode('pdb!'),
+                ],
+                ['src/out/Default/ignored.txt', new Uint8Array([1])],
+            ],
+            0,
+        );
         const outer = await makeZip([['artifacts.zip', nested]], 0);
         const artifact = join(dir, 'windows.zip');
         await Deno.writeFile(artifact, outer);
@@ -225,14 +223,8 @@ Deno.test('macOS zstd/tar extraction selects build files', async () => {
 
         const out = join(dir, 'mac-selected');
         await Deno.mkdir(out);
-        assertEquals(
-            await _test.extractBuild(artifact, out, 'mac-build'),
-            1,
-        );
-        assertEquals(
-            await Deno.readTextFile(join(out, filePath)),
-            'app!',
-        );
+        assertEquals(await _test.extractBuild(artifact, out, 'mac-build'), 1);
+        assertEquals(await Deno.readTextFile(join(out, filePath)), 'app!');
     } finally {
         await Deno.remove(dir, { recursive: true });
     }

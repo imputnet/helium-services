@@ -17,8 +17,11 @@ export function looksLikeAppleCrashReport(text: string): boolean {
         return false; // raw .ips JSON
     }
 
-    return /^Thread \d+.*:/m.test(text) && /^Binary Images:/m.test(text)
-        && /^Process:/m.test(text);
+    return (
+        /^Thread \d+.*:/m.test(text)
+        && /^Binary Images:/m.test(text)
+        && /^Process:/m.test(text)
+    );
 }
 
 export function parseAppleCrashMeta(text: string): AppleCrashMeta {

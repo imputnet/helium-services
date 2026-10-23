@@ -21,14 +21,12 @@ export function dbPath(dataDir: string): string {
 }
 
 export async function ensureDataDirs(dataDir: string): Promise<void> {
-    for (
-        const d of [
-            join(dataDir, 'dumps'),
-            join(dataDir, 'processed'),
-            symbolsDir(dataDir),
-            tmpDir(dataDir),
-        ]
-    ) {
+    for (const d of [
+        join(dataDir, 'dumps'),
+        join(dataDir, 'processed'),
+        symbolsDir(dataDir),
+        tmpDir(dataDir),
+    ]) {
         await Deno.mkdir(d, { recursive: true });
     }
 }

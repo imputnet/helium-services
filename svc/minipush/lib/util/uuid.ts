@@ -19,7 +19,9 @@ export const fromBytes = (arr: Uint8Array) => {
         arr.subarray(6, 8),
         arr.subarray(8, 10),
         arr.subarray(10),
-    ].map(encodeHex).join('-');
+    ]
+        .map(encodeHex)
+        .join('-');
 };
 
 export const UUID_SHAPE =

@@ -65,7 +65,7 @@ Deno.test('POST /api/symbols requires product and version', async () => {
             body: new Uint8Array([1, 2, 3]),
         });
         assertEquals(res.status, 400);
-        const body = await res.json() as { error: string };
+        const body = (await res.json()) as { error: string };
         assertEquals(body.error.includes('product'), true);
     } finally {
         await env.cleanup();

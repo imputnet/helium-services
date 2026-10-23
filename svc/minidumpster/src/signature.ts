@@ -80,11 +80,17 @@ function moduleFor(
         return null;
     }
 
-    return modules.find((m) => {
-        const base = parseHex(m.image_addr);
-        return base !== null && typeof m.image_size === 'number'
-            && addr >= base && addr < base + m.image_size;
-    }) ?? null;
+    return (
+        modules.find((m) => {
+            const base = parseHex(m.image_addr);
+            return (
+                base !== null
+                && typeof m.image_size === 'number'
+                && addr >= base
+                && addr < base + m.image_size
+            );
+        }) ?? null
+    );
 }
 
 function frameFunction(f: SymFrame): string | null {
@@ -116,13 +122,13 @@ export function crashingThread(
     }
 
     return (
-        traces.find((t) =>
-            t.is_requesting_thread === true || t.is_requesting === true
+        traces.find(
+            (t) => t.is_requesting_thread === true || t.is_requesting === true,
         )
-            ?? traces.find((t) =>
-                t.registers && Object.keys(t.registers).length > 0
-            )
-            ?? traces[0]
+        ?? traces.find(
+            (t) => t.registers && Object.keys(t.registers).length > 0,
+        )
+        ?? traces[0]
     );
 }
 
@@ -187,8 +193,10 @@ const SIGNATURE_ONLY_FRAME_RE = new RegExp(
 export function isSignatureExcludedFrame(f: SymFrame): boolean {
     const fn = frameFunction(f);
 
-    return isCrashMachineryFrame(f)
-        || (fn !== null && SIGNATURE_ONLY_FRAME_RE.test(fn));
+    return (
+        isCrashMachineryFrame(f)
+        || (fn !== null && SIGNATURE_ONLY_FRAME_RE.test(fn))
+    );
 }
 
 function skipSignatureExcludedFrames(frames: SymFrame[]): SymFrame[] {
@@ -265,10 +273,7 @@ function applyAnchoredSignatureRule(frames: SymFrame[]): SymFrame[] {
 
 async function sha256Hex(text: string): Promise<string> {
     return new Uint8Array(
-        await crypto.subtle.digest(
-            'SHA-256',
-            new TextEncoder().encode(text),
-        ),
+        await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)),
     ).toHex();
 }
 
@@ -277,7 +282,8 @@ export async function computeSignature(
     opts: { topN?: number; appHints?: string[] } = {},
 ): Promise<SignatureResult | null> {
     const topN = opts.topN ?? 5;
-    const hints = (opts.appHints ?? []).map((h) => h.toLowerCase().trim())
+    const hints = (opts.appHints ?? [])
+        .map((h) => h.toLowerCase().trim())
         .filter((h) => h !== '');
 
     const thread = crashingThread(resp);
@@ -285,9 +291,10 @@ export async function computeSignature(
         return null;
     }
 
-    const appFrames = hints.length > 0
-        ? thread.frames.filter((f) => isAppFrame(f, hints))
-        : [];
+    const appFrames =
+        hints.length > 0
+            ? thread.frames.filter((f) => isAppFrame(f, hints))
+            : [];
     const withoutSentinels = skipSignatureExcludedFrames(
         appFrames.length > 0 ? appFrames : thread.frames,
     );

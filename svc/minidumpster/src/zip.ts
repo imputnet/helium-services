@@ -41,7 +41,9 @@ export async function extractZip(
         for await (const entry of zipReader.getEntriesGenerator()) {
             const rel = normalize(entry.filename.replaceAll('\\', '/'));
             if (
-                rel.startsWith('/') || rel === '..' || rel.startsWith('../')
+                rel.startsWith('/')
+                || rel === '..'
+                || rel.startsWith('../')
                 || rel.includes('/../')
             ) {
                 throw new Error(`unsafe zip entry path: ${entry.filename}`);

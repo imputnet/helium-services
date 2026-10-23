@@ -83,7 +83,10 @@ const handleBroadcastSubscribe: Handler<C.ClientBroadcastSubscribe> = (
 
 const handleAck: Handler<C.ClientAck> = (state, msg) => {
     if (state.uaidInternal) {
-        g_state.onClientAck(state, msg.updates.map((u) => u.version));
+        g_state.onClientAck(
+            state,
+            msg.updates.map((u) => u.version),
+        );
     }
 
     return null;

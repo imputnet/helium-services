@@ -21,16 +21,18 @@ const getMinimumVersion = async (data: Uint8Array) => {
 
     const lines = decode(buf.splice(0)).split('\n');
 
-    const headerIndex = lines.findIndex((l) => l.includes('Name') && l.includes('Compressed'));
+    const headerIndex = lines.findIndex(
+        (l) => l.includes('Name') && l.includes('Compressed'),
+    );
     const nameOffset = lines[headerIndex]?.indexOf('Name');
     if (headerIndex === -1 || nameOffset === -1) {
         throw new Error('could not find 7z listing header');
     }
 
     lines.splice(0, headerIndex);
-    const plistPath = lines.map((l) => l.substring(nameOffset)).find((path) =>
-        path.endsWith('/Info.plist')
-    );
+    const plistPath = lines
+        .map((l) => l.substring(nameOffset))
+        .find((path) => path.endsWith('/Info.plist'));
 
     if (typeof plistPath !== 'string') {
         throw new Error('could not find info.plist in dmg');
@@ -41,8 +43,9 @@ const getMinimumVersion = async (data: Uint8Array) => {
     const plistData = parse(decode(buf.splice(0)));
 
     if (
-        plistData instanceof Object && 'LSMinimumSystemVersion' in plistData &&
-        typeof plistData.LSMinimumSystemVersion === 'string'
+        plistData instanceof Object
+        && 'LSMinimumSystemVersion' in plistData
+        && typeof plistData.LSMinimumSystemVersion === 'string'
     ) {
         return plistData.LSMinimumSystemVersion;
     }

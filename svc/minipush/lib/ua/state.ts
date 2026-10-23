@@ -133,7 +133,7 @@ const ackToHomes = (
         }
 
         state.inflight.delete(version);
-        byHome.set(home, [...byHome.get(home) ?? [], version]);
+        byHome.set(home, [...(byHome.get(home) ?? []), version]);
     }
 
     for (const [home, versions] of byHome) {
@@ -161,8 +161,10 @@ export const onDeliver = (
 ) => {
     const state = connectedClients.get(uaid);
     if (
-        !state || state.id !== conn || !state.ready ||
-        state.ws.readyState !== WebSocket.OPEN
+        !state
+        || state.id !== conn
+        || !state.ready
+        || state.ws.readyState !== WebSocket.OPEN
     ) {
         Mesh.send(from, { t: 'undeliverable', uaid, conn });
         return;

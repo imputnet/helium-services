@@ -1,4 +1,8 @@
-import { MAX_EXTENSIONS_PER_REQUEST, OMAHA_JSON_PREFIX, UPDATE_SERVICES } from './constants.ts';
+import {
+    MAX_EXTENSIONS_PER_REQUEST,
+    OMAHA_JSON_PREFIX,
+    UPDATE_SERVICES,
+} from './constants.ts';
 
 import * as Util from '../util.ts';
 import * as V3 from './v3/index.ts';
@@ -79,7 +83,10 @@ const craftRequest = async (apps: App[], version: ProtocolVersion) => {
 };
 
 export async function request(
-    { serviceId, protocolVersion }: {
+    {
+        serviceId,
+        protocolVersion,
+    }: {
         serviceId: ServiceId;
         protocolVersion: ProtocolVersion;
     },
@@ -94,22 +101,20 @@ export async function request(
 
     const appIds = apps.map((app) => app.appid).join(',');
     const browserVersion = await Chromium.getRandomVersion();
-    const body = await craftRequest(
-        apps,
-        protocolVersion,
-    );
+    const body = await craftRequest(apps, protocolVersion);
 
     const response = await fetch(UPDATE_SERVICES[serviceId], {
         method: 'POST',
         headers: {
             'user-agent': extraData.userAgent,
             'content-type': 'application/json',
-            'priority': 'u=4, i',
+            priority: 'u=4, i',
             'sec-fetch-dest': 'empty',
             'sec-fetch-mode': 'no-cors',
             'sec-fetch-site': 'none',
             'x-goog-update-appid': appIds,
-            'x-goog-update-interactivity': serviceId === 'CHROME_COMPONENTS' ? 'fg' : 'bg',
+            'x-goog-update-interactivity':
+                serviceId === 'CHROME_COMPONENTS' ? 'fg' : 'bg',
             'x-goog-update-updater': `chrome-${browserVersion}`,
         },
         cache: 'no-cache',

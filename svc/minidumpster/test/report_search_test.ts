@@ -10,12 +10,16 @@ Deno.test('report search indexes symbolicated function names', async () => {
         const id = crypto.randomUUID();
         const response: SymbolicatorResponse = {
             status: 'completed',
-            stacktraces: [{
-                frames: [{
-                    function: 'blink::LocalFrame::Navigate()',
-                    symbol: 'LocalFrame_Navigate',
-                }],
-            }],
+            stacktraces: [
+                {
+                    frames: [
+                        {
+                            function: 'blink::LocalFrame::Navigate()',
+                            symbol: 'LocalFrame_Navigate',
+                        },
+                    ],
+                },
+            ],
         };
         env.db.insertReport({
             id,
@@ -41,9 +45,9 @@ Deno.test('report search indexes symbolicated function names', async () => {
             [id],
         );
         assertEquals(
-            env.db.searchReports('LocalFrame_Navigate').map((report) =>
-                report.id
-            ),
+            env.db
+                .searchReports('LocalFrame_Navigate')
+                .map((report) => report.id),
             [id],
         );
         indexReportResponse(env.db, id, response);

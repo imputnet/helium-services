@@ -10,10 +10,7 @@ import { assert } from '@std/assert';
 
 const waitForHelloTimeout = (state: ConnectionState) => {
     state.helloTimeoutId = setTimeout(() => {
-        state.ws.close(
-            CloseStatus.TIMED_OUT,
-            'timed out waiting for hello',
-        );
+        state.ws.close(CloseStatus.TIMED_OUT, 'timed out waiting for hello');
     }, 10_000);
 
     Deno.unrefTimer(state.helloTimeoutId);
@@ -50,7 +47,8 @@ const handleWebsocketConnection = (state: ConnectionState) => {
     const { ws } = state;
 
     ws.addEventListener('message', async (event) => {
-        let success = false, data;
+        let success = false,
+            data;
         try {
             const obj = JSON.parse(event.data);
             const parsed = await clientMessage.safeParseAsync(obj);

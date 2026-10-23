@@ -68,10 +68,7 @@ export const startNode = async (
             output += decoder.decode(chunk);
         }
     };
-    const collected = Promise.all([
-        collect(proc.stdout),
-        collect(proc.stderr),
-    ]);
+    const collected = Promise.all([collect(proc.stdout), collect(proc.stderr)]);
 
     let exited = false;
     const status = proc.status.then(async (s) => {
@@ -220,8 +217,8 @@ export class FakeUA {
 
     async register(channelID = crypto.randomUUID()) {
         this.send({ messageType: 'register', channelID });
-        const res = await this.next((m) =>
-            m.messageType === 'register' && m.channelID === channelID
+        const res = await this.next(
+            (m) => m.messageType === 'register' && m.channelID === channelID,
         );
         assert(res.status === 200, `register failed: ${JSON.stringify(res)}`);
         return { channelID, endpoint: res.pushEndpoint as string };
@@ -254,10 +251,10 @@ export const push = async (
         method: 'POST',
         headers: body
             ? {
-                'content-encoding': 'aes128gcm',
-                ttl: '30',
-                ...headers,
-            }
+                  'content-encoding': 'aes128gcm',
+                  ttl: '30',
+                  ...headers,
+              }
             : { ttl: '30', ...headers },
         body,
     });

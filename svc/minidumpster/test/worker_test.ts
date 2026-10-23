@@ -15,10 +15,7 @@ async function insertPendingReport(
     id: string,
     receivedAt: number = Date.now(),
 ): Promise<void> {
-    await writeFileWithDirs(
-        dumpPath(env.dir, id),
-        minimalMinidump(),
-    );
+    await writeFileWithDirs(dumpPath(env.dir, id), minimalMinidump());
     env.db.insertReport({
         id,
         product: 'MyBrowser',
@@ -37,10 +34,7 @@ async function assertFilesDoNotExist(...paths: string[]): Promise<void> {
     }
 }
 
-async function assertPayloadDiscarded(
-    env: TestEnv,
-    id: string,
-): Promise<void> {
+async function assertPayloadDiscarded(env: TestEnv, id: string): Promise<void> {
     assertEquals(env.db.getReport(id), null);
     await assertFilesDoNotExist(
         dumpPath(env.dir, id),
@@ -54,20 +48,24 @@ function mockSymbolicator(fixture: string, pendingPolls: number) {
     const fetchFn = ((input: string | URL | Request, init?: RequestInit) => {
         const url = new URL(String(input));
         if (init?.method === 'POST' && url.pathname === '/minidump') {
-            return Promise.resolve(Response.json({
-                status: 'pending',
-                request_id: 'req-1',
-                retry_after: 0,
-            }));
+            return Promise.resolve(
+                Response.json({
+                    status: 'pending',
+                    request_id: 'req-1',
+                    retry_after: 0,
+                }),
+            );
         }
         if (url.pathname === '/requests/req-1') {
             polls++;
             if (polls <= pendingPolls) {
-                return Promise.resolve(Response.json({
-                    status: 'pending',
-                    request_id: 'req-1',
-                    retry_after: 0,
-                }));
+                return Promise.resolve(
+                    Response.json({
+                        status: 'pending',
+                        request_id: 'req-1',
+                        retry_after: 0,
+                    }),
+                );
             }
             return Promise.resolve(
                 new Response(fixture, {
@@ -93,12 +91,15 @@ Deno.test('worker follows the pending/poll protocol and groups the report', asyn
         assert(claimed);
         assertEquals(env.db.getReport(claimed.id)!.status, 'processing');
 
-        await processReport({
-            db: env.db,
-            config: env.config,
-            fetchFn: mock.fetchFn,
-            pollIntervalMs: 5,
-        }, claimed);
+        await processReport(
+            {
+                db: env.db,
+                config: env.config,
+                fetchFn: mock.fetchFn,
+                pollIntervalMs: 5,
+            },
+            claimed,
+        );
 
         assert(
             mock.polls() >= 3,
@@ -141,26 +142,26 @@ Deno.test('worker shutdown wakes idle polling and aborts symbolication', async (
 
         const id = crypto.randomUUID();
         await insertPendingReport(env, id);
-        const { promise: started, resolve: notifyStarted } = Promise
-            .withResolvers<void>();
+        const { promise: started, resolve: notifyStarted } =
+            Promise.withResolvers<void>();
         let requests = 0;
-        const fetchFn =
-            ((_input: string | URL | Request, init?: RequestInit) => {
-                requests++;
-                notifyStarted();
-                return new Promise<Response>((_resolve, reject) => {
-                    const signal = init?.signal;
-                    if (signal?.aborted) {
-                        reject(signal.reason);
-                        return;
-                    }
-                    signal?.addEventListener(
-                        'abort',
-                        () => reject(signal.reason),
-                        { once: true },
-                    );
+        const fetchFn = ((
+            _input: string | URL | Request,
+            init?: RequestInit,
+        ) => {
+            requests++;
+            notifyStarted();
+            return new Promise<Response>((_resolve, reject) => {
+                const signal = init?.signal;
+                if (signal?.aborted) {
+                    reject(signal.reason);
+                    return;
+                }
+                signal?.addEventListener('abort', () => reject(signal.reason), {
+                    once: true,
                 });
-            }) as typeof fetch;
+            });
+        }) as typeof fetch;
         const abort = new AbortController();
         const active = startWorker({
             db: env.db,
@@ -192,8 +193,8 @@ Deno.test('worker survives a secondary report-state write failure', async () => 
             requests++ === 0
                 ? new Response('temporary failure', { status: 500 })
                 : new Response(completed, {
-                    headers: { 'content-type': 'application/json' },
-                }),
+                      headers: { 'content-type': 'application/json' },
+                  }),
         )) as typeof fetch;
     const env = await makeTestEnv({ workerPollMs: 5 });
     try {
@@ -237,12 +238,15 @@ Deno.test('two crashes with the same stack land in the same group', async () => 
             env.db.claimNext(Date.now())!,
         ];
         for (const r of claimed) {
-            await processReport({
-                db: env.db,
-                config: env.config,
-                fetchFn: mock.fetchFn,
-                pollIntervalMs: 5,
-            }, r);
+            await processReport(
+                {
+                    db: env.db,
+                    config: env.config,
+                    fetchFn: mock.fetchFn,
+                    pollIntervalMs: 5,
+                },
+                r,
+            );
         }
         const a = env.db.getReport(claimed[0].id)!;
         const b = env.db.getReport(claimed[1].id)!;
@@ -255,9 +259,7 @@ Deno.test('two crashes with the same stack land in the same group', async () => 
 
 Deno.test('worker retries with backoff, then discards terminal failures', async () => {
     const fetchFn = (() =>
-        Promise.resolve(
-            new Response('boom', { status: 500 }),
-        )) as typeof fetch;
+        Promise.resolve(new Response('boom', { status: 500 }))) as typeof fetch;
     const env = await makeTestEnv({
         maxAttempts: 2,
     });
@@ -276,12 +278,15 @@ Deno.test('worker retries with backoff, then discards terminal failures', async 
             1,
         );
         const first = env.db.claimNext(Date.now())!;
-        await processReport({
-            db: env.db,
-            config: env.config,
-            fetchFn,
-            pollIntervalMs: 5,
-        }, first);
+        await processReport(
+            {
+                db: env.db,
+                config: env.config,
+                fetchFn,
+                pollIntervalMs: 5,
+            },
+            first,
+        );
 
         const row = env.db.getReport(first.id)!;
         assertEquals(row.status, 'pending');
@@ -303,12 +308,15 @@ Deno.test('worker retries with backoff, then discards terminal failures', async 
             processedPath(env.dir, first.id),
             '{"sensitive":"partial result"}',
         );
-        await processReport({
-            db: env.db,
-            config: env.config,
-            fetchFn,
-            pollIntervalMs: 5,
-        }, second);
+        await processReport(
+            {
+                db: env.db,
+                config: env.config,
+                fetchFn,
+                pollIntervalMs: 5,
+            },
+            second,
+        );
         await assertPayloadDiscarded(env, first.id);
         assertEquals(env.db.getGroup(group), null);
         assertEquals(env.db.reportsPerDay(0), []);
@@ -321,10 +329,12 @@ Deno.test('worker drops raw data rejected by Symbolicator parsing', async () => 
     let requests = 0;
     const fetchFn = (() => {
         requests++;
-        return Promise.resolve(Response.json({
-            status: 'failed',
-            message: 'malformed minidump with sensitive details',
-        }));
+        return Promise.resolve(
+            Response.json({
+                status: 'failed',
+                message: 'malformed minidump with sensitive details',
+            }),
+        );
     }) as typeof fetch;
     const env = await makeTestEnv({
         maxAttempts: 5,
@@ -346,17 +356,10 @@ Deno.test('worker drops raw data rejected by Symbolicator parsing', async () => 
             annotations: JSON.stringify({ uploaded_by: 'jj', secret: 'x' }),
             received_at: Date.now(),
         });
-        const group = env.db.upsertGroup(
-            'rejected',
-            'rejected',
-            Date.now(),
-        );
+        const group = env.db.upsertGroup('rejected', 'rejected', Date.now());
         env.db.markProcessed(id, group, 'Windows', Date.now(), false, 1);
         env.db.recountGroups([group]);
-        assertEquals(
-            env.db.requeueUnsymbolicated('MyBrowser', '1.0', 0),
-            1,
-        );
+        assertEquals(env.db.requeueUnsymbolicated('MyBrowser', '1.0', 0), 1);
         const claimed = env.db.claimNext(Date.now())!;
         await processReport(
             {
@@ -379,9 +382,7 @@ Deno.test('worker drops raw data rejected by Symbolicator parsing', async () => 
 });
 
 Deno.test('worker drops non-actionable crashes after symbolication', async () => {
-    const response = JSON.parse(
-        await fixtureResponse(),
-    );
+    const response = JSON.parse(await fixtureResponse());
     response.stacktraces[0].frames[1].function =
         'partition_alloc::TerminateBecauseOutOfMemory(unsigned long long)';
     const mock = mockSymbolicator(JSON.stringify(response), 0);
@@ -392,12 +393,15 @@ Deno.test('worker drops non-actionable crashes after symbolication', async () =>
         const claimed = env.db.claimNext(Date.now());
         assert(claimed);
 
-        await processReport({
-            db: env.db,
-            config: env.config,
-            fetchFn: mock.fetchFn,
-            pollIntervalMs: 5,
-        }, claimed);
+        await processReport(
+            {
+                db: env.db,
+                config: env.config,
+                fetchFn: mock.fetchFn,
+                pollIntervalMs: 5,
+            },
+            claimed,
+        );
 
         await assertPayloadDiscarded(env, id);
         assertEquals(env.db.reportsPerDay(0), []);
@@ -475,35 +479,45 @@ Deno.test('symbols upload requeues unsymbolicated reports, which then regroup', 
         status: 'completed',
         system_info: { os_name: 'macOS 26.5.1', cpu_arch: 'arm64' },
         crash_reason: 'EXC_BREAKPOINT (SIGTRAP)',
-        modules: [{
-            code_file: '/app/Helium',
-            image_addr: '0x100000000',
-            image_size: 1048576,
-        }],
-        stacktraces: [{
-            thread_id: 0,
-            is_requesting: true,
-            frames: [{
-                status: 'missing',
-                package: '/app/Helium',
-                instruction_addr: '0x100001234',
-            }],
-        }],
+        modules: [
+            {
+                code_file: '/app/Helium',
+                image_addr: '0x100000000',
+                image_size: 1048576,
+            },
+        ],
+        stacktraces: [
+            {
+                thread_id: 0,
+                is_requesting: true,
+                frames: [
+                    {
+                        status: 'missing',
+                        package: '/app/Helium',
+                        instruction_addr: '0x100001234',
+                    },
+                ],
+            },
+        ],
     });
     const symbolicated = JSON.stringify({
         status: 'completed',
         system_info: { os_name: 'macOS 26.5.1', cpu_arch: 'arm64' },
         crash_reason: 'EXC_BREAKPOINT (SIGTRAP)',
-        stacktraces: [{
-            thread_id: 0,
-            is_requesting: true,
-            frames: [{
-                status: 'symbolicated',
-                package: '/app/Helium',
-                function: 'HeliumThing::Explode()',
-                instruction_addr: '0x100001234',
-            }],
-        }],
+        stacktraces: [
+            {
+                thread_id: 0,
+                is_requesting: true,
+                frames: [
+                    {
+                        status: 'symbolicated',
+                        package: '/app/Helium',
+                        function: 'HeliumThing::Explode()',
+                        instruction_addr: '0x100001234',
+                    },
+                ],
+            },
+        ],
     });
     let withSymbols = false;
     const fetchFn = (() =>

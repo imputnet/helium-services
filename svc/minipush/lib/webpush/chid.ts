@@ -69,10 +69,11 @@ const unwrapFromBytes = async (
         ),
     );
 
-    const [uaidBytes, chidBytes, keyBytes] = Buf.split(
-        plain.buffer,
-        [UAID_LEN_UNSIGNED, CHID_LEN, SHA256_LEN],
-    );
+    const [uaidBytes, chidBytes, keyBytes] = Buf.split(plain.buffer, [
+        UAID_LEN_UNSIGNED,
+        CHID_LEN,
+        SHA256_LEN,
+    ]);
 
     const chid = Uuid.fromBytes(chidBytes);
     const uaid = encodeBase64Url(uaidBytes);

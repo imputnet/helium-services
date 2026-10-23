@@ -25,6 +25,7 @@ export const getSignature = async (asset: Asset) => {
 };
 
 export const getMinimumVersion = async (asset: Asset) => {
-    _minimumVersionCache[asset.name] ??= await getMinimumSystemVersionFor(asset);
+    _minimumVersionCache[asset.name] ??=
+        await getMinimumSystemVersionFor(asset);
     return _minimumVersionCache[asset.name];
 };

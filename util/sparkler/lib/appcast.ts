@@ -40,7 +40,9 @@ const toAppcastRelease = async (
     try {
         minimumSystemVersion = await getMinimumVersion(dmg);
     } catch (e) {
-        console.warn(`[!] could not get minimum OS version for ${dmg.name}, falling back to 10.0`);
+        console.warn(
+            `[!] could not get minimum OS version for ${dmg.name}, falling back to 10.0`,
+        );
         console.warn(e);
     }
 
@@ -50,7 +52,7 @@ const toAppcastRelease = async (
         'sparkle:version': release.version,
         'sparkle:shortVersionString': release.version,
         'sparkle:minimumSystemVersion': minimumSystemVersion,
-        'enclosure': await toEnclosure(dmg),
+        enclosure: await toEnclosure(dmg),
     };
 
     if (release.channel) {
@@ -68,7 +70,7 @@ const toAppcastRelease = async (
         };
 
         appcastRelease['sparkle:deltas'].enclosure.push({
-            ...await toEnclosure(delta),
+            ...(await toEnclosure(delta)),
             '@sparkle:deltaFrom': deltaFrom,
         });
     }
@@ -83,12 +85,17 @@ export const makeAppcast = async (arch: CPUArchitecture) => {
         '@standalone': 'yes',
         rss: {
             '@version': '2.0',
-            '@xmlns:sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle',
+            '@xmlns:sparkle':
+                'http://www.andymatuschak.org/xml-namespaces/sparkle',
             channel: {
                 title: `Helium (${arch})`,
-                item: (await Promise.all(
-                    releases.map((release) => toAppcastRelease(release, arch)),
-                )).filter((r) => r !== undefined),
+                item: (
+                    await Promise.all(
+                        releases.map((release) =>
+                            toAppcastRelease(release, arch),
+                        ),
+                    )
+                ).filter((r) => r !== undefined),
             },
         },
     };
@@ -97,7 +104,7 @@ export const makeAppcast = async (arch: CPUArchitecture) => {
 };
 
 export const getSignaturesAndVersions = async (appcastPath: string) => {
-    if (!await exists(appcastPath)) {
+    if (!(await exists(appcastPath))) {
         return [];
     }
 

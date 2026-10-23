@@ -159,8 +159,7 @@ const CHART_DAYS = 14;
 const DAY_MS = 86400_000;
 
 export function reportChartSince(): number {
-    return Math.floor(Date.now() / DAY_MS) * DAY_MS
-        - (CHART_DAYS - 1) * DAY_MS;
+    return Math.floor(Date.now() / DAY_MS) * DAY_MS - (CHART_DAYS - 1) * DAY_MS;
 }
 
 function chartData(stats: ReportDayStat[], breakdown: ChartBreakdown) {
@@ -183,16 +182,17 @@ function chartData(stats: ReportDayStat[], breakdown: ChartBreakdown) {
         totals.set(label, (totals.get(label) ?? 0) + row.n);
     }
 
-    const legend = [...totals].sort(([a], [b]) =>
-        (a ?? '').localeCompare(b ?? '')
-    ).map(([value, total], i) => ({
-        value,
-        label: value ?? 'Unknown',
-        total,
-        color: breakdown === 'total'
-            ? 'var(--accent)'
-            : `hsl(${Math.round(i * 137.508) % 360} 65% 55%)`,
-    }));
+    const legend = [...totals]
+        .sort(([a], [b]) => (a ?? '').localeCompare(b ?? ''))
+        .map(([value, total], i) => ({
+            value,
+            label: value ?? 'Unknown',
+            total,
+            color:
+                breakdown === 'total'
+                    ? 'var(--accent)'
+                    : `hsl(${Math.round(i * 137.508) % 360} 65% 55%)`,
+        }));
     const max = Math.max(1, ...series.map((day) => day.n));
 
     return {
@@ -205,11 +205,11 @@ function chartData(stats: ReportDayStat[], breakdown: ChartBreakdown) {
         series: series.map(({ day, n, counts }) => ({
             day,
             n,
-            pct: n / max * 100,
+            pct: (n / max) * 100,
             segments: legend.flatMap(({ value, label, color }) => {
                 const count = counts.get(value);
                 return count
-                    ? [{ label, color, n: count, pct: count / n * 100 }]
+                    ? [{ label, color, n: count, pct: (count / n) * 100 }]
                     : [];
             }),
         })),
@@ -223,13 +223,11 @@ export function groupsPage(data: GroupsPageData, user?: string): string {
     // Href for a column-header sort link, preserving the active filters.
     const sortHref = (sort: string): string => {
         const params = new URLSearchParams();
-        for (
-            const [key, value] of Object.entries({
-                ...filter,
-                breakdown: data.breakdown,
-                sort,
-            })
-        ) {
+        for (const [key, value] of Object.entries({
+            ...filter,
+            breakdown: data.breakdown,
+            sort,
+        })) {
             if (value) {
                 params.set(key, value);
             }
@@ -267,11 +265,14 @@ function frameView(f: SymFrame, index: number) {
 
 function frameRows(t: SymStacktrace, threadIndex: number) {
     const frames = t.frames.map(frameView);
-    const rows: ({ kind: 'frame'; frame: ReturnType<typeof frameView> } | {
-        kind: 'fold';
-        id: string;
-        frames: ReturnType<typeof frameView>[];
-    })[] = [];
+    const rows: (
+        | { kind: 'frame'; frame: ReturnType<typeof frameView> }
+        | {
+              kind: 'fold';
+              id: string;
+              frames: ReturnType<typeof frameView>[];
+          }
+    )[] = [];
 
     let prefixEnd = 0;
     while (
@@ -301,11 +302,7 @@ function frameRows(t: SymStacktrace, threadIndex: number) {
     return rows;
 }
 
-function threadView(
-    t: SymStacktrace,
-    crashed: boolean,
-    threadIndex: number,
-) {
+function threadView(t: SymStacktrace, crashed: boolean, threadIndex: number) {
     return {
         id: String(t.thread_id ?? '?'),
         name: t.thread_name ?? '',
@@ -334,11 +331,9 @@ function frameModule(f: SymFrame): string | null {
 
 function systemInfo(resp: SymbolicatorResponse): string {
     const sys = resp.system_info;
-    return [
-        sys?.os_name,
-        sys?.os_version,
-        sys?.cpu_arch,
-    ].filter((a) => a).join(' ');
+    return [sys?.os_name, sys?.os_version, sys?.cpu_arch]
+        .filter((a) => a)
+        .join(' ');
 }
 
 function frameText(f: SymFrame, index: number): string {
@@ -393,19 +388,23 @@ export function reportCopyText(
     sections.push(summary.join('\n'));
 
     if (annotations.length > 0) {
-        sections.push([
-            '## Annotations',
-            ...annotations.map(([key, value]) => `${key}: ${value}`),
-        ].join('\n'));
+        sections.push(
+            [
+                '## Annotations',
+                ...annotations.map(([key, value]) => `${key}: ${value}`),
+            ].join('\n'),
+        );
     }
 
     const traces = resp.stacktraces ?? [];
     if (crashing) {
         const name = crashing.thread_name ? ` (${crashing.thread_name})` : '';
-        sections.push([
-            `## Crashing thread ${crashing.thread_id ?? '?'}${name}`,
-            ...crashing.frames.map(frameText),
-        ].join('\n'));
+        sections.push(
+            [
+                `## Crashing thread ${crashing.thread_id ?? '?'}${name}`,
+                ...crashing.frames.map(frameText),
+            ].join('\n'),
+        );
     }
 
     const otherThreads = traces.filter((t) => t !== crashing);

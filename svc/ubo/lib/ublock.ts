@@ -26,8 +26,7 @@ type Filename = string;
 type AssetFile = Record<Filename, Asset>;
 
 const loadManifestFromGithub = async () => {
-    const assetList = await fetch(AssetsInfo.assetsUrl)
-        .then((a) => a.text());
+    const assetList = await fetch(AssetsInfo.assetsUrl).then((a) => a.text());
     const checksum = await Util.digest(assetList);
     if (checksum !== AssetsInfo.fileChecksum) {
         console.warn('[!] assets.json checksum does not match');
@@ -48,8 +47,7 @@ const prepareAssetString = async () => {
         delete asset.cdnURLs;
 
         if (id === manifestId) {
-            asset.contentURL = new URL('assets.json', env.baseURL)
-                .toString();
+            asset.contentURL = new URL('assets.json', env.baseURL).toString();
             continue;
         }
 
@@ -87,10 +85,7 @@ const prepareAssetString = async () => {
         const proxyURL = new URL(key, env.baseURL).toString();
 
         if (locals.length) {
-            asset.contentURL = [
-                proxyURL,
-                ...locals,
-            ];
+            asset.contentURL = [proxyURL, ...locals];
         } else {
             asset.contentURL = proxyURL;
         }
@@ -140,10 +135,7 @@ const prepareFilterlist = async (path: string) => {
         }
 
         const includePath = includeMatch[1];
-        const absoluteIncludePath = Path.join(
-            Path.dirname(path),
-            includePath,
-        );
+        const absoluteIncludePath = Path.join(Path.dirname(path), includePath);
 
         // This should not happen. Let's skip this include.
         if (
@@ -161,8 +153,9 @@ const prepareFilterlist = async (path: string) => {
 
     const handleDiff = (line: string) => {
         const diffPath = line.split('! Diff-Path:')[1].trim();
-        const absoluteDiffPath =
-            Path.join(Path.dirname(path), diffPath).split('#')[0];
+        const absoluteDiffPath = Path.join(Path.dirname(path), diffPath).split(
+            '#',
+        )[0];
 
         // This might happen, but it's unlikely in the wild.
         if (
@@ -173,9 +166,7 @@ const prepareFilterlist = async (path: string) => {
             return;
         }
 
-        toAllowlist[absoluteDiffPath] ??= urls.map(
-            addToAllowlist(diffPath),
-        );
+        toAllowlist[absoluteDiffPath] ??= urls.map(addToAllowlist(diffPath));
     };
 
     for (const line of text.split('\n')) {
@@ -204,9 +195,7 @@ export const handleFilterlist = (path: string) => {
         path = path.substring(1);
     }
 
-    return Cache.materialize(
-        path,
-        { expiry_seconds: 3600 },
-        () => prepareFilterlist(path),
+    return Cache.materialize(path, { expiry_seconds: 3600 }, () =>
+        prepareFilterlist(path),
     );
 };

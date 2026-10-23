@@ -13,12 +13,10 @@ Deno.test('dev data seeds realistic reports idempotently', async () => {
 
         assertEquals(first, { reportsCreated: 8, reportsTotal: 8 });
         assertEquals(second, { reportsCreated: 0, reportsTotal: 8 });
-        assertEquals(env.db.listGroups().map((group) => group.report_count), [
-            3,
-            2,
-            1,
-            1,
-        ]);
+        assertEquals(
+            env.db.listGroups().map((group) => group.report_count),
+            [3, 2, 1, 1],
+        );
 
         const processed = env.db.getReport(
             '10000000-0000-4000-8000-000000000001',

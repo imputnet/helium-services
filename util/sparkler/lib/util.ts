@@ -1,7 +1,5 @@
 export const sleep = (ms: number) =>
-    new Promise<void>(
-        (resolve) => setTimeout(resolve, ms),
-    );
+    new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export const beq = (a_: ArrayBuffer, b_: ArrayBuffer) => {
     const a = new Uint8Array(a_);

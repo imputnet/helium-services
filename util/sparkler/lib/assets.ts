@@ -18,7 +18,7 @@ export const downloadAsset = async (asset: Asset): Promise<void> => {
     const response = await fetch(asset.machine_url, {
         headers: {
             ...headers,
-            'Accept': 'application/octet-stream',
+            Accept: 'application/octet-stream',
         },
         redirect: 'follow',
     });
@@ -84,9 +84,9 @@ export const verify = async (asset: Asset) => {
 
     if (!beq(decodeHex(asset.digest).buffer, actualDigest)) {
         throw new Error(
-            `digest for ${asset.name} is not matching: ${
-                encodeHex(actualDigest)
-            } != ${asset.digest}`,
+            `digest for ${asset.name} is not matching: ${encodeHex(
+                actualDigest,
+            )} != ${asset.digest}`,
         );
     }
 };
@@ -99,7 +99,7 @@ export const ensureAssetsReady = async () => {
         .filter((d) => d !== null);
 
     for (const asset of downloadables) {
-        if (!await hasAsset(asset)) {
+        if (!(await hasAsset(asset))) {
             console.log(`[r] missing asset ${asset.name}, downloading...`);
             await downloadAsset(asset);
         }

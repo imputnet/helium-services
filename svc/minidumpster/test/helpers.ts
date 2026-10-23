@@ -37,8 +37,7 @@ export function testConfig(
         artifactCrawlerPollMs: 15 * 60 * 1000,
         artifactCrawlerMaxBytes: 20 * 1024 * 1024 * 1024,
         artifactCrawlerMaxAgeDays: 7,
-        artifactCrawlerNamePattern: String
-            .raw`(?:^|[-_.])(symbols?|symbolicated|debug(?:-?symbols?)?|dsym|pdb)(?:$|[-_.])`,
+        artifactCrawlerNamePattern: String.raw`(?:^|[-_.])(symbols?|symbolicated|debug(?:-?symbols?)?|dsym|pdb)(?:$|[-_.])`,
         ...over,
     };
 }

@@ -17,7 +17,9 @@ const getBestUrl = (updatecheck: OmahaResponseApp['updatecheck']) => {
         return;
     }
 
-    const download_op = pipeline.operations.find((op) => op.type === 'download');
+    const download_op = pipeline.operations.find(
+        (op) => op.type === 'download',
+    );
     if (!download_op) {
         return;
     }
@@ -40,7 +42,9 @@ const getBestUrl = (updatecheck: OmahaResponseApp['updatecheck']) => {
 };
 
 type Updatecheck = OmahaResponseApp['updatecheck'];
-const filterUpdatecheck = async (updatecheck: Updatecheck): Promise<Updatecheck> => {
+const filterUpdatecheck = async (
+    updatecheck: Updatecheck,
+): Promise<Updatecheck> => {
     if (updatecheck.status !== 'ok') {
         return { status: 'noupdate' };
     }
@@ -92,10 +96,12 @@ const filterUpdatecheck = async (updatecheck: Updatecheck): Promise<Updatecheck>
     return {
         status: 'ok',
         nextversion: updatecheck.nextversion,
-        pipelines: [{
-            pipeline_id: pipeline.pipeline_id,
-            operations: ops,
-        }],
+        pipelines: [
+            {
+                pipeline_id: pipeline.pipeline_id,
+                operations: ops,
+            },
+        ],
     };
 };
 
@@ -108,22 +114,27 @@ const filterResponse = async ({ response }: OmahaResponse) => {
         server: response.server,
         protocol: response.protocol,
         daystart: response.daystart,
-        apps: response.apps && await Promise.all(response.apps.map(async (app) => (
-            {
-                appid: app.appid,
-                status: app.status,
-                cohort: '',
-                cohortname: '',
-                ping: app.ping && {
-                    status: app.ping.status,
-                },
-                updatecheck: await filterUpdatecheck(app.updatecheck),
-            }
-        ))),
+        apps:
+            response.apps
+            && (await Promise.all(
+                response.apps.map(async (app) => ({
+                    appid: app.appid,
+                    status: app.status,
+                    cohort: '',
+                    cohortname: '',
+                    ping: app.ping && {
+                        status: app.ping.status,
+                    },
+                    updatecheck: await filterUpdatecheck(app.updatecheck),
+                })),
+            )),
     };
 };
 
-export const addToPoolFromResponse = (id: ServiceId, { response }: OmahaResponse) => {
+export const addToPoolFromResponse = (
+    id: ServiceId,
+    { response }: OmahaResponse,
+) => {
     if (!response.apps) {
         return;
     }

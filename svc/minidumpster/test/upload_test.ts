@@ -67,11 +67,13 @@ Deno.test('pasted Apple crash reports are filed and deduped by incident id', asy
 
         const legacyDb = new DatabaseSync(dbPath(env.dir));
         try {
-            legacyDb.prepare(
-                `UPDATE reports
+            legacyDb
+                .prepare(
+                    `UPDATE reports
                  SET status = 'failed', error = 'old failure', attempts = 5
                  WHERE id = ?`,
-            ).run(id);
+                )
+                .run(id);
         } finally {
             legacyDb.close();
         }
@@ -366,14 +368,7 @@ Deno.test('reports can be deleted and empty groups are pruned', async () => {
                 annotations: '{}',
                 received_at: Date.now(),
             });
-            env.db.markProcessed(
-                id,
-                groupId,
-                'Windows',
-                Date.now(),
-                true,
-                1,
-            );
+            env.db.markProcessed(id, groupId, 'Windows', Date.now(), true, 1);
         }
         env.db.recountGroups([groupId]);
 
@@ -436,14 +431,7 @@ Deno.test('groups can be deleted with all reports and payloads', async () => {
                 annotations: '{}',
                 received_at: Date.now(),
             });
-            env.db.markProcessed(
-                id,
-                groupId,
-                'Windows',
-                Date.now(),
-                true,
-                1,
-            );
+            env.db.markProcessed(id, groupId, 'Windows', Date.now(), true, 1);
             env.db.indexReportFunctions(id, 'GroupCrash');
         }
         env.db.recountGroups([groupId]);
@@ -504,14 +492,7 @@ Deno.test('all reports in a group can be manually requeued', async () => {
                 annotations: '{}',
                 received_at: Date.now() + index,
             });
-            env.db.markProcessed(
-                id,
-                groupId,
-                'macOS',
-                Date.now(),
-                true,
-                3,
-            );
+            env.db.markProcessed(id, groupId, 'macOS', Date.now(), true, 3);
         }
         env.db.recountGroups([groupId]);
 
@@ -636,10 +617,9 @@ Deno.test('search finds reports by id, guid, and function name', async () => {
         });
 
         // Full id -> direct redirect (case-insensitive).
-        const byId = await app.request(
-            `/search?q=${id.toUpperCase()}`,
-            { headers: { cookie } },
-        );
+        const byId = await app.request(`/search?q=${id.toUpperCase()}`, {
+            headers: { cookie },
+        });
         assertEquals(byId.status, 302);
         assertEquals(byId.headers.get('location'), `/reports/${id}`);
 
@@ -651,10 +631,9 @@ Deno.test('search finds reports by id, guid, and function name', async () => {
         assertEquals(byPrefix.headers.get('location'), `/reports/${id}`);
 
         // Guid (lowercased by the user) -> redirect.
-        const byGuid = await app.request(
-            `/search?q=${guid.toLowerCase()}`,
-            { headers: { cookie } },
-        );
+        const byGuid = await app.request(`/search?q=${guid.toLowerCase()}`, {
+            headers: { cookie },
+        });
         assertEquals(byGuid.status, 302);
         assertEquals(byGuid.headers.get('location'), `/reports/${id}`);
 

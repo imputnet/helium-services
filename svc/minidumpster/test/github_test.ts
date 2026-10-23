@@ -38,17 +38,21 @@ Deno.test('GitHub issue URL prefills the Helium bug report safely', () => {
         status: 'completed',
         crash_reason: 'EXCEPTION_ACCESS_VIOLATION',
         system_info: { os_name: 'Windows', cpu_arch: 'x86_64' },
-        stacktraces: [{
-            thread_id: 7,
-            is_requesting_thread: true,
-            frames: [{
-                function: 'content::RenderWidgetHostImpl::Crash()',
-                package: String.raw`C:\Users\secret\helium.dll`,
-                filename: String.raw`C:\Users\secret\src\content\host.cc`,
-                lineno: 42,
-                instruction_addr: '0x12345678',
-            }],
-        }],
+        stacktraces: [
+            {
+                thread_id: 7,
+                is_requesting_thread: true,
+                frames: [
+                    {
+                        function: 'content::RenderWidgetHostImpl::Crash()',
+                        package: String.raw`C:\Users\secret\helium.dll`,
+                        filename: String.raw`C:\Users\secret\src\content\host.cc`,
+                        lineno: 42,
+                        instruction_addr: '0x12345678',
+                    },
+                ],
+            },
+        ],
     };
 
     const url = new URL(

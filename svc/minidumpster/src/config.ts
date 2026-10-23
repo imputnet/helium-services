@@ -47,9 +47,9 @@ function intEnv(
     const n = Number(raw);
     if (!Number.isFinite(n) || n <= 0) {
         throw new Error(
-            `config error: ${name} must be a positive number, got ${
-                JSON.stringify(raw)
-            }`,
+            `config error: ${name} must be a positive number, got ${JSON.stringify(
+                raw,
+            )}`,
         );
     }
     return n;
@@ -59,9 +59,9 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
     const missing = REQUIRED.filter((k) => !env[k]);
     if (missing.length > 0) {
         throw new Error(
-            `config error: missing required environment variable(s): ${
-                missing.join(', ')
-            }`,
+            `config error: missing required environment variable(s): ${missing.join(
+                ', ',
+            )}`,
         );
     }
 
@@ -84,9 +84,9 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
         );
     }
 
-    const artifactPattern = env['ARTIFACT_CRAWLER_NAME_PATTERN']
-        || String
-            .raw`(?:^|[-_.])(symbols?|symbolicated|debug(?:-?symbols?)?|dsym|pdb)(?:$|[-_.])`;
+    const artifactPattern =
+        env['ARTIFACT_CRAWLER_NAME_PATTERN']
+        || String.raw`(?:^|[-_.])(symbols?|symbolicated|debug(?:-?symbols?)?|dsym|pdb)(?:$|[-_.])`;
     try {
         new RegExp(artifactPattern, 'i');
     } catch (err) {
@@ -110,9 +110,10 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
         symbolUploadToken: env['SYMBOL_UPLOAD_TOKEN']!,
         maxDumpSizeBytes: intEnv(env, 'MAX_DUMP_SIZE_MB', 20) * 1024 * 1024,
         retentionDays: intEnv(env, 'RETENTION_DAYS', 30),
-        symbolsRetentionDays: env['SYMBOLS_RETENTION_DAYS'] === '0'
-            ? 0
-            : intEnv(env, 'SYMBOLS_RETENTION_DAYS', 180),
+        symbolsRetentionDays:
+            env['SYMBOLS_RETENTION_DAYS'] === '0'
+                ? 0
+                : intEnv(env, 'SYMBOLS_RETENTION_DAYS', 180),
         publicBaseUrl: baseUrl.replace(/\/+$/, ''),
         signatureFrames: intEnv(env, 'SIGNATURE_FRAMES', 5),
         maxAttempts: intEnv(env, 'MAX_ATTEMPTS', 5),
@@ -124,11 +125,8 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
             'ARTIFACT_CRAWLER_POLL_MS',
             15 * 60 * 1000,
         ),
-        artifactCrawlerMaxBytes: intEnv(
-            env,
-            'ARTIFACT_CRAWLER_MAX_MB',
-            20480,
-        ) * 1024 * 1024,
+        artifactCrawlerMaxBytes:
+            intEnv(env, 'ARTIFACT_CRAWLER_MAX_MB', 20480) * 1024 * 1024,
         artifactCrawlerMaxAgeDays: intEnv(
             env,
             'ARTIFACT_CRAWLER_MAX_AGE_DAYS',
@@ -138,9 +136,7 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
     };
 }
 
-export function devConfig(
-    env: Record<string, string | undefined>,
-): Config {
+export function devConfig(env: Record<string, string | undefined>): Config {
     const config = loadConfig({
         ...env,
         DATA_DIR: env['DEV_DATA_DIR'] || './.dev-data',

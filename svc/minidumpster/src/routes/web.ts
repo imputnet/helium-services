@@ -87,9 +87,8 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
 
         const groups = db.listGroups(filter);
         const value = c.req.query('breakdown');
-        const breakdown = value === 'version' || value === 'platform'
-            ? value
-            : 'total';
+        const breakdown =
+            value === 'version' || value === 'platform' ? value : 'total';
         const stats = db.reportsPerDay(ui.reportChartSince(), {
             breakdown,
             filter,
@@ -251,9 +250,8 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
         }
 
         const value = c.req.query('breakdown');
-        const breakdown = value === 'version' || value === 'platform'
-            ? value
-            : 'total';
+        const breakdown =
+            value === 'version' || value === 'platform' ? value : 'total';
         const stats = db.reportsPerDay(ui.reportChartSince(), {
             groupId: group.id,
             breakdown,
@@ -304,9 +302,8 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
             return c.html(ui.messagePage('Not found', 'No such report.'), 404);
         }
 
-        const group = report.group_id != null
-            ? db.getGroup(report.group_id)
-            : null;
+        const group =
+            report.group_id != null ? db.getGroup(report.group_id) : null;
 
         const responseType = accepts(c, {
             header: 'Accept',
@@ -322,15 +319,9 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
             if (resp) {
                 hasProcessedResponse = true;
                 if (wantsPlain) {
-                    return c.text(
-                        ui.reportCopyText(
-                            report,
-                            group,
-                            resp,
-                        ),
-                        200,
-                        { 'content-type': 'text/plain; charset=utf-8' },
-                    );
+                    return c.text(ui.reportCopyText(report, group, resp), 200, {
+                        'content-type': 'text/plain; charset=utf-8',
+                    });
                 }
                 stack = ui.stackHtml(resp, true);
                 if (config.githubIssueRepo && config.githubIssueTemplate) {
@@ -356,10 +347,7 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
                 stack,
                 hasProcessedResponse,
                 issueUrl,
-                reportExpiresAt(
-                    report.received_at,
-                    config.retentionDays,
-                ),
+                reportExpiresAt(report.received_at, config.retentionDays),
                 c.get('session').login,
             ),
         );
@@ -398,9 +386,10 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
 
         deleteReportAndPayload(db, config, id);
         const groupId = report.group_id;
-        const redirect = groupId != null && db.getGroup(groupId)
-            ? `/groups/${groupId}`
-            : '/';
+        const redirect =
+            groupId != null && db.getGroup(groupId)
+                ? `/groups/${groupId}`
+                : '/';
         logEvent('report_deleted_manual', {
             report_id: id,
             group_id: groupId,
@@ -448,8 +437,7 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
 
             return c.body(file.readable, 200, {
                 'content-type': 'application/json',
-                'content-disposition':
-                    `attachment; filename="${report.id}.json"`,
+                'content-disposition': `attachment; filename="${report.id}.json"`,
             });
         } catch {
             return c.text('not found\n', 404);

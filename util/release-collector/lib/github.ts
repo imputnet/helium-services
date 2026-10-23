@@ -2,9 +2,7 @@ import { headers } from './env.ts';
 import type { GithubRelease } from '../../sparkler/types/github.ts';
 
 const sleep = (ms: number) =>
-    new Promise<void>(
-        (resolve) => setTimeout(resolve, ms),
-    );
+    new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export const getGithubReleases = async (
     repo: string,

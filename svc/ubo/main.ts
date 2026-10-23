@@ -16,19 +16,23 @@ const handle = async (request: Request): Promise<Response> => {
         throw { status: 405, text: 'method not allowed' };
     }
 
-    const acceptsBrotli = request.headers.get('accept-encoding')
-        ?.split(', ', 8).some((enc) => enc === '*' || enc === 'br');
+    const acceptsBrotli = request.headers
+        .get('accept-encoding')
+        ?.split(', ', 8)
+        .some((enc) => enc === '*' || enc === 'br');
 
     if (!acceptsBrotli) {
         throw {
             status: 406,
-            text: 'this service can only respond with brotli-encoded'
+            text:
+                'this service can only respond with brotli-encoded'
                 + 'responses',
         };
     }
 
     const [data, etag] = await handleData(request);
-    const cachedOnClient = request.headers.get('if-none-match')
+    const cachedOnClient = request.headers
+        .get('if-none-match')
         ?.split(', ', 8)
         .includes(etag);
 
@@ -37,8 +41,8 @@ const handle = async (request: Request): Promise<Response> => {
         'Content-Type': data.type,
         'Content-Length': String(data.size),
         'Content-Encoding': 'br',
-        'ETag': etag,
-        'Vary': 'Accept-Encoding',
+        ETag: etag,
+        Vary: 'Accept-Encoding',
     };
 
     if (request.method === 'OPTIONS') {
@@ -56,10 +60,7 @@ const handle = async (request: Request): Promise<Response> => {
         });
     }
 
-    return new Response(
-        data.stream(),
-        { headers },
-    );
+    return new Response(data.stream(), { headers });
 };
 
 if (import.meta.main) {

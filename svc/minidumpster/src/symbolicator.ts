@@ -76,13 +76,10 @@ async function submitAndPoll(
         },
     );
     if (!res.ok) {
-        throw await responseError(
-            `symbolicator POST ${endpoint} failed`,
-            res,
-        );
+        throw await responseError(`symbolicator POST ${endpoint} failed`, res);
     }
 
-    let body = await res.json() as SymbolicatorResponse;
+    let body = (await res.json()) as SymbolicatorResponse;
 
     while (body.status === 'pending') {
         if (!body.request_id) {
@@ -104,7 +101,7 @@ async function submitAndPoll(
             throw await responseError('symbolicator poll failed', poll);
         }
 
-        body = await poll.json() as SymbolicatorResponse;
+        body = (await poll.json()) as SymbolicatorResponse;
     }
 
     return body;

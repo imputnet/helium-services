@@ -126,7 +126,8 @@ type DeepReadonly<T> = {
 
 export const deepFreeze = <T extends object>(obj: T): DeepReadonly<T> => {
     for (const value of Object.values(obj)) {
-        const freezable = typeof value === 'object' || typeof value === 'function';
+        const freezable =
+            typeof value === 'object' || typeof value === 'function';
         if (value && freezable) {
             deepFreeze(value);
         }

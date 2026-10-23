@@ -27,7 +27,7 @@ Deno.test('Symbolicator deadline covers the initial POST', async () => {
         symbolicateMinidump('http://symbolicator.test', minimalMinidump(), {
             fetchFn: abortingFetch((signal) => signals.push(signal)),
             maxWaitMs: 10,
-        })
+        }),
     );
     assert(signals[0].aborted);
     assert(err instanceof Error);
@@ -60,7 +60,7 @@ Deno.test('Symbolicator deadline remains active while reading POST JSON', async 
         symbolicateMinidump('http://symbolicator.test', minimalMinidump(), {
             fetchFn,
             maxWaitMs: 10,
-        })
+        }),
     );
     assert(signals[0].aborted);
     assert(err instanceof Error);
@@ -72,18 +72,20 @@ Deno.test('Symbolicator deadline aborts an excessive retry_after', async () => {
     const fetchFn = ((_input: string | URL | Request, init?: RequestInit) => {
         assert(init?.signal instanceof AbortSignal);
         calls++;
-        return Promise.resolve(Response.json({
-            status: 'pending',
-            request_id: 'request-1',
-            retry_after: 60,
-        }));
+        return Promise.resolve(
+            Response.json({
+                status: 'pending',
+                request_id: 'request-1',
+                retry_after: 60,
+            }),
+        );
     }) as typeof fetch;
 
     const err = await assertRejects(() =>
         symbolicateMinidump('http://symbolicator.test', minimalMinidump(), {
             fetchFn,
             maxWaitMs: 10,
-        })
+        }),
     );
     assertEquals(calls, 1);
     assert(err instanceof Error);
@@ -99,11 +101,13 @@ Deno.test('Symbolicator reuses one deadline signal for POST and polling', async 
         signals.push(signal);
         urls.push(String(input));
         if (signals.length === 1) {
-            return Promise.resolve(Response.json({
-                status: 'pending',
-                request_id: 'request-1',
-                retry_after: 0,
-            }));
+            return Promise.resolve(
+                Response.json({
+                    status: 'pending',
+                    request_id: 'request-1',
+                    retry_after: 0,
+                }),
+            );
         }
         return Promise.resolve(Response.json(completed));
     }) as typeof fetch;
@@ -116,30 +120,23 @@ Deno.test('Symbolicator reuses one deadline signal for POST and polling', async 
     assertEquals(result.status, 'completed');
     assertEquals(signals.length, 2);
     assert(signals[0] === signals[1]);
-    assertEquals(
-        urls,
-        [
-            'http://symbolicator.test/minidump?timeout=300&scope=minidumpster',
-            'http://symbolicator.test/requests/request-1?timeout=300',
-        ],
-    );
+    assertEquals(urls, [
+        'http://symbolicator.test/minidump?timeout=300&scope=minidumpster',
+        'http://symbolicator.test/requests/request-1?timeout=300',
+    ]);
 });
 
 Deno.test('Symbolicator HTTP errors do not expose response details', async () => {
     const err = await assertRejects(
         () =>
-            symbolicateMinidump(
-                'http://symbolicator.test',
-                minimalMinidump(),
-                {
-                    fetchFn: (() =>
-                        Promise.resolve(
-                            new Response('sensitive upstream detail', {
-                                status: 400,
-                            }),
-                        )) as typeof fetch,
-                },
-            ),
+            symbolicateMinidump('http://symbolicator.test', minimalMinidump(), {
+                fetchFn: (() =>
+                    Promise.resolve(
+                        new Response('sensitive upstream detail', {
+                            status: 400,
+                        }),
+                    )) as typeof fetch,
+            }),
         Error,
         'symbolicator POST /minidump failed: 400',
     );
@@ -159,11 +156,13 @@ Deno.test('Symbolicator deadline covers a hanging poll request', async () => {
         calls++;
         if (calls === 1) {
             postSignal = signal;
-            return Promise.resolve(Response.json({
-                status: 'pending',
-                request_id: 'request-1',
-                retry_after: 0,
-            }));
+            return Promise.resolve(
+                Response.json({
+                    status: 'pending',
+                    request_id: 'request-1',
+                    retry_after: 0,
+                }),
+            );
         }
         return abortingFetch((seen, url) => {
             pollSignal = seen;
@@ -175,7 +174,7 @@ Deno.test('Symbolicator deadline covers a hanging poll request', async () => {
         symbolicateMinidump('http://symbolicator.test', minimalMinidump(), {
             fetchFn: pendingThenHang,
             maxWaitMs: 10,
-        })
+        }),
     );
     assert(postSignal === pollSignal);
     assert(err instanceof Error);

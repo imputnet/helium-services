@@ -17,10 +17,10 @@ const getTtl = (req: Request) => {
 
     const ttl = parseInt(ttlStr, 10);
     if (
-        String(ttl) !== ttlStr ||
-        !Number.isSafeInteger(ttl) ||
-        ttl < 0 ||
-        ttl > max
+        String(ttl) !== ttlStr
+        || !Number.isSafeInteger(ttl)
+        || ttl < 0
+        || ttl > max
     ) {
         return max;
     }

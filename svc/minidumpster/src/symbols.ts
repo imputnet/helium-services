@@ -29,7 +29,10 @@ export interface SymbolsOptions {
 }
 
 function requireValidNames(product: string, version: string): void {
-    for (const [field, value] of [['product', product], ['version', version]]) {
+    for (const [field, value] of [
+        ['product', product],
+        ['version', version],
+    ]) {
         if (!NAME_RE.test(value)) {
             throw new HttpError(
                 400,
@@ -79,7 +82,8 @@ async function runSymsorter(
         }
         return {
             code,
-            output: new TextDecoder().decode(stdout)
+            output:
+                new TextDecoder().decode(stdout)
                 + new TextDecoder().decode(stderr),
         };
     } finally {
@@ -244,9 +248,8 @@ async function handleSymbolUpload(
                 contentType,
                 () => zipPath,
             ).catch((e) => {
-                const message = e instanceof Error
-                    ? e.message
-                    : 'malformed multipart body';
+                const message =
+                    e instanceof Error ? e.message : 'malformed multipart body';
                 throw new HttpError(400, message);
             });
 

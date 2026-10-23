@@ -69,12 +69,10 @@ export function deleteReportPayloads(
     reportIds: Iterable<string>,
 ): void {
     for (const reportId of reportIds) {
-        for (
-            const [kind, path] of [
-                ['raw', dumpPath(config.dataDir, reportId)],
-                ['processed', processedPath(config.dataDir, reportId)],
-            ] as const
-        ) {
+        for (const [kind, path] of [
+            ['raw', dumpPath(config.dataDir, reportId)],
+            ['processed', processedPath(config.dataDir, reportId)],
+        ] as const) {
             try {
                 removeIfExists(path);
             } catch (err) {

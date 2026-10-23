@@ -1,7 +1,8 @@
 export const toBytes = (s: string) => new TextEncoder().encode(s);
 
 export const cat = (...bufs: (ArrayBuffer | Uint8Array)[]) => {
-    let len = 0, written = 0;
+    let len = 0,
+        written = 0;
     for (const buf of bufs) {
         len += buf.byteLength;
     }
