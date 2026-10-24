@@ -12,18 +12,25 @@ export const ms = {
 
 export const now = () => new Date().getTime();
 
-export const insecure_rand = (max: number, min: number = 0) => {
-    max |= 0;
-    min |= 0;
+export const randomInt = (max: number) => {
+    if (!Number.isInteger(max) || max <= 0 || max > 2 ** 32) {
+        throw new RangeError('invalid random integer bound');
+    }
 
-    return Math.floor(Math.random() * (max - min) + min);
+    const limit = 2 ** 32 - (2 ** 32 % max);
+    const value = new Uint32Array(1);
+    do {
+        crypto.getRandomValues(value);
+    } while (value[0] >= limit);
+
+    return value[0] % max;
 };
 
-export const any = <T>(arr: T[]) => arr[insecure_rand(arr.length)];
+export const any = <T>(arr: T[]) => arr[randomInt(arr.length)];
 
 export const shuffle = <T>(arr: T[]) => {
-    for (let i = arr.length - 1; i >= 0; --i) {
-        const j = insecure_rand(i);
+    for (let i = arr.length - 1; i > 0; --i) {
+        const j = randomInt(i + 1);
         if (i != j) {
             [arr[i], arr[j]] = [arr[j], arr[i]];
         }
