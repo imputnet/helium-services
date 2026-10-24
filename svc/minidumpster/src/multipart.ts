@@ -2,6 +2,7 @@
 import busboy from 'busboy';
 import { Readable } from 'node:stream';
 import { createWriteStream } from 'node:fs';
+import { stat } from 'node:fs/promises';
 import { pipeline } from 'node:stream/promises';
 
 interface StreamedFile {
@@ -68,7 +69,7 @@ export function streamMultipartToDisk(
             fileWrites.push(
                 pipeline(stream, createWriteStream(path))
                     .then(async () => {
-                        const { size } = await Deno.stat(path);
+                        const { size } = await stat(path);
                         files.push({
                             field: name,
                             filename: info.filename ?? '',

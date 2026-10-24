@@ -1,6 +1,7 @@
+import { open, readdir, stat } from 'node:fs/promises';
 import { Hono, type MiddlewareHandler } from 'hono';
 import { accepts } from 'hono/accepts';
-import { serveStatic } from 'hono/deno';
+import { serveStatic } from '@hono/node-server/serve-static';
 
 import * as ui from '../ui.ts';
 import { logError, logEvent } from '../log.ts';
@@ -16,6 +17,7 @@ import {
 } from '../reports.ts';
 import {
     dumpPath,
+    isNotFound,
     processedPath,
     symbolsDir,
     writeFileWithDirs,
@@ -43,25 +45,31 @@ async function readProcessed(dataDir: string, reportId: string) {
     }
 }
 
+// Opens eagerly so a missing file throws here rather than mid-response.
+async function openReadable(path: string): Promise<ReadableStream> {
+    const file = await open(path, 'r');
+    return file.readableWebStream({ autoClose: true });
+}
+
 async function installedSymbolBundles(
     dataDir: string,
 ): Promise<{ id: string; updatedAt: number | null }[]> {
     const dir = `${symbolsDir(dataDir)}/bundles`;
     const bundles: { id: string; updatedAt: number | null }[] = [];
     try {
-        for await (const entry of Deno.readDir(dir)) {
-            if (!entry.isFile) {
+        for (const entry of await readdir(dir, { withFileTypes: true })) {
+            if (!entry.isFile()) {
                 continue;
             }
 
-            const stat = await Deno.stat(`${dir}/${entry.name}`);
+            const { mtimeMs } = await stat(`${dir}/${entry.name}`);
             bundles.push({
                 id: entry.name,
-                updatedAt: stat.mtime?.getTime() ?? null,
+                updatedAt: mtimeMs,
             });
         }
     } catch (err) {
-        if (!(err instanceof Deno.errors.NotFound)) {
+        if (!isNotFound(err)) {
             logError('symbols_overview_read_error', err, { dir });
         }
     }
@@ -87,9 +95,8 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
 
         const groups = db.listGroups(filter);
         const value = c.req.query('breakdown');
-        const breakdown = value === 'version' || value === 'platform'
-            ? value
-            : 'total';
+        const breakdown =
+            value === 'version' || value === 'platform' ? value : 'total';
         const stats = db.reportsPerDay(ui.reportChartSince(), {
             breakdown,
             filter,
@@ -251,9 +258,8 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
         }
 
         const value = c.req.query('breakdown');
-        const breakdown = value === 'version' || value === 'platform'
-            ? value
-            : 'total';
+        const breakdown =
+            value === 'version' || value === 'platform' ? value : 'total';
         const stats = db.reportsPerDay(ui.reportChartSince(), {
             groupId: group.id,
             breakdown,
@@ -304,9 +310,8 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
             return c.html(ui.messagePage('Not found', 'No such report.'), 404);
         }
 
-        const group = report.group_id != null
-            ? db.getGroup(report.group_id)
-            : null;
+        const group =
+            report.group_id != null ? db.getGroup(report.group_id) : null;
 
         const responseType = accepts(c, {
             header: 'Accept',
@@ -322,15 +327,9 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
             if (resp) {
                 hasProcessedResponse = true;
                 if (wantsPlain) {
-                    return c.text(
-                        ui.reportCopyText(
-                            report,
-                            group,
-                            resp,
-                        ),
-                        200,
-                        { 'content-type': 'text/plain; charset=utf-8' },
-                    );
+                    return c.text(ui.reportCopyText(report, group, resp), 200, {
+                        'content-type': 'text/plain; charset=utf-8',
+                    });
                 }
                 stack = ui.stackHtml(resp, true);
                 if (config.githubIssueRepo && config.githubIssueTemplate) {
@@ -356,10 +355,7 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
                 stack,
                 hasProcessedResponse,
                 issueUrl,
-                reportExpiresAt(
-                    report.received_at,
-                    config.retentionDays,
-                ),
+                reportExpiresAt(report.received_at, config.retentionDays),
                 c.get('session').login,
             ),
         );
@@ -398,9 +394,10 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
 
         deleteReportAndPayload(db, config, id);
         const groupId = report.group_id;
-        const redirect = groupId != null && db.getGroup(groupId)
-            ? `/groups/${groupId}`
-            : '/';
+        const redirect =
+            groupId != null && db.getGroup(groupId)
+                ? `/groups/${groupId}`
+                : '/';
         logEvent('report_deleted_manual', {
             report_id: id,
             group_id: groupId,
@@ -416,12 +413,12 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
         }
 
         try {
-            const file = await Deno.open(dumpPath(config.dataDir, report.id), {
-                read: true,
-            });
+            const file = await openReadable(
+                dumpPath(config.dataDir, report.id),
+            );
 
             const apple = report.kind === 'apple';
-            return c.body(file.readable, 200, {
+            return c.body(file, 200, {
                 'content-type': apple
                     ? 'text/plain; charset=utf-8'
                     : 'application/octet-stream',
@@ -441,15 +438,13 @@ export function webRoutes(deps: AppDeps): Hono<Env> {
         }
 
         try {
-            const file = await Deno.open(
+            const file = await openReadable(
                 processedPath(config.dataDir, report.id),
-                { read: true },
             );
 
-            return c.body(file.readable, 200, {
+            return c.body(file, 200, {
                 'content-type': 'application/json',
-                'content-disposition':
-                    `attachment; filename="${report.id}.json"`,
+                'content-disposition': `attachment; filename="${report.id}.json"`,
             });
         } catch {
             return c.text('not found\n', 404);

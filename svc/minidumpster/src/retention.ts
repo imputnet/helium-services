@@ -1,9 +1,10 @@
-import { join } from '@std/path';
+import { readdir, rm, rmdir, stat } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import type { Db } from './db.ts';
 import type { Config } from './config.ts';
 import { logError, logEvent } from './log.ts';
-import { symbolsDir } from './paths.ts';
+import { isNotFound, symbolsDir } from './paths.ts';
 import { deleteReportPayloads } from './reports.ts';
 
 export function runRetention(
@@ -38,17 +39,19 @@ export async function runSymbolRetention(
 
     const expired = new Set<string>();
     try {
-        for await (const entry of Deno.readDir(bundlesDir)) {
-            if (!entry.isFile) {
+        for (const entry of await readdir(bundlesDir, {
+            withFileTypes: true,
+        })) {
+            if (!entry.isFile()) {
                 continue;
             }
-            const stat = await Deno.stat(join(bundlesDir, entry.name));
-            if ((stat.mtime?.getTime() ?? now) < cutoff) {
+            const { mtimeMs } = await stat(join(bundlesDir, entry.name));
+            if (mtimeMs < cutoff) {
                 expired.add(entry.name);
             }
         }
     } catch (err) {
-        if (err instanceof Deno.errors.NotFound) {
+        if (isNotFound(err)) {
             return none;
         }
         throw err;
@@ -59,14 +62,14 @@ export async function runSymbolRetention(
     }
 
     let debugDirs = 0;
-    for await (const shard of Deno.readDir(root)) {
-        if (!shard.isDirectory || shard.name === 'bundles') {
+    for (const shard of await readdir(root, { withFileTypes: true })) {
+        if (!shard.isDirectory() || shard.name === 'bundles') {
             continue;
         }
 
         const shardPath = join(root, shard.name);
-        for await (const dbg of Deno.readDir(shardPath)) {
-            if (!dbg.isDirectory) {
+        for (const dbg of await readdir(shardPath, { withFileTypes: true })) {
+            if (!dbg.isDirectory()) {
                 continue;
             }
 
@@ -74,35 +77,33 @@ export async function runSymbolRetention(
             let hadRefs = false;
             let remaining = 0;
             try {
-                for await (const ref of Deno.readDir(refsPath)) {
+                for (const ref of await readdir(refsPath)) {
                     hadRefs = true;
-                    if (expired.has(ref.name)) {
-                        await Deno.remove(join(refsPath, ref.name));
+                    if (expired.has(ref)) {
+                        await rm(join(refsPath, ref));
                     } else {
                         remaining++;
                     }
                 }
             } catch (err) {
-                if (err instanceof Deno.errors.NotFound) {
+                if (isNotFound(err)) {
                     continue; // unmanaged dir
                 }
                 throw err;
             }
 
             if (hadRefs && remaining === 0) {
-                await Deno.remove(join(shardPath, dbg.name), {
-                    recursive: true,
-                });
+                await rm(join(shardPath, dbg.name), { recursive: true });
                 debugDirs++;
             }
         }
 
         // Drop the two-char shard dir if it is now empty.
-        await Deno.remove(shardPath).catch(() => {});
+        await rmdir(shardPath).catch(() => {});
     }
 
     for (const bundle of expired) {
-        await Deno.remove(join(bundlesDir, bundle)).catch(() => {});
+        await rm(join(bundlesDir, bundle)).catch(() => {});
     }
 
     logEvent('symbols_retention_run', {
@@ -121,7 +122,7 @@ export function startRetentionJob(db: Db, config: Config): () => void {
             logError('retention_error', err);
         }
         runSymbolRetention(config).catch((err) =>
-            logError('symbols_retention_error', err)
+            logError('symbols_retention_error', err),
         );
     };
 

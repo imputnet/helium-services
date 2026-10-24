@@ -82,6 +82,6 @@ export const onUnregister = (uaid: string, chid: string) => {
     mailbox.removeChannel(uaid, chid);
 };
 
-Deno.unrefTimer(setInterval(() => {
+setInterval(() => {
     counters.expiredMessages += mailbox.expire();
-}, 1000));
+}, 1000).unref();

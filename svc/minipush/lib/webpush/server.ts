@@ -1,7 +1,7 @@
-import { assert } from '@std/assert/assert';
+import assert from 'node:assert/strict';
 import { unwrap } from './chid.ts';
 import { env } from '../env.ts';
-import { encodeBase64Url } from '@std/encoding/base64url';
+import * as Buf from '../util/buffer.ts';
 import type { StoredMessage } from '../home/mailbox.ts';
 import * as HTTP from '../util/http.ts';
 import * as MessageId from './message-id.ts';
@@ -17,10 +17,10 @@ const getTtl = (req: Request) => {
 
     const ttl = parseInt(ttlStr, 10);
     if (
-        String(ttl) !== ttlStr ||
-        !Number.isSafeInteger(ttl) ||
-        ttl < 0 ||
-        ttl > max
+        String(ttl) !== ttlStr
+        || !Number.isSafeInteger(ttl)
+        || ttl < 0
+        || ttl > max
     ) {
         return max;
     }
@@ -115,7 +115,7 @@ export const handleWebPushRequest = async (
             messageType: 'notification',
             channelID: chid,
             version: id,
-            data: hasBody ? encodeBase64Url(body) : undefined,
+            data: hasBody ? Buf.toBase64Url(body) : undefined,
             headers,
         },
     };

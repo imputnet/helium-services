@@ -1,3 +1,5 @@
+import { serve } from '@hono/node-server';
+
 import * as App from './app.ts';
 import * as ArtifactCrawler from './artifact-crawler.ts';
 import * as Config from './config.ts';
@@ -10,10 +12,10 @@ import { Db } from './db.ts';
 if (import.meta.main) {
     let config;
     try {
-        config = Config.loadConfig(Deno.env.toObject());
+        config = Config.loadConfig(process.env);
     } catch (err) {
         console.error(err instanceof Error ? err.message : String(err));
-        Deno.exit(1);
+        process.exit(1);
     }
 
     await Paths.ensureDataDirs(config.dataDir);
@@ -23,7 +25,7 @@ if (import.meta.main) {
     const stopRetention = Retention.startRetentionJob(db, config);
     const worker = Worker.startWorker({ db, config });
 
-    const server = Deno.serve({ port: config.port }, app.fetch);
+    const server = serve({ fetch: app.fetch, port: config.port });
     const artifactCrawler = ArtifactCrawler.startArtifactCrawler({
         db,
         config,
@@ -42,11 +44,11 @@ if (import.meta.main) {
         Log.logEvent('server_stopping');
         stopRetention();
         await artifactCrawler.stop();
-        await server.shutdown();
+        await new Promise((resolve) => server.close(resolve));
         await worker.stop();
         db.close();
-        Deno.exit(0);
+        process.exit(0);
     };
-    Deno.addSignalListener('SIGINT', shutdown);
-    Deno.addSignalListener('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
 }

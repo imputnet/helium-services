@@ -2,7 +2,9 @@ import type { OmahaResponse, ProtocolVersion, ResponseType } from './types.ts';
 import * as V3 from './v3/index.ts';
 import * as V4 from './v4/index.ts';
 
-export const makeHeaders = ({ response }: V3.OmahaResponse | V4.OmahaResponse) => {
+export const makeHeaders = ({
+    response,
+}: V3.OmahaResponse | V4.OmahaResponse) => {
     return {
         'x-daynum': String(response.daystart.elapsed_days),
         'x-daystart': String(response.daystart.elapsed_seconds),

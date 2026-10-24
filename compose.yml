@@ -26,7 +26,9 @@ services:
   ubo_proxy:
     container_name: ubo_proxy
     read_only: true
-    build: ./svc/ubo
+    build:
+      context: .
+      target: ubo
     restart: unless-stopped
     environment:
       - UBO_PROXY_BASE_URL=${UBO_PROXY_BASE_URL}
@@ -36,7 +38,9 @@ services:
   ext_proxy:
     container_name: ext_proxy
     read_only: true
-    build: ./svc/extension-proxy
+    build:
+      context: .
+      target: extension-proxy
     restart: unless-stopped
     environment:
       - HMAC_SECRET=${HMAC_SECRET}
@@ -45,7 +49,9 @@ services:
   ext_proxy_2:
     container_name: ext_proxy_backup
     read_only: true
-    build: ./svc/extension-proxy
+    build:
+      context: .
+      target: extension-proxy
     restart: unless-stopped
     environment:
       - HMAC_SECRET=${HMAC_SECRET}

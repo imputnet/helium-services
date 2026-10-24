@@ -1,6 +1,12 @@
 import * as V3 from './v3/index.ts';
 import * as V4 from './v4/index.ts';
-import type { App, OmahaRequest, ProtocolVersion, ResponseType, ServiceId } from './types.ts';
+import type {
+    App,
+    OmahaRequest,
+    ProtocolVersion,
+    ResponseType,
+    ServiceId,
+} from './types.ts';
 
 export * from '../helpers.ts';
 
@@ -37,7 +43,8 @@ const handleGet = (request: Request): RequestData => {
 
     const xParams = url.searchParams.getAll('x');
     if (
-        xParams.length === 0 || (xParams.length > 1 && responseType === 'redirect')
+        xParams.length === 0
+        || (xParams.length > 1 && responseType === 'redirect')
     ) {
         throw 'malformed request';
     }
@@ -72,10 +79,12 @@ const getAppsForProtocol = (
         version: app.version,
         brand: app.brand,
         updatecheck: app.updatecheck && {
-            cause: 'cause' in app.updatecheck ? app.updatecheck.cause : undefined,
-            sameversionupdate: 'sameversionupdate' in app.updatecheck
-                ? app.updatecheck.sameversionupdate
-                : undefined,
+            cause:
+                'cause' in app.updatecheck ? app.updatecheck.cause : undefined,
+            sameversionupdate:
+                'sameversionupdate' in app.updatecheck
+                    ? app.updatecheck.sameversionupdate
+                    : undefined,
             rollback_allowed: app.updatecheck.rollback_allowed,
             targetversionprefix: app.updatecheck.targetversionprefix,
             updatedisabled: app.updatecheck.updatedisabled,
@@ -90,7 +99,7 @@ const handlePost = async (request: Request): Promise<RequestData> => {
 
     let body: { request: OmahaRequest };
     try {
-        body = await request.json();
+        body = (await request.json()) as { request: OmahaRequest };
     } catch {
         throw 'invalid body';
     }

@@ -38,13 +38,14 @@ so the reverse proxy must overwrite that header.
 ## local development
 
 ```sh
-deno task dev:seed
-deno task dev:mock
+pnpm install
+pnpm dev:seed
+pnpm dev:mock
 ```
 
 the mock server intentionally does not run the processing worker, retention, or
 artifact crawler. uploads appear as pending and remain available for UI work.
-use `DEV_DATA_DIR=/some/path deno task dev:mock` to choose another data
+use `DEV_DATA_DIR=/some/path pnpm dev:mock` to choose another data
 directory, including a more durable location outside the checkout.
 
 ## usage

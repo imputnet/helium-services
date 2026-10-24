@@ -1,9 +1,14 @@
-import * as path from 'jsr:@std/path/join';
+import { readFile, writeFile } from 'node:fs/promises';
+import * as path from 'node:path';
+
+import {
+    type GithubRelease,
+    getReleases,
+} from '@helium-services/common/github';
 
 import { env } from './lib/env.ts';
-import type { GithubRelease } from '../sparkler/types/github.ts';
 import { getArchitecture, isDesiredFile } from './lib/filenames.ts';
-import { getGithubReleases, getLatestRelease } from './lib/github.ts';
+import { getLatestRelease } from './lib/github.ts';
 
 type Platform = string;
 type Architecture = 'x86_64' | 'arm64';
@@ -47,24 +52,30 @@ const processRelease = (
 
 if (import.meta.main) {
     const platforms: Platforms = JSON.parse(
-        await Deno.readTextFile(path.join(import.meta.dirname!, '/platforms.json')),
+        await readFile(
+            path.join(import.meta.dirname, 'platforms.json'),
+            'utf8',
+        ),
     );
 
     const manifest: Manifest = {};
 
     await Promise.all(
         Object.entries(platforms).map(async ([platform, info]) => {
-            const releases = await getGithubReleases(info.repository);
+            const releases = await getReleases(info.repository);
 
             manifest[platform] = {
-                stable: processRelease(platform, getLatestRelease(releases, false)),
-                beta: processRelease(platform, getLatestRelease(releases, true)),
+                stable: processRelease(
+                    platform,
+                    getLatestRelease(releases, false),
+                ),
+                beta: processRelease(
+                    platform,
+                    getLatestRelease(releases, true),
+                ),
             };
         }),
     );
 
-    Deno.writeTextFileSync(
-        env.outPath,
-        JSON.stringify(manifest),
-    );
+    await writeFile(env.outPath, JSON.stringify(manifest));
 }

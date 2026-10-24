@@ -1,0 +1,21 @@
+{
+    "name": "@helium-services/common",
+    "private": true,
+    "license": "AGPL-3.0",
+    "files": [
+        "dist"
+    ],
+    "type": "module",
+    "exports": {
+        "./*": {
+            "production": "./dist/*.js",
+            "default": "./src/*.ts"
+        }
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "typecheck": "tsc",
+        "lint": "oxlint",
+        "fmt": "oxfmt"
+    }
+}

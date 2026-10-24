@@ -1,5 +1,7 @@
+import { serve } from '@hono/node-server';
+import { respondWithError } from '@helium-services/common/http';
+
 import * as Assets from './lib/ublock.ts';
-import * as Util from './lib/util.ts';
 
 const handleData = (request: Request) => {
     const url = new URL(request.url);
@@ -16,19 +18,23 @@ const handle = async (request: Request): Promise<Response> => {
         throw { status: 405, text: 'method not allowed' };
     }
 
-    const acceptsBrotli = request.headers.get('accept-encoding')
-        ?.split(', ', 8).some((enc) => enc === '*' || enc === 'br');
+    const acceptsBrotli = request.headers
+        .get('accept-encoding')
+        ?.split(', ', 8)
+        .some((enc) => enc === '*' || enc === 'br');
 
     if (!acceptsBrotli) {
         throw {
             status: 406,
-            text: 'this service can only respond with brotli-encoded'
+            text:
+                'this service can only respond with brotli-encoded'
                 + 'responses',
         };
     }
 
     const [data, etag] = await handleData(request);
-    const cachedOnClient = request.headers.get('if-none-match')
+    const cachedOnClient = request.headers
+        .get('if-none-match')
         ?.split(', ', 8)
         .includes(etag);
 
@@ -37,8 +43,8 @@ const handle = async (request: Request): Promise<Response> => {
         'Content-Type': data.type,
         'Content-Length': String(data.size),
         'Content-Encoding': 'br',
-        'ETag': etag,
-        'Vary': 'Accept-Encoding',
+        ETag: etag,
+        Vary: 'Accept-Encoding',
     };
 
     if (request.method === 'OPTIONS') {
@@ -56,23 +62,19 @@ const handle = async (request: Request): Promise<Response> => {
         });
     }
 
-    return new Response(
-        data.stream(),
-        { headers },
-    );
+    return new Response(data.stream(), { headers });
+};
+
+const handleRequest = async (request: Request) => {
+    try {
+        return await handle(request);
+    } catch (e) {
+        return respondWithError(e);
+    }
 };
 
 if (import.meta.main) {
     // try to preload assets.json before any request arrives
     Assets.handleAssets().catch(() => {});
+    serve({ fetch: handleRequest, port: 8000 });
 }
-
-export default {
-    async fetch(request: Request) {
-        try {
-            return await handle(request);
-        } catch (e) {
-            return Util.respondWithError(e);
-        }
-    },
-};

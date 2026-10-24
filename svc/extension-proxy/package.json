@@ -1,0 +1,18 @@
+{
+    "name": "extension-proxy",
+    "private": true,
+    "license": "AGPL-3.0",
+    "type": "module",
+    "scripts": {
+        "start": "node main.ts",
+        "dev": "node --watch main.ts",
+        "typecheck": "tsc",
+        "lint": "oxlint",
+        "fmt": "oxfmt"
+    },
+    "dependencies": {
+        "@helium-services/common": "workspace:*",
+        "@hono/node-server": "^1.19.17",
+        "@libs/xml": "jsr:^6.0.8"
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "name": "release-collector",
+    "private": true,
+    "license": "AGPL-3.0",
+    "type": "module",
+    "scripts": {
+        "start": "node main.ts",
+        "typecheck": "tsc",
+        "lint": "oxlint",
+        "fmt": "oxfmt"
+    },
+    "dependencies": {
+        "@helium-services/common": "workspace:*"
+    }
+}

@@ -47,11 +47,7 @@ export function authRoutes(deps: AppDeps): Hono<Env> {
         }
 
         if (
-            !await checkOrgMembership(
-                ghFetch,
-                token.token,
-                config.githubOrg,
-            )
+            !(await checkOrgMembership(ghFetch, token.token, config.githubOrg))
         ) {
             logEvent('login_denied', {
                 login: user.login,

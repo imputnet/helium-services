@@ -1,14 +1,15 @@
-import { parse, stringify } from 'jsr:@libs/xml';
+import { readFile } from 'node:fs/promises';
+import { basename } from 'node:path';
+import { parse, stringify } from '@libs/xml';
 
 import { getMinimumVersion, getSignature } from './cache.ts';
 import { getReleases } from './github.ts';
 import { env } from './env.ts';
+import { exists } from './util.ts';
 
-import { Appcast, AppcastRelease, Enclosure } from '../types/appcast.ts';
-import { Asset, CPUArchitecture } from '../types/assets.ts';
-import { Release } from '../types/github.ts';
-import { exists } from 'jsr:@std/fs/exists';
-import { basename } from 'jsr:@std/path';
+import type { Appcast, AppcastRelease, Enclosure } from '../types/appcast.ts';
+import type { Asset, CPUArchitecture } from '../types/assets.ts';
+import type { Release } from '../types/github.ts';
 
 const getUrlForAsset = (asset: Asset) => {
     if (env.shouldServeAssets) {
@@ -40,7 +41,9 @@ const toAppcastRelease = async (
     try {
         minimumSystemVersion = await getMinimumVersion(dmg);
     } catch (e) {
-        console.warn(`[!] could not get minimum OS version for ${dmg.name}, falling back to 10.0`);
+        console.warn(
+            `[!] could not get minimum OS version for ${dmg.name}, falling back to 10.0`,
+        );
         console.warn(e);
     }
 
@@ -50,7 +53,7 @@ const toAppcastRelease = async (
         'sparkle:version': release.version,
         'sparkle:shortVersionString': release.version,
         'sparkle:minimumSystemVersion': minimumSystemVersion,
-        'enclosure': await toEnclosure(dmg),
+        enclosure: await toEnclosure(dmg),
     };
 
     if (release.channel) {
@@ -68,7 +71,7 @@ const toAppcastRelease = async (
         };
 
         appcastRelease['sparkle:deltas'].enclosure.push({
-            ...await toEnclosure(delta),
+            ...(await toEnclosure(delta)),
             '@sparkle:deltaFrom': deltaFrom,
         });
     }
@@ -83,12 +86,17 @@ export const makeAppcast = async (arch: CPUArchitecture) => {
         '@standalone': 'yes',
         rss: {
             '@version': '2.0',
-            '@xmlns:sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle',
+            '@xmlns:sparkle':
+                'http://www.andymatuschak.org/xml-namespaces/sparkle',
             channel: {
                 title: `Helium (${arch})`,
-                item: (await Promise.all(
-                    releases.map((release) => toAppcastRelease(release, arch)),
-                )).filter((r) => r !== undefined),
+                item: (
+                    await Promise.all(
+                        releases.map((release) =>
+                            toAppcastRelease(release, arch),
+                        ),
+                    )
+                ).filter((r) => r !== undefined),
             },
         },
     };
@@ -97,11 +105,11 @@ export const makeAppcast = async (arch: CPUArchitecture) => {
 };
 
 export const getSignaturesAndVersions = async (appcastPath: string) => {
-    if (!await exists(appcastPath)) {
+    if (!(await exists(appcastPath))) {
         return [];
     }
 
-    const text = await Deno.readTextFile(appcastPath);
+    const text = await readFile(appcastPath, 'utf8');
     const data = parse(text) as unknown as Appcast;
 
     return (data.rss.channel.item ?? []).flatMap((item) => [

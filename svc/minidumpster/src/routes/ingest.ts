@@ -1,4 +1,4 @@
-import { getConnInfo } from 'hono/deno';
+import { getConnInfo } from '@hono/node-server/conninfo';
 import { bearerAuth } from 'hono/bearer-auth';
 import { rateLimiter } from 'hono-rate-limiter';
 import { type Context, Hono } from 'hono';
@@ -33,9 +33,12 @@ function errorText(err: HttpError): Response {
 }
 
 function errorJson(err: HttpError): Response {
-    return Response.json({ ok: false, error: err.message }, {
-        status: err.status,
-    });
+    return Response.json(
+        { ok: false, error: err.message },
+        {
+            status: err.status,
+        },
+    );
 }
 
 export function ingestRoutes(deps: AppDeps): Hono<Env> {
@@ -108,14 +111,9 @@ export function ingestRoutes(deps: AppDeps): Hono<Env> {
         }),
         async (c) => {
             try {
-                const result = await ingestSymbolUpload(
-                    c.req.raw,
-                    config,
-                    db,
-                    {
-                        symsorterBin: deps.symsorterBin,
-                    },
-                );
+                const result = await ingestSymbolUpload(c.req.raw, config, db, {
+                    symsorterBin: deps.symsorterBin,
+                });
                 return c.json(result);
             } catch (err) {
                 if (err instanceof HttpError) {

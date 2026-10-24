@@ -1,18 +1,6 @@
-import { Asset, CPUArchitecture } from './assets.ts';
+import type { Asset, CPUArchitecture } from './assets.ts';
 
-export type GithubRelease = {
-    tag_name: string;
-    prerelease: boolean;
-    draft: boolean;
-    published_at: string;
-    assets: {
-        url: string;
-        name: string;
-        digest: string;
-        size: number;
-        browser_download_url: string;
-    }[];
-};
+export type { GithubRelease } from '@helium-services/common/github';
 
 export type Version = string;
 

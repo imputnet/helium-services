@@ -1,52 +1,33 @@
-import { env, headers } from './env.ts';
-import { sleep } from './util.ts';
+import { getReleases as getGithubReleases } from '@helium-services/common/github';
 
-import { Asset, CPUArchitecture } from '../types/assets.ts';
-import { DownloadableMap, GithubRelease, Release, Version } from '../types/github.ts';
+import { env } from './env.ts';
+
+import type { Asset, CPUArchitecture } from '../types/assets.ts';
+import type {
+    DownloadableMap,
+    GithubRelease,
+    Release,
+    Version,
+} from '../types/github.ts';
 
 const OLD_VERSION_THRESHOLD_DAYS = 30;
 const REFRESH_INTERVAL_MSECS = 1000 * 60 * 60; /* 1 hour */
 
-const getGithubReleases = async (page = 1) => {
-    const url = new URL(
-        `https://api.github.com/repos/${env.githubRepo}/releases?per_page=100`,
-    );
-    url.searchParams.set('page', page.toString());
-
-    const response = await fetch(url, {
-        headers: {
-            ...headers,
-            'Content-Type': 'application/vnd.github+json',
-        },
-    });
-
-    if (response.status === 429) {
-        await sleep(5000);
-        return getGithubReleases(page);
-    }
-
-    if (!response.ok) {
-        console.log(response);
-        throw 'response is not ok';
-    }
-
-    const releases: GithubRelease[] = await response.json();
-    return releases;
-};
-
 const getAllGithubReleases = async () => {
     const releases: GithubRelease[] = [];
 
-    let temp: GithubRelease[], page = 0;
+    let temp: GithubRelease[],
+        page = 0;
     do {
-        temp = await getGithubReleases(++page);
+        temp = await getGithubReleases(env.githubRepo, ++page);
 
         const beforeFilter = temp.length;
         const latestRelease = (releases[0] || temp[0])?.published_at;
         if (latestRelease) {
             temp = temp.filter((r) => {
-                const delta = new Date(latestRelease).getTime() -
-                    new Date(r.published_at).getTime();
+                const delta =
+                    new Date(latestRelease).getTime()
+                    - new Date(r.published_at).getTime();
                 return delta < OLD_VERSION_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
             });
         }
@@ -58,10 +39,9 @@ const getAllGithubReleases = async () => {
     return releases;
 };
 
-const expired = () => (
-    last_checked_at === undefined ||
-    Date.now() - last_checked_at > REFRESH_INTERVAL_MSECS
-);
+const expired = () =>
+    last_checked_at === undefined
+    || Date.now() - last_checked_at > REFRESH_INTERVAL_MSECS;
 
 const getDownloadFromRelease = (
     release: GithubRelease,

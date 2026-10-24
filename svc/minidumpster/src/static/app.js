@@ -1,5 +1,3 @@
-// deno-lint-ignore-file
-
 document.addEventListener('submit', (event) => {
     const message = event.target.dataset.confirm;
     if (message && !globalThis.confirm(message)) {
@@ -31,18 +29,21 @@ document.addEventListener('click', (event) => {
         const copy = event.target;
         fetch(document.location.href, {
             headers: { accept: 'text/plain' },
-        }).then((response) => {
-            if (!response.ok) {
-                throw new Error(`copy source failed: ${response.status}`);
-            }
-            return response.text();
-        }).then((text) => navigator.clipboard.writeText(text)).then(() => {
-            const original = copy.textContent;
-            copy.textContent = 'Copied';
-            setTimeout(() => {
-                copy.textContent = original;
-            }, 1200);
-        });
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`copy source failed: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then((text) => navigator.clipboard.writeText(text))
+            .then(() => {
+                const original = copy.textContent;
+                copy.textContent = 'Copied';
+                setTimeout(() => {
+                    copy.textContent = original;
+                }, 1200);
+            });
         return;
     }
 

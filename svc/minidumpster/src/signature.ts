@@ -1,4 +1,5 @@
-import { basename } from '@std/path/windows';
+import { createHash } from 'node:crypto';
+import { basename } from 'node:path/win32';
 
 export interface SymFrame {
     status?: string;
@@ -80,11 +81,17 @@ function moduleFor(
         return null;
     }
 
-    return modules.find((m) => {
-        const base = parseHex(m.image_addr);
-        return base !== null && typeof m.image_size === 'number'
-            && addr >= base && addr < base + m.image_size;
-    }) ?? null;
+    return (
+        modules.find((m) => {
+            const base = parseHex(m.image_addr);
+            return (
+                base !== null
+                && typeof m.image_size === 'number'
+                && addr >= base
+                && addr < base + m.image_size
+            );
+        }) ?? null
+    );
 }
 
 function frameFunction(f: SymFrame): string | null {
@@ -116,13 +123,13 @@ export function crashingThread(
     }
 
     return (
-        traces.find((t) =>
-            t.is_requesting_thread === true || t.is_requesting === true
+        traces.find(
+            (t) => t.is_requesting_thread === true || t.is_requesting === true,
         )
-            ?? traces.find((t) =>
-                t.registers && Object.keys(t.registers).length > 0
-            )
-            ?? traces[0]
+        ?? traces.find(
+            (t) => t.registers && Object.keys(t.registers).length > 0,
+        )
+        ?? traces[0]
     );
 }
 
@@ -187,8 +194,10 @@ const SIGNATURE_ONLY_FRAME_RE = new RegExp(
 export function isSignatureExcludedFrame(f: SymFrame): boolean {
     const fn = frameFunction(f);
 
-    return isCrashMachineryFrame(f)
-        || (fn !== null && SIGNATURE_ONLY_FRAME_RE.test(fn));
+    return (
+        isCrashMachineryFrame(f)
+        || (fn !== null && SIGNATURE_ONLY_FRAME_RE.test(fn))
+    );
 }
 
 function skipSignatureExcludedFrames(frames: SymFrame[]): SymFrame[] {
@@ -263,13 +272,8 @@ function applyAnchoredSignatureRule(frames: SymFrame[]): SymFrame[] {
     return frames;
 }
 
-async function sha256Hex(text: string): Promise<string> {
-    return new Uint8Array(
-        await crypto.subtle.digest(
-            'SHA-256',
-            new TextEncoder().encode(text),
-        ),
-    ).toHex();
+function sha256Hex(text: string): string {
+    return createHash('sha256').update(text).digest('hex');
 }
 
 export async function computeSignature(
@@ -277,7 +281,8 @@ export async function computeSignature(
     opts: { topN?: number; appHints?: string[] } = {},
 ): Promise<SignatureResult | null> {
     const topN = opts.topN ?? 5;
-    const hints = (opts.appHints ?? []).map((h) => h.toLowerCase().trim())
+    const hints = (opts.appHints ?? [])
+        .map((h) => h.toLowerCase().trim())
         .filter((h) => h !== '');
 
     const thread = crashingThread(resp);
@@ -285,9 +290,10 @@ export async function computeSignature(
         return null;
     }
 
-    const appFrames = hints.length > 0
-        ? thread.frames.filter((f) => isAppFrame(f, hints))
-        : [];
+    const appFrames =
+        hints.length > 0
+            ? thread.frames.filter((f) => isAppFrame(f, hints))
+            : [];
     const withoutSentinels = skipSignatureExcludedFrames(
         appFrames.length > 0 ? appFrames : thread.frames,
     );
@@ -296,7 +302,7 @@ export async function computeSignature(
     ).slice(0, topN);
 
     const labels = chosen.map((f) => frameLabel(f, resp.modules));
-    const signature = await sha256Hex(labels.join('\n'));
+    const signature = sha256Hex(labels.join('\n'));
     const symbolicated = chosen.every((f) => f.status === 'symbolicated');
 
     return { signature, title: labels[0], symbolicated };
@@ -306,7 +312,7 @@ export async function fallbackSignature(
     resp: SymbolicatorResponse,
 ): Promise<SignatureResult> {
     const reason = resp.crash_reason?.trim() || 'no stacktrace';
-    const signature = await sha256Hex(`reason:${reason}`);
+    const signature = sha256Hex(`reason:${reason}`);
 
     return { signature, title: reason, symbolicated: false };
 }

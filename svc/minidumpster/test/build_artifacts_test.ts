@@ -1,8 +1,10 @@
-import { join } from '@std/path';
-import { assertEquals, assertRejects } from '@std/assert';
+import { join } from 'node:path';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 
 import { _test } from '../src/build-artifacts.ts';
-import { makeZip } from './helpers.ts';
+import { makeTempDir, makeZip } from './helpers.ts';
 
 function writeString(
     target: Uint8Array,
@@ -27,10 +29,7 @@ function writeOctal(
     );
 }
 
-function tarEntry(
-    name: string,
-    data: Uint8Array,
-): Uint8Array {
+function tarEntry(name: string, data: Uint8Array): Uint8Array {
     const header = new Uint8Array(512);
     writeString(header, 0, 100, name);
     writeOctal(header, 100, 8, 0o600);
@@ -43,12 +42,7 @@ function tarEntry(
     writeString(header, 257, 6, 'ustar\0');
     writeString(header, 263, 2, '00');
     const checksum = header.reduce((sum, byte) => sum + byte, 0);
-    writeString(
-        header,
-        148,
-        8,
-        checksum.toString(8).padStart(6, '0') + '\0 ',
-    );
+    writeString(header, 148, 8, checksum.toString(8).padStart(6, '0') + '\0 ');
 
     const padded = Math.ceil(data.byteLength / 512) * 512;
     const result = new Uint8Array(512 + padded);
@@ -90,8 +84,8 @@ function rawZstd(data: Uint8Array): Uint8Array {
     return frame;
 }
 
-Deno.test('artifact downloads do not retry streamed size violations', async () => {
-    const dir = await Deno.makeTempDir();
+test('artifact downloads do not retry streamed size violations', async () => {
+    const dir = await makeTempDir();
     try {
         let requests = 0;
         const fetchMock: typeof fetch = () => {
@@ -108,7 +102,7 @@ Deno.test('artifact downloads do not retry streamed size violations', async () =
             );
         };
 
-        await assertRejects(
+        await assert.rejects(
             () =>
                 _test.downloadArtifact(
                     'https://example.test/artifact.zip',
@@ -117,17 +111,16 @@ Deno.test('artifact downloads do not retry streamed size violations', async () =
                     join(dir, 'artifact.zip'),
                     fetchMock,
                 ),
-            Error,
-            'exceeded expected size',
+            { message: /exceeded expected size/ },
         );
-        assertEquals(requests, 1);
+        assert.equal(requests, 1);
     } finally {
-        await Deno.remove(dir, { recursive: true });
+        await rm(dir, { recursive: true });
     }
 });
 
-Deno.test('artifact downloads reject a size header that exceeds metadata', async () => {
-    const dir = await Deno.makeTempDir();
+test('artifact downloads reject a size header that exceeds metadata', async () => {
+    const dir = await makeTempDir();
     try {
         let requests = 0;
         const fetchMock: typeof fetch = () => {
@@ -139,7 +132,7 @@ Deno.test('artifact downloads reject a size header that exceeds metadata', async
             );
         };
 
-        await assertRejects(
+        await assert.rejects(
             () =>
                 _test.downloadArtifact(
                     'https://example.test/artifact.zip',
@@ -148,17 +141,16 @@ Deno.test('artifact downloads reject a size header that exceeds metadata', async
                     join(dir, 'artifact.zip'),
                     fetchMock,
                 ),
-            Error,
-            'exceeds its declared metadata size',
+            { message: /exceeds its declared metadata size/ },
         );
-        assertEquals(requests, 1);
+        assert.equal(requests, 1);
     } finally {
-        await Deno.remove(dir, { recursive: true });
+        await rm(dir, { recursive: true });
     }
 });
 
-Deno.test('artifact downloads retry transient connection failures', async () => {
-    const dir = await Deno.makeTempDir();
+test('artifact downloads retry transient connection failures', async () => {
+    const dir = await makeTempDir();
     try {
         let requests = 0;
         const fetchMock: typeof fetch = () => {
@@ -180,60 +172,69 @@ Deno.test('artifact downloads retry transient connection failures', async () => 
             artifact,
             fetchMock,
         );
-        assertEquals(requests, 2);
-        assertEquals(await Deno.readFile(artifact), new Uint8Array([1, 2]));
+        assert.equal(requests, 2);
+        assert.deepStrictEqual(
+            new Uint8Array(await readFile(artifact)),
+            new Uint8Array([1, 2]),
+        );
     } finally {
-        await Deno.remove(dir, { recursive: true });
+        await rm(dir, { recursive: true });
     }
 });
 
-Deno.test('Windows nested artifacts extract selected files', async () => {
-    const dir = await Deno.makeTempDir();
+test('Windows nested artifacts extract selected files', async () => {
+    const dir = await makeTempDir();
     try {
-        const nested = await makeZip([
-            ['src/out/Default/helium.pdb', new TextEncoder().encode('pdb!')],
-            ['src/out/Default/ignored.txt', new Uint8Array([1])],
-        ], 0);
+        const nested = await makeZip(
+            [
+                [
+                    'src/out/Default/helium.pdb',
+                    new TextEncoder().encode('pdb!'),
+                ],
+                ['src/out/Default/ignored.txt', new Uint8Array([1])],
+            ],
+            0,
+        );
         const outer = await makeZip([['artifacts.zip', nested]], 0);
         const artifact = join(dir, 'windows.zip');
-        await Deno.writeFile(artifact, outer);
+        await writeFile(artifact, outer);
 
         const out = join(dir, 'selected');
-        await Deno.mkdir(out);
-        assertEquals(
+        await mkdir(out);
+        assert.deepStrictEqual(
             await _test.extractBuild(artifact, out, 'windows-build'),
             1,
         );
-        assertEquals(await Deno.readTextFile(join(out, 'helium.pdb')), 'pdb!');
+        assert.equal(await readFile(join(out, 'helium.pdb'), 'utf8'), 'pdb!');
     } finally {
-        await Deno.remove(dir, { recursive: true });
+        await rm(dir, { recursive: true });
     }
 });
 
-Deno.test('macOS zstd/tar extraction selects build files', async () => {
-    const dir = await Deno.makeTempDir();
+test('macOS zstd/tar extraction selects build files', async () => {
+    const dir = await makeTempDir();
     try {
         const filePath = 'src/out/Default/Helium.app/Contents/MacOS/Helium';
         const tar = makeTar([
             tarEntry(filePath, new TextEncoder().encode('app!')),
         ]);
         const artifact = join(dir, 'mac.zip');
-        await Deno.writeFile(
+        await writeFile(
             artifact,
             await makeZip([['build_src.tar.zst', rawZstd(tar)]], 0),
         );
 
         const out = join(dir, 'mac-selected');
-        await Deno.mkdir(out);
-        assertEquals(
+        await mkdir(out);
+        assert.deepStrictEqual(
             await _test.extractBuild(artifact, out, 'mac-build'),
             1,
         );
-        assertEquals(
-            await Deno.readTextFile(join(out, filePath)),
+        assert.deepStrictEqual(
+            await readFile(join(out, filePath), 'utf8'),
             'app!',
         );
     } finally {
-        await Deno.remove(dir, { recursive: true });
+        await rm(dir, { recursive: true });
     }
 });

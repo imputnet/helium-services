@@ -1,0 +1,11 @@
+packages:
+  - lib/common
+  - svc/extension-proxy
+  - svc/minidumpster
+  - svc/minipush
+  - svc/ubo
+  - util/release-collector
+  - util/sparkler
+
+# needed by `pnpm deploy`, which the Dockerfile uses
+injectWorkspacePackages: true

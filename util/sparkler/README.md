@@ -9,7 +9,8 @@ the script can be seen at [https://updates.helium.computer/](https://updates.hel
 ### usage
 
 ```
-docker build -t sparkler .
+# from the repo root
+docker build --target sparkler -t sparkler .
 ```
 
 run as a daemon:

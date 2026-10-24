@@ -1,8 +1,8 @@
-import { basename, join } from '@std/path';
-import { type FileEntry, Reader, ZipReader } from '@zip-js/zip-js';
+import { mkdir, mkdtemp, open, readdir, rm } from 'node:fs/promises';
+import { basename, join } from 'node:path';
+import { type FileEntry, Reader, ZipReader } from '@zip.js/zip.js';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import type { ReadableStream as NodeReadableStream } from 'node:stream/web';
 import { Decompress } from 'fzstd';
 import { x as extractTar } from 'tar';
 
@@ -16,7 +16,7 @@ import {
     type SymbolIngestAndRequeueResult,
     type SymbolsOptions,
 } from './symbols.ts';
-import { DenoFileReader } from './zip.ts';
+import { FileHandleReader, fileWritable } from './zip.ts';
 
 export type BuildArtifactKind = 'mac-build' | 'windows-build';
 
@@ -30,7 +30,7 @@ function zstdDecompressionStream(): TransformStream<Uint8Array, Uint8Array> {
         start(controller) {
             // fzstd reuses its output buffer after the callback returns.
             decoder = new Decompress((chunk) =>
-                controller.enqueue(chunk.slice())
+                controller.enqueue(chunk.slice()),
             );
         },
         transform(chunk) {
@@ -47,12 +47,15 @@ interface RandomReader {
 }
 
 class SliceReader extends Reader<null> {
-    constructor(
-        private parent: RandomReader,
-        private baseOffset: number,
-        private sliceSize: number,
-    ) {
+    private parent: RandomReader;
+    private baseOffset: number;
+    private sliceSize: number;
+
+    constructor(parent: RandomReader, baseOffset: number, sliceSize: number) {
         super(null);
+        this.parent = parent;
+        this.baseOffset = baseOffset;
+        this.sliceSize = sliceSize;
     }
 
     override init(): Promise<void> {
@@ -67,23 +70,16 @@ class SliceReader extends Reader<null> {
         if (index < 0 || length < 0 || index + length > this.sliceSize) {
             throw new Error('nested ZIP read is outside the stored entry');
         }
-        return this.parent.readUint8Array(
-            this.baseOffset + index,
-            length,
-        );
+        return this.parent.readUint8Array(this.baseOffset + index, length);
     }
 }
 
 async function countFiles(path: string): Promise<number> {
-    let count = 0;
-    for await (const entry of Deno.readDir(path)) {
-        if (entry.isFile) {
-            count++;
-        } else if (entry.isDirectory) {
-            count += await countFiles(join(path, entry.name));
-        }
-    }
-    return count;
+    const entries = await readdir(path, {
+        recursive: true,
+        withFileTypes: true,
+    });
+    return entries.filter((entry) => entry.isFile()).length;
 }
 
 async function extractMacBuildReader<T>(
@@ -114,12 +110,7 @@ async function extractMacBuildReader<T>(
         const zstd = zstdDecompressionStream();
         await Promise.all([
             buildEntry.getData(zstd.writable),
-            pipeline(
-                Readable.fromWeb(
-                    zstd.readable as unknown as NodeReadableStream,
-                ),
-                extractor,
-            ),
+            pipeline(Readable.fromWeb(zstd.readable), extractor),
         ]);
 
         const files = await countFiles(destDir);
@@ -188,21 +179,9 @@ async function extractWindowsBuildReader<T>(
                     continue;
                 }
 
-                const output = await Deno.open(join(destDir, basename(path)), {
-                    create: true,
-                    truncate: true,
-                    write: true,
-                });
-                try {
-                    await entry.getData(output.writable);
-                } catch (err) {
-                    try {
-                        output.close();
-                    } catch {
-                        // getData closes the stream
-                    }
-                    throw err;
-                }
+                await entry.getData(
+                    await fileWritable(join(destDir, basename(path))),
+                );
                 files++;
             }
         } finally {
@@ -219,8 +198,8 @@ async function extractBuild(
     destDir: string,
     kind: BuildArtifactKind,
 ): Promise<number> {
-    using file = await Deno.open(artifactPath, { read: true });
-    const reader = new DenoFileReader(file);
+    await using file = await open(artifactPath, 'r');
+    const reader = new FileHandleReader(file);
     return await (kind === 'mac-build'
         ? extractMacBuildReader(reader, destDir)
         : extractWindowsBuildReader(reader, destDir));
@@ -234,12 +213,7 @@ async function downloadArtifact(
     fetchFn: typeof fetch = fetch,
     signal?: AbortSignal,
 ): Promise<void> {
-    const file = await Deno.open(artifactPath, {
-        create: true,
-        truncate: true,
-        write: true,
-        mode: 0o600,
-    });
+    const file = await open(artifactPath, 'w', 0o600);
     let downloaded = 0;
     let lastLogged = 0;
     const started = Date.now();
@@ -310,7 +284,7 @@ async function downloadArtifact(
                     }
                     let offset = 0;
                     while (offset < chunk.length) {
-                        const written = await file.write(
+                        const { bytesWritten: written } = await file.write(
                             chunk.subarray(offset),
                         );
                         offset += written;
@@ -322,7 +296,7 @@ async function downloadArtifact(
                             bytes: downloaded,
                             total_bytes: artifactSize,
                             percent: Math.floor(
-                                downloaded * 100 / artifactSize,
+                                (downloaded * 100) / artifactSize,
                             ),
                             elapsed_ms: Date.now() - started,
                         });
@@ -349,7 +323,7 @@ async function downloadArtifact(
             }
         }
     } finally {
-        file.close();
+        await file.close();
     }
 
     if (downloaded !== artifactSize) {
@@ -377,14 +351,13 @@ export async function ingestBuildArtifact(
     signal?: AbortSignal,
     opts: SymbolsOptions = {},
 ): Promise<SymbolIngestAndRequeueResult> {
-    await Deno.mkdir(tmpDir(config.dataDir), { recursive: true });
-    const workDir = await Deno.makeTempDir({
-        dir: tmpDir(config.dataDir),
-        prefix: 'build-artifact-',
-    });
+    await mkdir(tmpDir(config.dataDir), { recursive: true });
+    const workDir = await mkdtemp(
+        join(tmpDir(config.dataDir), 'build-artifact-'),
+    );
     const extractedDir = join(workDir, 'selected');
     const artifactPath = join(workDir, 'artifact.zip');
-    await Deno.mkdir(extractedDir);
+    await mkdir(extractedDir);
 
     try {
         await downloadArtifact(
@@ -417,7 +390,7 @@ export async function ingestBuildArtifact(
             opts,
         );
     } finally {
-        await Deno.remove(workDir, { recursive: true }).catch(() => {});
+        await rm(workDir, { recursive: true }).catch(() => {});
     }
 }
 

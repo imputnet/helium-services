@@ -1,6 +1,9 @@
 export class HttpError extends Error {
-    constructor(readonly status: number, message: string) {
+    readonly status: number;
+
+    constructor(status: number, message: string) {
         super(message);
+        this.status = status;
     }
 }
 
@@ -50,14 +53,7 @@ export async function parseCrashRequest(
     const encoding = (req.headers.get('content-encoding') ?? '').toLowerCase();
     if (encoding.includes('gzip')) {
         try {
-            // Deno types DecompressionStream's writable side as BufferSource, which
-            // WritableStream's invariance makes incompatible with Uint8Array.
-            body = body.pipeThrough(
-                new DecompressionStream('gzip') as unknown as TransformStream<
-                    Uint8Array,
-                    Uint8Array
-                >,
-            );
+            body = body.pipeThrough(new DecompressionStream('gzip'));
         } catch {
             throw new HttpError(400, 'invalid gzip body');
         }

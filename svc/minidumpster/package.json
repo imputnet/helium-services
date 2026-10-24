@@ -1,0 +1,33 @@
+{
+    "name": "minidumpster",
+    "private": true,
+    "license": "AGPL-3.0",
+    "files": [
+        "src"
+    ],
+    "type": "module",
+    "scripts": {
+        "dev": "node --watch src/main.ts",
+        "dev:mock": "node --watch-path=src --watch-path=test/fixtures src/dev.ts",
+        "dev:seed": "node src/dev-seed.ts",
+        "start": "node src/main.ts",
+        "test": "node --test 'test/*_test.ts'",
+        "typecheck": "tsc",
+        "lint": "oxlint",
+        "fmt": "oxfmt"
+    },
+    "dependencies": {
+        "@hono/node-server": "^1.19.17",
+        "@hono/oauth-providers": "~0.8.8",
+        "@zip.js/zip.js": "2.8.26",
+        "busboy": "^1.6.0",
+        "eta": "^3.5.0",
+        "fzstd": "0.1.1",
+        "hono": "^4.13.13",
+        "hono-rate-limiter": "~0.4.2",
+        "tar": "7.5.19"
+    },
+    "devDependencies": {
+        "@types/busboy": "^1.5.5"
+    }
+}

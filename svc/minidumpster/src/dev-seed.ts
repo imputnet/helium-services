@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+
 import { type Config, devConfig } from './config.ts';
 import { Db } from './db.ts';
 import {
@@ -125,8 +127,7 @@ const GROUPS = {
     },
     machinery: {
         signature: 'dev-crash-machinery-fold',
-        title:
-            'v8::internal::maglev::MaglevPhiRepresentationSelector::PreProcessBasicBlock()',
+        title: 'v8::internal::maglev::MaglevPhiRepresentationSelector::PreProcessBasicBlock()',
     },
 };
 
@@ -159,27 +160,29 @@ function responseFor(
     if (report.group === 'machinery') {
         response.crash_reason = 'EXCEPTION_BREAKPOINT / mock fatal check';
         const module = 'C:\\Program Files\\Helium\\chrome.dll';
-        response.stacktraces = [{
-            thread_id: 42,
-            thread_name: 'ThreadPoolForegroundWorker',
-            is_requesting_thread: true,
-            frames: [
-                'base::ImmediateCrash()',
-                'logging::LogMessage::HandleFatal()',
-                'logging::LogMessage::Flush::<lambda_0>::operator()()',
-                'absl::cleanup_internal::Storage<Callback>::InvokeCallback()',
-                'absl::Cleanup<Callback>::~Cleanup()',
-                'logging::LogMessage::Flush()',
-                'logging::LogMessageFatal::~LogMessageFatal()',
-                'v8::internal::maglev::MaglevPhiRepresentationSelector::PreProcessBasicBlock()',
-                'v8::internal::maglev::MaglevCompiler::Compile()',
-            ].map((fn, index) => ({
-                status: 'symbolicated',
-                function: fn,
-                package: module,
-                instruction_addr: `0x${(0x1000 + index * 16).toString(16)}`,
-            })),
-        }];
+        response.stacktraces = [
+            {
+                thread_id: 42,
+                thread_name: 'ThreadPoolForegroundWorker',
+                is_requesting_thread: true,
+                frames: [
+                    'base::ImmediateCrash()',
+                    'logging::LogMessage::HandleFatal()',
+                    'logging::LogMessage::Flush::<lambda_0>::operator()()',
+                    'absl::cleanup_internal::Storage<Callback>::InvokeCallback()',
+                    'absl::Cleanup<Callback>::~Cleanup()',
+                    'logging::LogMessage::Flush()',
+                    'logging::LogMessageFatal::~LogMessageFatal()',
+                    'v8::internal::maglev::MaglevPhiRepresentationSelector::PreProcessBasicBlock()',
+                    'v8::internal::maglev::MaglevCompiler::Compile()',
+                ].map((fn, index) => ({
+                    status: 'symbolicated',
+                    function: fn,
+                    package: module,
+                    instruction_addr: `0x${(0x1000 + index * 16).toString(16)}`,
+                })),
+            },
+        ];
     }
     if (!report.symbolicated) {
         for (const trace of response.stacktraces ?? []) {
@@ -203,12 +206,12 @@ export async function seedDevData(
     now = Date.now(),
 ) {
     const windows = JSON.parse(
-        await Deno.readTextFile(WINDOWS_RESPONSE),
+        await readFile(WINDOWS_RESPONSE, 'utf8'),
     ) as SymbolicatorResponse;
     const apple = JSON.parse(
-        await Deno.readTextFile(APPLE_RESPONSE),
+        await readFile(APPLE_RESPONSE, 'utf8'),
     ) as SymbolicatorResponse;
-    const appleDump = await Deno.readTextFile(APPLE_REPORT);
+    const appleDump = await readFile(APPLE_REPORT, 'utf8');
     const groupIds = new Map<MockReport['group'], number>();
     let reportsCreated = 0;
 
@@ -232,18 +235,20 @@ export async function seedDevData(
             channel: report.version === '0.14.3.1' ? 'nightly' : 'stable',
             dev_fixture: 'true',
             guid: `DEV-${report.id.slice(0, 8)}`,
-            source: report.kind === 'apple'
-                ? 'manual-apple-crash-report'
-                : 'crashpad',
+            source:
+                report.kind === 'apple'
+                    ? 'manual-apple-crash-report'
+                    : 'crashpad',
         };
         db.insertReport({
             id: report.id,
             product: report.product,
             version: report.version,
             guid: `DEV-${report.id.slice(0, 8)}`,
-            ptype: report.group === 'renderer' || report.group === 'machinery'
-                ? 'renderer'
-                : 'browser',
+            ptype:
+                report.group === 'renderer' || report.group === 'machinery'
+                    ? 'renderer'
+                    : 'browser',
             channel: annotations.channel,
             annotations: JSON.stringify(annotations),
             received_at: receivedAt,
@@ -280,8 +285,7 @@ export async function seedDevData(
             channel: 'canary',
             annotations: JSON.stringify({
                 dev_fixture: 'true',
-                note:
-                    'Intentionally pending; the mock server does not run a worker.',
+                note: 'Intentionally pending; the mock server does not run a worker.',
             }),
             received_at: now - 20 * 60 * 1000,
         });
@@ -300,12 +304,7 @@ export async function seedDevData(
         '0.14.3.1',
         'helium-macos-arm64-symbols',
     );
-    db.markArtifactIngested(
-        ingested.repo,
-        ingested.artifact_id,
-        1,
-        now - HOUR,
-    );
+    db.markArtifactIngested(ingested.repo, ingested.artifact_id, 1, now - HOUR);
     const retrying = db.registerArtifact(
         'imputnet/helium-windows',
         900002,
@@ -324,7 +323,7 @@ export async function seedDevData(
 }
 
 if (import.meta.main) {
-    const config = devConfig(Deno.env.toObject());
+    const config = devConfig(process.env);
     await ensureDataDirs(config.dataDir);
     const db = new Db(dbPath(config.dataDir));
     try {

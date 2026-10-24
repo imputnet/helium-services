@@ -160,12 +160,14 @@ function migrateSchema(db: DatabaseSync): void {
             // Replaced by idx_reports_queue in databases created before it.
             db.exec('DROP INDEX IF EXISTS idx_reports_status');
 
-            const legacyColumn = db.prepare(`
+            const legacyColumn = db
+                .prepare(`
                 SELECT 1
                 FROM pragma_table_info('reports')
                 WHERE name = 'dump_deleted'
                 LIMIT 1
-            `).get();
+            `)
+                .get();
             if (legacyColumn) {
                 db.exec('ALTER TABLE reports DROP COLUMN dump_deleted');
             }
@@ -229,23 +231,25 @@ export class Db {
     }
 
     insertReport(r: NewReport): void {
-        this.db.prepare(
-            `INSERT INTO reports (
+        this.db
+            .prepare(
+                `INSERT INTO reports (
                  id, product, version, guid, ptype, channel,
                  annotations, status, received_at, kind
              )
              VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
-        ).run(
-            r.id,
-            r.product,
-            r.version,
-            r.guid,
-            r.ptype,
-            r.channel,
-            r.annotations,
-            r.received_at,
-            r.kind ?? 'minidump',
-        );
+            )
+            .run(
+                r.id,
+                r.product,
+                r.version,
+                r.guid,
+                r.ptype,
+                r.channel,
+                r.annotations,
+                r.received_at,
+                r.kind ?? 'minidump',
+            );
     }
 
     getReport(id: string): ReportRow | null {
@@ -299,9 +303,9 @@ export class Db {
         );
         const seen = new Set(direct.map((report) => report.id));
 
-        return direct.concat(
-            fullText.filter((report) => !seen.has(report.id)),
-        ).slice(0, limit);
+        return direct
+            .concat(fullText.filter((report) => !seen.has(report.id)))
+            .slice(0, limit);
     }
 
     searchGroups(query: string, limit = 25): GroupRow[] {
@@ -343,14 +347,18 @@ export class Db {
             if (!report) {
                 throw new Error(`cannot index missing report ${reportId}`);
             }
-            this.db.prepare(
-                `DELETE FROM report_search
+            this.db
+                .prepare(
+                    `DELETE FROM report_search
                  WHERE rowid = ?`,
-            ).run(report.rowId);
-            this.db.prepare(
-                `INSERT INTO report_search (rowid, report_id, functions)
+                )
+                .run(report.rowId);
+            this.db
+                .prepare(
+                    `INSERT INTO report_search (rowid, report_id, functions)
                  VALUES (?, ?, ?)`,
-            ).run(report.rowId, reportId, functions);
+                )
+                .run(report.rowId, reportId, functions);
         });
     }
 
@@ -372,11 +380,13 @@ export class Db {
     }
 
     resetProcessing(): number {
-        const res = this.db.prepare(
-            `UPDATE reports
+        const res = this.db
+            .prepare(
+                `UPDATE reports
              SET status = 'pending'
              WHERE status = 'processing'`,
-        ).run();
+            )
+            .run();
 
         return Number(res.changes);
     }
@@ -389,20 +399,22 @@ export class Db {
         symbolicated: boolean,
         attempts: number,
     ): void {
-        this.db.prepare(
-            `UPDATE reports
+        this.db
+            .prepare(
+                `UPDATE reports
              SET status = 'processed', group_id = ?, platform = ?,
                  processed_at = ?, symbolicated = ?, attempts = ?,
                  next_attempt_at = 0, error = NULL
              WHERE id = ?`,
-        ).run(
-            groupId,
-            platform,
-            processedAt,
-            symbolicated ? 1 : 0,
-            attempts,
-            id,
-        );
+            )
+            .run(
+                groupId,
+                platform,
+                processedAt,
+                symbolicated ? 1 : 0,
+                attempts,
+                id,
+            );
     }
 
     requeueUnsymbolicated(
@@ -421,15 +433,17 @@ export class Db {
                 product,
                 version,
             );
-            this.db.prepare(
-                `UPDATE reports
+            this.db
+                .prepare(
+                    `UPDATE reports
                  SET status = 'pending', group_id = NULL, attempts = 0,
                      next_attempt_at = ?, error = NULL
                  WHERE status = 'processed'
                    AND symbolicated = 0
                    AND product = ? COLLATE NOCASE
                    AND version = ?`,
-            ).run(notBefore, product, version);
+                )
+                .run(notBefore, product, version);
             this.recountGroups(reports.map((report) => report.group_id));
 
             return reports.length;
@@ -442,12 +456,14 @@ export class Db {
         attempts: number,
         nextAttemptAt: number,
     ): void {
-        this.db.prepare(
-            `UPDATE reports
+        this.db
+            .prepare(
+                `UPDATE reports
              SET status = 'pending', error = ?, attempts = ?,
                  next_attempt_at = ?
              WHERE id = ?`,
-        ).run(error, attempts, nextAttemptAt, id);
+            )
+            .run(error, attempts, nextAttemptAt, id);
     }
 
     requeueReport(id: string): boolean {
@@ -463,13 +479,15 @@ export class Db {
                 return false;
             }
 
-            this.db.prepare(
-                `UPDATE reports
+            this.db
+                .prepare(
+                    `UPDATE reports
                  SET status = 'pending', group_id = NULL, error = NULL,
                      attempts = 0, next_attempt_at = 0
                  WHERE id = ?
                    AND status = 'processed'`,
-            ).run(id);
+                )
+                .run(id);
             this.recountGroups([report.group_id]);
 
             return true;
@@ -482,13 +500,15 @@ export class Db {
                 return null;
             }
 
-            const result = this.db.prepare(
-                `UPDATE reports
+            const result = this.db
+                .prepare(
+                    `UPDATE reports
                  SET status = 'pending', group_id = NULL, error = NULL,
                      attempts = 0, next_attempt_at = 0
                  WHERE group_id = ?
                    AND status = 'processed'`,
-            ).run(id);
+                )
+                .run(id);
             this.recountGroups([id]);
 
             return Number(result.changes);
@@ -501,15 +521,17 @@ export class Db {
         releaseTag: string,
         artifactName: string,
     ): ArtifactIngestRow {
-        this.db.prepare(
-            `INSERT INTO artifact_ingests (
+        this.db
+            .prepare(
+                `INSERT INTO artifact_ingests (
                  repo, artifact_id, release_tag, artifact_name
              )
              VALUES (?, ?, ?, ?)
              ON CONFLICT(repo, artifact_id) DO UPDATE
              SET release_tag = excluded.release_tag,
                  artifact_name = excluded.artifact_name`,
-        ).run(repo, artifactId, releaseTag, artifactName);
+            )
+            .run(repo, artifactId, releaseTag, artifactName);
 
         return this.getArtifactIngest(repo, artifactId)!;
     }
@@ -545,13 +567,15 @@ export class Db {
         attempts: number,
         ingestedAt: number,
     ): void {
-        this.db.prepare(
-            `UPDATE artifact_ingests
+        this.db
+            .prepare(
+                `UPDATE artifact_ingests
              SET status = 'ingested', attempts = ?, next_attempt_at = 0,
                  error = NULL, ingested_at = ?
              WHERE repo = ?
                AND artifact_id = ?`,
-        ).run(attempts, ingestedAt, repo, artifactId);
+            )
+            .run(attempts, ingestedAt, repo, artifactId);
     }
 
     markArtifactError(
@@ -562,19 +586,21 @@ export class Db {
         nextAttemptAt: number,
         failed: boolean,
     ): void {
-        this.db.prepare(
-            `UPDATE artifact_ingests
+        this.db
+            .prepare(
+                `UPDATE artifact_ingests
              SET status = ?, attempts = ?, next_attempt_at = ?, error = ?
              WHERE repo = ?
                AND artifact_id = ?`,
-        ).run(
-            failed ? 'failed' : 'pending',
-            attempts,
-            nextAttemptAt,
-            error,
-            repo,
-            artifactId,
-        );
+            )
+            .run(
+                failed ? 'failed' : 'pending',
+                attempts,
+                nextAttemptAt,
+                error,
+                repo,
+                artifactId,
+            );
     }
 
     upsertGroup(signature: string, title: string, seenAt: number): number {
@@ -681,9 +707,10 @@ export class Db {
         }
 
         const where = conds.length > 0 ? `WHERE ${conds.join(' AND ')}` : '';
-        const order = filter.sort === 'last_seen'
-            ? 'g.last_seen DESC'
-            : 'g.report_count DESC';
+        const order =
+            filter.sort === 'last_seen'
+                ? 'g.last_seen DESC'
+                : 'g.report_count DESC';
 
         const sql = `SELECT g.*,
                     (
@@ -749,14 +776,18 @@ export class Db {
         } = {},
     ): ReportDayStat[] {
         const { breakdown = 'total', filter = {}, groupId } = options;
-        const column = breakdown === 'version' || breakdown === 'platform'
-            ? breakdown
-            : null;
+        const column =
+            breakdown === 'version' || breakdown === 'platform'
+                ? breakdown
+                : null;
         const conditions = ['received_at >= ?'];
         const params: (string | number)[] = [sinceMs];
-        for (
-            const key of ['product', 'version', 'platform', 'ptype'] as const
-        ) {
+        for (const key of [
+            'product',
+            'version',
+            'platform',
+            'ptype',
+        ] as const) {
             if (filter[key]) {
                 conditions.push(`${key} = ?`);
                 params.push(filter[key]);
@@ -842,12 +873,13 @@ export class Db {
 
     deleteReport(id: string): void {
         this.inWriteTransaction(() => {
-            const groupId = this.one<{ group_id: number | null }>(
-                `DELETE FROM reports
+            const groupId =
+                this.one<{ group_id: number | null }>(
+                    `DELETE FROM reports
                  WHERE id = ?
                  RETURNING group_id`,
-                id,
-            )?.group_id ?? null;
+                    id,
+                )?.group_id ?? null;
             this.recountGroups([groupId]);
         });
     }

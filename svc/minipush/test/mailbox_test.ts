@@ -1,30 +1,31 @@
-import { assertEquals } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 import { Expiry } from '../lib/home/expiry.ts';
 import { Mailbox, type StoredMessage } from '../lib/home/mailbox.ts';
 
 const T0 = 1_000_000_000;
 
-Deno.test('expiry yields items once they are due', () => {
+test('expiry yields items once they are due', () => {
     const wheel = new Expiry<string>(T0);
     wheel.add('a', T0 + 1500);
     wheel.add('b', T0 + 3000);
     wheel.add('c', T0 + 3000);
     wheel.add('gone', T0 + 3000);
     wheel.delete('gone', T0 + 3000);
-    assertEquals(wheel.size, 3);
+    assert.equal(wheel.size, 3);
 
-    assertEquals([...wheel.due(T0 + 1000)], []);
-    assertEquals([...wheel.due(T0 + 2000)], ['a']);
-    assertEquals([...wheel.due(T0 + 2999)], []);
-    assertEquals([...wheel.due(T0 + 60_000)], ['b', 'c']);
-    assertEquals(wheel.size, 0);
+    assert.deepStrictEqual([...wheel.due(T0 + 1000)], []);
+    assert.deepStrictEqual([...wheel.due(T0 + 2000)], ['a']);
+    assert.deepStrictEqual([...wheel.due(T0 + 2999)], []);
+    assert.deepStrictEqual([...wheel.due(T0 + 60_000)], ['b', 'c']);
+    assert.equal(wheel.size, 0);
 });
 
-Deno.test('expiry never loses items scheduled in the past', () => {
+test('expiry never loses items scheduled in the past', () => {
     const wheel = new Expiry<string>(T0);
     [...wheel.due(T0 + 5000)];
     wheel.add('late', T0);
-    assertEquals([...wheel.due(T0 + 6000)], ['late']);
+    assert.deepStrictEqual([...wheel.due(T0 + 6000)], ['late']);
 });
 
 let n = 0;
@@ -47,38 +48,38 @@ const message = (
 
 const limits = { perChannel: 2, maxBytes: 10_000 };
 
-Deno.test('mailbox limits each channel on its own', () => {
+test('mailbox limits each channel on its own', () => {
     const box = new Mailbox(limits, T0);
-    assertEquals(box.add(message('u', 'a')), 'ok');
+    assert.equal(box.add(message('u', 'a')), 'ok');
     const second = message('u', 'a');
-    assertEquals(box.add(second), 'ok');
-    assertEquals(box.add(message('u', 'a')), 'full');
+    assert.equal(box.add(second), 'ok');
+    assert.equal(box.add(message('u', 'a')), 'full');
 
     // other channels, of the same UA or not, are unaffected
-    assertEquals(box.add(message('u', 'b')), 'ok');
-    assertEquals(box.add(message('u', 'c')), 'ok');
-    assertEquals(box.add(message('other', 'a')), 'ok');
-    assertEquals(box.count, 5);
+    assert.equal(box.add(message('u', 'b')), 'ok');
+    assert.equal(box.add(message('u', 'c')), 'ok');
+    assert.equal(box.add(message('other', 'a')), 'ok');
+    assert.equal(box.count, 5);
 
     // and the channel has room again once a message is gone
     box.remove('u', second.data.version);
-    assertEquals(box.add(message('u', 'a')), 'ok');
+    assert.equal(box.add(message('u', 'a')), 'ok');
 });
 
-Deno.test('mailbox enforces the byte budget', () => {
+test('mailbox enforces the byte budget', () => {
     const box = new Mailbox({ ...limits, maxBytes: 1000 }, T0);
-    assertEquals(box.add(message('a', 'c', T0 + 1000, 'x'.repeat(400))), 'ok');
-    assertEquals(
+    assert.equal(box.add(message('a', 'c', T0 + 1000, 'x'.repeat(400))), 'ok');
+    assert.equal(
         box.add(message('b', 'c', T0 + 1000, 'x'.repeat(400))),
         'over-budget',
     );
 
     box.expire(T0 + 1000);
-    assertEquals(box.bytes, 0);
-    assertEquals(box.add(message('b', 'c', T0 + 1000, 'x'.repeat(400))), 'ok');
+    assert.equal(box.bytes, 0);
+    assert.equal(box.add(message('b', 'c', T0 + 1000, 'x'.repeat(400))), 'ok');
 });
 
-Deno.test('mailbox removes and expires messages', () => {
+test('mailbox removes and expires messages', () => {
     const box = new Mailbox(limits, T0);
     const a = message('u', 'a', T0 + 1000);
     const b = message('u', 'b', T0 + 5000);
@@ -87,34 +88,34 @@ Deno.test('mailbox removes and expires messages', () => {
     box.add(b);
     box.add(c);
 
-    assertEquals(box.get('u', T0), [a, b]);
-    assertEquals(box.remove('u', a.data.version), true);
-    assertEquals(box.remove('u', a.data.version), false);
-    assertEquals(box.get('u', T0), [b]);
+    assert.deepStrictEqual(box.get('u', T0), [a, b]);
+    assert.equal(box.remove('u', a.data.version), true);
+    assert.equal(box.remove('u', a.data.version), false);
+    assert.deepStrictEqual(box.get('u', T0), [b]);
 
-    assertEquals(box.expire(T0 + 1000), 1);
-    assertEquals(box.get('w', T0), []);
-    assertEquals([...box.uaids()], ['u']);
+    assert.equal(box.expire(T0 + 1000), 1);
+    assert.deepStrictEqual(box.get('w', T0), []);
+    assert.deepStrictEqual([...box.uaids()], ['u']);
 
     box.remove('u', b.data.version);
-    assertEquals(box.count, 0);
-    assertEquals(box.bytes, 0);
-    assertEquals(box.expire(T0 + 60_000), 0);
+    assert.equal(box.count, 0);
+    assert.equal(box.bytes, 0);
+    assert.equal(box.expire(T0 + 60_000), 0);
 });
 
-Deno.test('mailbox hides expired messages before they are dropped', () => {
+test('mailbox hides expired messages before they are dropped', () => {
     const box = new Mailbox(limits, T0);
     const a = message('u', 'a', T0 + 1000);
     const b = message('u', 'b', T0 + 5000);
     box.add(a);
     box.add(b);
 
-    assertEquals(box.get('u', T0 + 999), [a, b]);
-    assertEquals(box.get('u', T0 + 1000), [b]);
-    assertEquals(box.count, 2);
+    assert.deepStrictEqual(box.get('u', T0 + 999), [a, b]);
+    assert.deepStrictEqual(box.get('u', T0 + 1000), [b]);
+    assert.equal(box.count, 2);
 });
 
-Deno.test('mailbox removes all messages of a channel', () => {
+test('mailbox removes all messages of a channel', () => {
     const box = new Mailbox(limits, T0);
     const a = message('u', 'a');
     const b = message('u', 'b');
@@ -123,10 +124,10 @@ Deno.test('mailbox removes all messages of a channel', () => {
     box.add(b);
 
     box.removeChannel('u', 'a');
-    assertEquals(box.get('u', T0), [b]);
-    assertEquals(box.count, 1);
+    assert.deepStrictEqual(box.get('u', T0), [b]);
+    assert.equal(box.count, 1);
 
     // and the channel's quota is free again
-    assertEquals(box.add(message('u', 'a')), 'ok');
-    assertEquals(box.add(message('u', 'a')), 'ok');
+    assert.equal(box.add(message('u', 'a')), 'ok');
+    assert.equal(box.add(message('u', 'a')), 'ok');
 });

@@ -3,7 +3,7 @@ import type { App, ServiceId } from './omaha/index.ts';
 export const APP_ID_REGEX = /^[a-p]{32}$/;
 
 const APPID_ALLOWLIST: Partial<Record<ServiceId, Set<string>>> = {
-    'CHROME_COMPONENTS': new Set([
+    CHROME_COMPONENTS: new Set([
         'hfnkpimlhhgieaddgfemjhofmfblmnib', // CRLSet
     ]),
 };

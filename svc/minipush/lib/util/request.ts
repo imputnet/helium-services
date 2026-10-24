@@ -37,17 +37,11 @@ export const readBoundedBodyWithTimeout = async (
 ) => {
     let timeoutId;
     const expiry = new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(
-            () => reject(new Error("time's up")),
-            timeoutMs,
-        );
+        timeoutId = setTimeout(() => reject(new Error("time's up")), timeoutMs);
     });
 
     try {
-        return await Promise.race([
-            readBoundedBody(request, maxBytes),
-            expiry,
-        ]);
+        return await Promise.race([readBoundedBody(request, maxBytes), expiry]);
     } catch {
         request.body?.cancel();
         return null;

@@ -1,4 +1,4 @@
-import { ServerMessage } from './server-schema.ts';
+import type { ServerMessage } from './server-schema.ts';
 
 import * as UAID from './uaid.ts';
 import * as g_state from './state.ts';
@@ -83,7 +83,10 @@ const handleBroadcastSubscribe: Handler<C.ClientBroadcastSubscribe> = (
 
 const handleAck: Handler<C.ClientAck> = (state, msg) => {
     if (state.uaidInternal) {
-        g_state.onClientAck(state, msg.updates.map((u) => u.version));
+        g_state.onClientAck(
+            state,
+            msg.updates.map((u) => u.version),
+        );
     }
 
     return null;

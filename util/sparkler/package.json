@@ -1,0 +1,20 @@
+{
+    "name": "sparkler",
+    "private": true,
+    "license": "AGPL-3.0",
+    "type": "module",
+    "scripts": {
+        "start": "node main.ts",
+        "dev": "node --watch main.ts",
+        "typecheck": "tsc",
+        "lint": "oxlint",
+        "fmt": "oxfmt"
+    },
+    "dependencies": {
+        "7z-wasm": "1.2.0",
+        "@helium-services/common": "workspace:*",
+        "@libs/xml": "jsr:^6.0.8",
+        "@noble/curves": "^1.9.7",
+        "@plist/parse": "1.1.0"
+    }
+}

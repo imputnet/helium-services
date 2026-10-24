@@ -1,4 +1,5 @@
-import { assert, assertEquals } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 
 import {
     looksLikeAppleCrashReport,
@@ -7,23 +8,23 @@ import {
 } from '../src/applecrash.ts';
 import { appleCrashFixture } from './helpers.ts';
 
-Deno.test('recognizes translated reports and rejects .ips JSON', async () => {
+test('recognizes translated reports and rejects .ips JSON', async () => {
     assert(looksLikeAppleCrashReport(await appleCrashFixture()));
     assert(!looksLikeAppleCrashReport('{"app_name":"Helium"}'));
     assert(!looksLikeAppleCrashReport('random text'));
 });
 
-Deno.test('extracts report metadata', async () => {
+test('extracts report metadata', async () => {
     const meta = parseAppleCrashMeta(await appleCrashFixture());
-    assertEquals(meta.process, 'Helium');
-    assertEquals(meta.identifier, 'net.imput.helium');
-    assertEquals(meta.version, '0.14.3.1');
-    assertEquals(meta.incidentId, '893ED25D-2D48-4068-9451-7BB173D52BDD');
-    assertEquals(meta.osVersion, 'macOS 26.5.1 (25F80)');
-    assertEquals(meta.hardwareModel, 'Mac16,10');
+    assert.equal(meta.process, 'Helium');
+    assert.equal(meta.identifier, 'net.imput.helium');
+    assert.equal(meta.version, '0.14.3.1');
+    assert.equal(meta.incidentId, '893ED25D-2D48-4068-9451-7BB173D52BDD');
+    assert.equal(meta.osVersion, 'macOS 26.5.1 (25F80)');
+    assert.equal(meta.hardwareModel, 'Mac16,10');
 });
 
-Deno.test('normalization produces the classic parser format', async () => {
+test('normalization produces the classic parser format', async () => {
     const normalized = normalizeAppleCrashReport(await appleCrashFixture());
 
     // Banner and Full Report JSON are stripped.
@@ -66,7 +67,7 @@ Deno.test('normalization produces the classic parser format', async () => {
     assert(normalized.includes('0x11a316988 ChromeMain + 93296464'));
 });
 
-Deno.test('classic-format input passes through unchanged', () => {
+test('classic-format input passes through unchanged', () => {
     const classic = [
         'Process:             Helium [9625]',
         'Code Type:           ARM-64 (Native)',
@@ -78,5 +79,5 @@ Deno.test('classic-format input passes through unchanged', () => {
         '       0x1024a4000 -        0x1024a7fff Helium arm64 (0.14.3.1) <4c4c4480-5555-3144-a1c9-68200780c659> /Applications/Helium.app/Contents/MacOS/Helium',
         '',
     ].join('\n');
-    assertEquals(normalizeAppleCrashReport(classic), classic);
+    assert.deepStrictEqual(normalizeAppleCrashReport(classic), classic);
 });

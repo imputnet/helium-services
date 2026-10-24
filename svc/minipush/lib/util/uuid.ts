@@ -1,11 +1,11 @@
-import { decodeHex, encodeHex } from '@std/encoding/hex';
+import { fromHex, toHex } from './buffer.ts';
 
 export const toBytes = (uuid: string) => {
     if (!UUID_SHAPE.test(uuid)) {
         throw `invalid uuid: ${uuid}`;
     }
 
-    return decodeHex(uuid.replaceAll('-', ''));
+    return fromHex(uuid.replaceAll('-', ''));
 };
 
 export const fromBytes = (arr: Uint8Array) => {
@@ -19,7 +19,9 @@ export const fromBytes = (arr: Uint8Array) => {
         arr.subarray(6, 8),
         arr.subarray(8, 10),
         arr.subarray(10),
-    ].map(encodeHex).join('-');
+    ]
+        .map(toHex)
+        .join('-');
 };
 
 export const UUID_SHAPE =

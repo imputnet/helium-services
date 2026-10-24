@@ -1,4 +1,5 @@
-import { assert, assertEquals } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 
 import { _test, crawlArtifactsOnce } from '../src/artifact-crawler.ts';
 import { makeTestEnv } from './helpers.ts';
@@ -25,35 +26,43 @@ function singleArtifactFetch(
         }
         if (url.pathname.endsWith('/actions/artifacts')) {
             const artifacts = url.pathname.includes('/helium-linux/')
-                ? [{
-                    id: 7,
-                    name: 'helium-symbols',
-                    size_in_bytes: size,
-                    created_at: new Date().toISOString(),
-                    expired: false,
-                    workflow_run: { id: 8, head_sha: 'sha' },
-                }]
+                ? [
+                      {
+                          id: 7,
+                          name: 'helium-symbols',
+                          size_in_bytes: size,
+                          created_at: new Date().toISOString(),
+                          expired: false,
+                          workflow_run: { id: 8, head_sha: 'sha' },
+                      },
+                  ]
                 : [];
-            return Promise.resolve(json({
-                total_count: artifacts.length,
-                artifacts,
-            }));
+            return Promise.resolve(
+                json({
+                    total_count: artifacts.length,
+                    artifacts,
+                }),
+            );
         }
         if (url.pathname.endsWith('/actions/runs/8/jobs')) {
-            return Promise.resolve(json({
-                jobs: [{
-                    name: 'Create release',
-                    conclusion: jobConclusion,
-                }],
-            }));
+            return Promise.resolve(
+                json({
+                    jobs: [
+                        {
+                            name: 'Create release',
+                            conclusion: jobConclusion,
+                        },
+                    ],
+                }),
+            );
         }
         throw new Error(`unexpected request: ${url}`);
     };
 }
 
-Deno.test('crawler classifies platform build artifacts and symbol archives', () => {
+test('crawler classifies platform build artifacts and symbol archives', () => {
     const symbols = /symbols/i;
-    assertEquals(
+    assert.deepStrictEqual(
         _test.artifactKind(
             'imputnet/helium-macos',
             'github_build_artifact_arm64',
@@ -61,7 +70,7 @@ Deno.test('crawler classifies platform build artifacts and symbol archives', () 
         ),
         'mac-build',
     );
-    assertEquals(
+    assert.deepStrictEqual(
         _test.artifactKind(
             'imputnet/helium-windows',
             'build-artifact-x86_64',
@@ -69,7 +78,7 @@ Deno.test('crawler classifies platform build artifacts and symbol archives', () 
         ),
         'windows-build',
     );
-    assertEquals(
+    assert.deepStrictEqual(
         _test.artifactKind(
             'imputnet/helium-linux',
             'helium-1.2.3-x86_64-symbols',
@@ -77,17 +86,13 @@ Deno.test('crawler classifies platform build artifacts and symbol archives', () 
         ),
         'symbols',
     );
-    assertEquals(
-        _test.artifactKind(
-            'imputnet/helium-windows',
-            'helium-x86_64',
-            symbols,
-        ),
+    assert.deepStrictEqual(
+        _test.artifactKind('imputnet/helium-windows', 'helium-x86_64', symbols),
         null,
     );
 });
 
-Deno.test('crawler stops the pass when GitHub is rate limited', async () => {
+test('crawler stops the pass when GitHub is rate limited', async () => {
     const env = await makeTestEnv({
         githubArtifactToken: 'github-artifact-token',
     });
@@ -107,13 +112,13 @@ Deno.test('crawler stops the pass when GitHub is rate limited', async () => {
                 );
             },
         });
-        assertEquals(requests, 1);
+        assert.equal(requests, 1);
     } finally {
         await env.cleanup();
     }
 });
 
-Deno.test('crawler resumes a rate-limited symbol artifact download', async () => {
+test('crawler resumes a rate-limited symbol artifact download', async () => {
     const env = await makeTestEnv({
         githubArtifactToken: 'github-artifact-token',
     });
@@ -128,7 +133,7 @@ Deno.test('crawler resumes a rate-limited symbol artifact download', async () =>
                     : input.url,
             );
             if (url.origin === 'https://api.test') {
-                assertEquals(
+                assert.deepStrictEqual(
                     new Headers(init?.headers).get('authorization'),
                     'Bearer github-artifact-token',
                 );
@@ -142,70 +147,80 @@ Deno.test('crawler resumes a rate-limited symbol artifact download', async () =>
                 }
                 if (url.pathname.endsWith('/actions/artifacts')) {
                     const isLinux = url.pathname.includes('/helium-linux/');
-                    return Promise.resolve(json({
-                        total_count: isLinux ? 4 : 0,
-                        artifacts: isLinux
-                            ? [
-                                {
-                                    id: 42,
-                                    name: 'helium-1.2.3.4-x86_64-symbols',
-                                    size_in_bytes: 1234,
-                                    created_at: new Date(1_000_000)
-                                        .toISOString(),
-                                    expired: false,
-                                    workflow_run: {
-                                        id: 99,
-                                        head_sha: 'release-sha',
-                                    },
-                                },
-                                {
-                                    id: 43,
-                                    name: 'helium-1.2.3.4-x86_64-AppImage',
-                                    size_in_bytes: 1234,
-                                    created_at: new Date(1_000_000)
-                                        .toISOString(),
-                                    expired: false,
-                                    workflow_run: {
-                                        id: 99,
-                                        head_sha: 'release-sha',
-                                    },
-                                },
-                                {
-                                    id: 44,
-                                    name: 'other-release-symbols',
-                                    size_in_bytes: 1234,
-                                    created_at: new Date(1_000_000)
-                                        .toISOString(),
-                                    expired: false,
-                                    workflow_run: {
-                                        id: 100,
-                                        head_sha: 'other-sha',
-                                    },
-                                },
-                                {
-                                    id: 45,
-                                    name: 'helium-old-symbols',
-                                    size_in_bytes: 1234,
-                                    created_at: new Date(
-                                        1_000_000 - 8 * 24 * 60 * 60 * 1000,
-                                    ).toISOString(),
-                                    expired: false,
-                                    workflow_run: {
-                                        id: 99,
-                                        head_sha: 'release-sha',
-                                    },
-                                },
-                            ]
-                            : [],
-                    }));
+                    return Promise.resolve(
+                        json({
+                            total_count: isLinux ? 4 : 0,
+                            artifacts: isLinux
+                                ? [
+                                      {
+                                          id: 42,
+                                          name: 'helium-1.2.3.4-x86_64-symbols',
+                                          size_in_bytes: 1234,
+                                          created_at: new Date(
+                                              1_000_000,
+                                          ).toISOString(),
+                                          expired: false,
+                                          workflow_run: {
+                                              id: 99,
+                                              head_sha: 'release-sha',
+                                          },
+                                      },
+                                      {
+                                          id: 43,
+                                          name: 'helium-1.2.3.4-x86_64-AppImage',
+                                          size_in_bytes: 1234,
+                                          created_at: new Date(
+                                              1_000_000,
+                                          ).toISOString(),
+                                          expired: false,
+                                          workflow_run: {
+                                              id: 99,
+                                              head_sha: 'release-sha',
+                                          },
+                                      },
+                                      {
+                                          id: 44,
+                                          name: 'other-release-symbols',
+                                          size_in_bytes: 1234,
+                                          created_at: new Date(
+                                              1_000_000,
+                                          ).toISOString(),
+                                          expired: false,
+                                          workflow_run: {
+                                              id: 100,
+                                              head_sha: 'other-sha',
+                                          },
+                                      },
+                                      {
+                                          id: 45,
+                                          name: 'helium-old-symbols',
+                                          size_in_bytes: 1234,
+                                          created_at: new Date(
+                                              1_000_000
+                                                  - 8 * 24 * 60 * 60 * 1000,
+                                          ).toISOString(),
+                                          expired: false,
+                                          workflow_run: {
+                                              id: 99,
+                                              head_sha: 'release-sha',
+                                          },
+                                      },
+                                  ]
+                                : [],
+                        }),
+                    );
                 }
                 if (url.pathname.endsWith('/actions/runs/99/jobs')) {
-                    return Promise.resolve(json({
-                        jobs: [{
-                            name: 'Create release',
-                            conclusion: 'success',
-                        }],
-                    }));
+                    return Promise.resolve(
+                        json({
+                            jobs: [
+                                {
+                                    name: 'Create release',
+                                    conclusion: 'success',
+                                },
+                            ],
+                        }),
+                    );
                 }
                 if (url.pathname.endsWith('/actions/artifacts/42/zip')) {
                     if (downloadRateLimited) {
@@ -240,10 +255,10 @@ Deno.test('crawler resumes a rate-limited symbol artifact download', async () =>
                 kind: string,
             ) => {
                 uploads++;
-                assertEquals(product, 'helium');
-                assertEquals(version, '1.2.3.4');
-                assertEquals(kind, 'symbols');
-                assertEquals(
+                assert.equal(product, 'helium');
+                assert.equal(version, '1.2.3.4');
+                assert.equal(kind, 'symbols');
+                assert.deepStrictEqual(
                     [...new Uint8Array(await new Response(body).arrayBuffer())],
                     [80, 75, 3, 4],
                 );
@@ -262,13 +277,13 @@ Deno.test('crawler resumes a rate-limited symbol artifact download', async () =>
         now += env.config.artifactCrawlerPollMs;
         await crawlArtifactsOnce(deps);
 
-        assertEquals(uploads, 1);
+        assert.equal(uploads, 1);
         const row = env.db.getArtifactIngest('imputnet/helium-linux', 42);
         assert(row);
-        assertEquals(row.status, 'ingested');
-        assertEquals(row.release_tag, '1.2.3.4');
-        assertEquals(row.attempts, 1);
-        assertEquals(
+        assert.equal(row.status, 'ingested');
+        assert.equal(row.release_tag, '1.2.3.4');
+        assert.equal(row.attempts, 1);
+        assert.deepStrictEqual(
             env.db.getArtifactIngest('imputnet/helium-linux', 45),
             null,
         );
@@ -277,7 +292,7 @@ Deno.test('crawler resumes a rate-limited symbol artifact download', async () =>
     }
 });
 
-Deno.test('crawler ignores artifacts from runs without a successful release job', async () => {
+test('crawler ignores artifacts from runs without a successful release job', async () => {
     const env = await makeTestEnv({
         githubArtifactToken: 'github-artifact-token',
     });
@@ -288,7 +303,7 @@ Deno.test('crawler ignores artifacts from runs without a successful release job'
             fetchFn: singleArtifactFetch(100, 'skipped'),
             githubApiUrl: 'https://api.test',
         });
-        assertEquals(
+        assert.deepStrictEqual(
             env.db.getArtifactIngest('imputnet/helium-linux', 7),
             null,
         );
@@ -297,7 +312,7 @@ Deno.test('crawler ignores artifacts from runs without a successful release job'
     }
 });
 
-Deno.test('crawler ignores artifacts larger than its configured download size', async () => {
+test('crawler ignores artifacts larger than its configured download size', async () => {
     const env = await makeTestEnv({
         githubArtifactToken: 'github-artifact-token',
         artifactCrawlerMaxBytes: 100,
@@ -313,7 +328,7 @@ Deno.test('crawler ignores artifacts larger than its configured download size', 
 
         await crawlArtifactsOnce(deps);
         await crawlArtifactsOnce(deps);
-        assertEquals(
+        assert.deepStrictEqual(
             env.db.getArtifactIngest('imputnet/helium-linux', 7),
             null,
         );

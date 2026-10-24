@@ -18,7 +18,9 @@ const computeStats = () =>
     [
         ...[...gauges].map(([k, read]) => [k, read()] as const),
         ...Object.entries(counters),
-    ].map(([k, v]) => `${kebabify(k)}: ${v}`).join(', ');
+    ]
+        .map(([k, v]) => `${kebabify(k)}: ${v}`)
+        .join(', ');
 
 export const logStats = () => {
     const statStr = computeStats();

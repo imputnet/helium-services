@@ -1,7 +1,8 @@
 export const toBytes = (s: string) => new TextEncoder().encode(s);
 
 export const cat = (...bufs: (ArrayBuffer | Uint8Array)[]) => {
-    let len = 0, written = 0;
+    let len = 0,
+        written = 0;
     for (const buf of bufs) {
         len += buf.byteLength;
     }
@@ -35,3 +36,19 @@ export const split = (buf: ArrayBuffer, lengths: number[]) => {
 
     return out;
 };
+
+const asBuffer = (buf: ArrayBuffer | Uint8Array) =>
+    ArrayBuffer.isView(buf)
+        ? Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength)
+        : Buffer.from(buf);
+
+export const fromBase64Url = (s: string) =>
+    new Uint8Array(Buffer.from(s, 'base64url'));
+
+export const toBase64Url = (buf: ArrayBuffer | Uint8Array) =>
+    asBuffer(buf).toString('base64url');
+
+export const fromHex = (s: string) => new Uint8Array(Buffer.from(s, 'hex'));
+
+export const toHex = (buf: ArrayBuffer | Uint8Array) =>
+    asBuffer(buf).toString('hex');

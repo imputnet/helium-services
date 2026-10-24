@@ -1,11 +1,13 @@
-import { assert, assertEquals } from '@std/assert';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { mkdir, writeFile } from 'node:fs/promises';
 
 import { buildApp } from '../src/app.ts';
 import { makeTestEnv } from './helpers.ts';
 import { checkOrgMembership } from '../src/github.ts';
 import { decodeSession, encodeSession } from '../src/session.ts';
 
-Deno.test('session payloads round-trip and reject malformed/expired values', () => {
+test('session payloads round-trip and reject malformed/expired values', () => {
     const now = Date.now();
     const valid = {
         login: 'jj',
@@ -13,12 +15,10 @@ Deno.test('session payloads round-trip and reject malformed/expired values', () 
     };
     const ok = decodeSession(encodeSession(valid), now);
     assert(ok);
-    assertEquals(ok.login, 'jj');
+    assert.equal(ok.login, 'jj');
 
-    const rejects = (
-        value: Parameters<typeof decodeSession>[0],
-        at = now,
-    ) => assertEquals(decodeSession(value, at), null);
+    const rejects = (value: Parameters<typeof decodeSession>[0], at = now) =>
+        assert.equal(decodeSession(value, at), null);
     rejects(undefined);
     rejects(false);
     rejects('not json');
@@ -28,7 +28,7 @@ Deno.test('session payloads round-trip and reject malformed/expired values', () 
 
 function githubMock(membershipState: string | null): typeof fetch {
     return (
-        input: URL | RequestInfo,
+        input: string | URL | Request,
         _init?: RequestInit,
     ): Promise<Response> => {
         const url = String(input);
@@ -46,11 +46,13 @@ function githubMock(membershipState: string | null): typeof fetch {
         }
         if (url === 'https://api.github.com/user/emails') {
             return Promise.resolve(
-                Response.json([{
-                    email: 'jj@example.com',
-                    primary: true,
-                    verified: true,
-                }]),
+                Response.json([
+                    {
+                        email: 'jj@example.com',
+                        primary: true,
+                        verified: true,
+                    },
+                ]),
             );
         }
         if (url.startsWith('https://api.github.com/user/memberships/orgs/')) {
@@ -78,27 +80,27 @@ async function withGlobalFetch(
     }
 }
 
-Deno.test('checkOrgMembership only accepts active membership', async () => {
-    assertEquals(
+test('checkOrgMembership only accepts active membership', async () => {
+    assert.deepStrictEqual(
         await checkOrgMembership(githubMock('active'), 't', 'test-org'),
         true,
     );
-    assertEquals(
+    assert.deepStrictEqual(
         await checkOrgMembership(githubMock('pending'), 't', 'test-org'),
         false,
     );
-    assertEquals(
+    assert.deepStrictEqual(
         await checkOrgMembership(githubMock(null), 't', 'test-org'),
         false,
     );
 });
 
-Deno.test('login entry redirects to GitHub and sets a state cookie', async () => {
+test('login entry redirects to GitHub and sets a state cookie', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
         const res = await app.request('/auth/callback');
-        assertEquals(res.status, 302);
+        assert.equal(res.status, 302);
         const location = res.headers.get('location') ?? '';
         assert(
             location.startsWith('https://github.com/login/oauth/authorize?'),
@@ -110,7 +112,7 @@ Deno.test('login entry redirects to GitHub and sets a state cookie', async () =>
     }
 });
 
-Deno.test('OAuth callback grants a session to active org members', async () => {
+test('OAuth callback grants a session to active org members', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({
@@ -122,8 +124,8 @@ Deno.test('OAuth callback grants a session to active org members', async () => {
             const res = await app.request('/auth/callback?code=abc&state=st1', {
                 headers: { cookie: 'state=st1' },
             });
-            assertEquals(res.status, 302);
-            assertEquals(res.headers.get('location'), '/');
+            assert.equal(res.status, 302);
+            assert.equal(res.headers.get('location'), '/');
             const setCookie = res.headers.get('set-cookie') ?? '';
             assert(setCookie.includes('session='));
             assert(setCookie.includes('Max-Age=604800'));
@@ -135,11 +137,11 @@ Deno.test('OAuth callback grants a session to active org members', async () => {
             const home = await app.request('/', {
                 headers: { cookie: `session=${sessionValue}` },
             });
-            assertEquals(home.status, 200);
-            assertEquals(
-                home.headers.get('content-security-policy')?.includes(
-                    "script-src 'self' 'unsafe-inline'",
-                ),
+            assert.equal(home.status, 200);
+            assert.deepStrictEqual(
+                home.headers
+                    .get('content-security-policy')
+                    ?.includes("script-src 'self' 'unsafe-inline'"),
                 false,
             );
             const homeHtml = await home.text();
@@ -149,7 +151,7 @@ Deno.test('OAuth callback grants a session to active org members', async () => {
                     '<script src="/static/app.js" defer></script>',
                 ),
             );
-            assertEquals(homeHtml.includes('<script>'), false);
+            assert.equal(homeHtml.includes('<script>'), false);
 
             env.db.registerArtifact(
                 'imputnet/helium-windows',
@@ -163,15 +165,12 @@ Deno.test('OAuth callback grants a session to active org members', async () => {
                 1,
                 Date.now(),
             );
-            await Deno.mkdir(`${env.dir}/symbols/bundles`, { recursive: true });
-            await Deno.writeTextFile(
-                `${env.dir}/symbols/bundles/helium-0.14.5.1`,
-                '',
-            );
+            await mkdir(`${env.dir}/symbols/bundles`, { recursive: true });
+            await writeFile(`${env.dir}/symbols/bundles/helium-0.14.5.1`, '');
             const symbols = await app.request('/symbols', {
                 headers: { cookie: `session=${sessionValue}` },
             });
-            assertEquals(symbols.status, 200);
+            assert.equal(symbols.status, 200);
             const symbolsHtml = await symbols.text();
             assert(symbolsHtml.includes('build-artifact-arm64'));
             assert(symbolsHtml.includes('symbols installed'));
@@ -180,15 +179,15 @@ Deno.test('OAuth callback grants a session to active org members', async () => {
             const tampered = await app.request('/', {
                 headers: { cookie: `session=${sessionValue}x` },
             });
-            assertEquals(tampered.status, 302);
-            assertEquals(tampered.headers.get('location'), '/auth/login');
+            assert.equal(tampered.status, 302);
+            assert.equal(tampered.headers.get('location'), '/auth/login');
         });
     } finally {
         await env.cleanup();
     }
 });
 
-Deno.test('OAuth callback rejects non-members with 403', async () => {
+test('OAuth callback rejects non-members with 403', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({
@@ -200,7 +199,7 @@ Deno.test('OAuth callback rejects non-members with 403', async () => {
             const res = await app.request('/auth/callback?code=abc&state=st1', {
                 headers: { cookie: 'state=st1' },
             });
-            assertEquals(res.status, 403);
+            assert.equal(res.status, 403);
             assert((await res.text()).includes('not an active member'));
         });
     } finally {
@@ -208,7 +207,7 @@ Deno.test('OAuth callback rejects non-members with 403', async () => {
     }
 });
 
-Deno.test('OAuth callback rejects state mismatches', async () => {
+test('OAuth callback rejects state mismatches', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
@@ -219,7 +218,7 @@ Deno.test('OAuth callback rejects state mismatches', async () => {
                     headers: { cookie: 'state=st1' },
                 },
             );
-            assertEquals(res.status, 401);
+            assert.equal(res.status, 401);
             await res.body?.cancel();
         });
     } finally {
@@ -227,36 +226,38 @@ Deno.test('OAuth callback rejects state mismatches', async () => {
     }
 });
 
-Deno.test('UI routes redirect to login without a session', async () => {
+test('UI routes redirect to login without a session', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
-        for (
-            const path of [
-                '/',
-                '/symbols',
-                '/groups/1',
-                '/reports/x',
-                '/reports/x/dump',
-            ]
-        ) {
+        for (const path of [
+            '/',
+            '/symbols',
+            '/groups/1',
+            '/reports/x',
+            '/reports/x/dump',
+        ]) {
             const res = await app.request(path);
-            assertEquals(res.status, 302, `expected redirect for ${path}`);
-            assertEquals(res.headers.get('location'), '/auth/login');
+            assert.deepStrictEqual(
+                res.status,
+                302,
+                `expected redirect for ${path}`,
+            );
+            assert.equal(res.headers.get('location'), '/auth/login');
         }
     } finally {
         await env.cleanup();
     }
 });
 
-Deno.test('shared page assets are served without a session', async () => {
+test('shared page assets are served without a session', async () => {
     const env = await makeTestEnv();
     try {
         const app = buildApp({ config: env.config, db: env.db });
 
         const res = await app.request('/static/style.css');
-        assertEquals(res.status, 200);
-        assertEquals(res.headers.get('x-content-type-options'), 'nosniff');
+        assert.equal(res.status, 200);
+        assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
         assert(
             (res.headers.get('content-security-policy') ?? '').includes(
                 "default-src 'none'",
@@ -267,29 +268,29 @@ Deno.test('shared page assets are served without a session', async () => {
                 "script-src 'self'",
             ),
         );
-        assertEquals(
-            res.headers.get('content-security-policy')?.includes(
-                "script-src 'self' 'unsafe-inline'",
-            ),
+        assert.deepStrictEqual(
+            res.headers
+                .get('content-security-policy')
+                ?.includes("script-src 'self' 'unsafe-inline'"),
             false,
         );
-        assertEquals(
+        assert.deepStrictEqual(
             res.headers.get('content-type'),
             'text/css; charset=utf-8',
         );
         assert((await res.text()).includes('.expandable'));
 
         const favicon = await app.request('/static/favicon.svg');
-        assertEquals(favicon.status, 200);
-        assertEquals(
+        assert.equal(favicon.status, 200);
+        assert.deepStrictEqual(
             favicon.headers.get('content-type'),
             'image/svg+xml; charset=utf-8',
         );
         assert((await favicon.text()).startsWith('<svg'));
 
         const script = await app.request('/static/app.js');
-        assertEquals(script.status, 200);
-        assertEquals(
+        assert.equal(script.status, 200);
+        assert.deepStrictEqual(
             script.headers.get('content-type'),
             'text/javascript; charset=utf-8',
         );
@@ -297,8 +298,8 @@ Deno.test('shared page assets are served without a session', async () => {
 
         // Everything else stays gated.
         const page = await app.request('/');
-        assertEquals(page.status, 302);
-        assertEquals(page.headers.get('location'), '/auth/login');
+        assert.equal(page.status, 302);
+        assert.equal(page.headers.get('location'), '/auth/login');
     } finally {
         await env.cleanup();
     }

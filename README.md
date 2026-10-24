@@ -34,13 +34,19 @@ Everything else runs on its own:
 - minidumpster has its own [compose.yml](svc/minidumpster/compose.yml) and
 [example .env file](svc/minidumpster/.env.example), and runs alongside
 Sentry's symbolicator.
-- minipush runs from its Dockerfile. Generate its secrets with
-`deno task gen`.
+- minipush runs from its image. Generate its secrets with `pnpm gen`.
+- every Node service and utility is a target in the root
+[Dockerfile](Dockerfile), e.g. `docker build --target minipush .`
 - sparkler writes its output to disk every hour, or once with `--oneshot`.
 release-collector runs once, so it's meant to be run on a schedule.
 sparkler needs a GitHub repo, an Ed25519 signing key, and output dirs, as
 shown in its [example .env file](util/sparkler/.env.example). release-collector
 only needs `OUTPUT_JSON_PATH`. Both accept an optional `GITHUB_ACCESS_TOKEN`.
+
+## Development
+The Node services and utilities are one pnpm workspace. Run `pnpm install` at
+the repo root, then `pnpm typecheck`, `pnpm lint`, `pnpm fmt`, or `pnpm test`
+there for everything, or inside a project for just that one.
 
 ## License
 All code in this repo is licensed under AGPL-3.0. See [LICENSE](LICENSE).

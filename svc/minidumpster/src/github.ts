@@ -1,4 +1,4 @@
-import { basename } from '@std/path/windows';
+import { basename } from 'node:path/win32';
 
 import type { GroupRow, ReportRow } from './db.ts';
 import {
@@ -71,9 +71,7 @@ export function githubIssueUrl(
     const frames = thread?.frames.slice(0, MAX_ISSUE_FRAMES) ?? [];
     const stack = frames.map(frameLine);
     if (thread && thread.frames.length > frames.length) {
-        stack.push(
-            `... ${thread.frames.length - frames.length} more frames`,
-        );
+        stack.push(`... ${thread.frames.length - frames.length} more frames`);
     }
 
     const additional = [
@@ -88,9 +86,9 @@ export function githubIssueUrl(
 
     const [owner, name] = repository.split('/');
     const url = new URL(
-        `https://github.com/${encodeURIComponent(owner)}/${
-            encodeURIComponent(name)
-        }/issues/new`,
+        `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(
+            name,
+        )}/issues/new`,
     );
     url.searchParams.set('template', template);
     url.searchParams.set('title', `[Bug]: ${title}`.slice(0, 256));
@@ -115,9 +113,9 @@ export async function checkOrgMembership(
     org: string,
 ) {
     const res = await fetchFn(
-        `https://api.github.com/user/memberships/orgs/${
-            encodeURIComponent(org)
-        }`,
+        `https://api.github.com/user/memberships/orgs/${encodeURIComponent(
+            org,
+        )}`,
         { headers: githubApiHeaders(token) },
     );
 
@@ -125,21 +123,20 @@ export async function checkOrgMembership(
         return false;
     }
 
-    const data = await res.json() as { state?: string };
+    const data = (await res.json()) as { state?: string };
     return data.state === 'active';
 }
 
 export class GithubHttpError extends Error {
+    readonly status: number;
     readonly rateLimited: boolean;
 
-    constructor(
-        message: string,
-        readonly status: number,
-        headers: Headers,
-    ) {
+    constructor(message: string, status: number, headers: Headers) {
         super(message);
         this.name = 'GithubHttpError';
-        this.rateLimited = status === 429
+        this.status = status;
+        this.rateLimited =
+            status === 429
             || headers.get('x-ratelimit-remaining') === '0'
             || headers.has('retry-after');
     }

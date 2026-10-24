@@ -1,8 +1,11 @@
 export const isDesiredFile = (platform: string, name: string) => {
-    return (platform === 'linux' && name.endsWith('.AppImage')) ||
-        (platform === 'macos' && name.endsWith('.dmg')) ||
-        (platform === 'windows' && name.endsWith('installer.exe') &&
-            !name.endsWith('mini-installer.exe'));
+    return (
+        (platform === 'linux' && name.endsWith('.AppImage'))
+        || (platform === 'macos' && name.endsWith('.dmg'))
+        || (platform === 'windows'
+            && name.endsWith('installer.exe')
+            && !name.endsWith('mini-installer.exe'))
+    );
 };
 
 export const getArchitecture = (filename: string) => {

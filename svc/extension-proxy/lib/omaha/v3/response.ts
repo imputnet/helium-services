@@ -40,39 +40,48 @@ const filterResponse = async ({ response }: OmahaResponse) => {
         server: response.server,
         protocol: response.protocol,
         daystart: response.daystart,
-        app: response.app && await Promise.all(response.app.map(async (app) => {
-            const updatecheck = app.updatecheck;
+        app:
+            response.app
+            && (await Promise.all(
+                response.app.map(async (app) => {
+                    const updatecheck = app.updatecheck;
 
-            if (updatecheck?.status === 'ok') {
-                const url = getBestUrl(updatecheck);
-                const fileName = updatecheck?.manifest?.packages?.package?.[0]?.name;
-                if (!url) {
-                    throw 'could not get any viable URL for download';
-                }
+                    if (updatecheck?.status === 'ok') {
+                        const url = getBestUrl(updatecheck);
+                        const fileName =
+                            updatecheck?.manifest?.packages?.package?.[0]?.name;
+                        if (!url) {
+                            throw 'could not get any viable URL for download';
+                        }
 
-                if (fileName) {
-                    if (!url.pathname.endsWith('/')) {
-                        url.pathname += '/';
+                        if (fileName) {
+                            if (!url.pathname.endsWith('/')) {
+                                url.pathname += '/';
+                            }
+
+                            url.pathname += fileName;
+                        }
+
+                        updatecheck.urls.url = [
+                            {
+                                codebase: await ExtensionProxy.wrap(
+                                    url.toString(),
+                                ),
+                            },
+                        ];
                     }
 
-                    url.pathname += fileName;
-                }
-
-                updatecheck.urls.url = [
-                    { codebase: await ExtensionProxy.wrap(url.toString()) },
-                ];
-            }
-
-            return {
-                appid: app.appid,
-                status: app.status,
-                cohort: '',
-                cohortname: '',
-                cohorthint: '',
-                ping: app.ping,
-                updatecheck,
-            };
-        })),
+                    return {
+                        appid: app.appid,
+                        status: app.status,
+                        cohort: '',
+                        cohortname: '',
+                        cohorthint: '',
+                        ping: app.ping,
+                        updatecheck,
+                    };
+                }),
+            )),
     };
 };
 
@@ -80,8 +89,8 @@ const handleRedirect = (data: OmahaResponse) => {
     const updateCheck = data?.response?.app?.[0]?.updatecheck;
 
     if (
-        updateCheck?.status === 'ok' &&
-        'codebase' in updateCheck?.urls?.url?.[0]
+        updateCheck?.status === 'ok'
+        && 'codebase' in updateCheck?.urls?.url?.[0]
     ) {
         return Util.respond(302, 'Found', {
             location: updateCheck.urls.url[0].codebase,
@@ -117,7 +126,8 @@ const handleXML = ({ response }: OmahaResponse) => {
 
                     if (app.updatecheck?.status === 'ok') {
                         const urls = app.updatecheck.urls.url[0];
-                        const package_ = app.updatecheck.manifest.packages.package[0];
+                        const package_ =
+                            app.updatecheck.manifest.packages.package[0];
                         if ('codebase' in urls) {
                             updatecheck = {
                                 '@status': app.updatecheck?.status,
@@ -133,15 +143,18 @@ const handleXML = ({ response }: OmahaResponse) => {
                         }
                     } else if (app.updatecheck) {
                         updatecheck = Object.fromEntries(
-                            Object.entries(app.updatecheck)
-                                .map(([key, value]) => [`@${key}`, value]),
+                            Object.entries(app.updatecheck).map(
+                                ([key, value]) => [`@${key}`, value],
+                            ),
                         );
                     }
 
                     return {
                         '@appid': app.appid,
                         '@status': app.status,
-                        ...(app.cohort ? { '@cohort': '', '@cohortname': '' } : {}),
+                        ...(app.cohort
+                            ? { '@cohort': '', '@cohortname': '' }
+                            : {}),
                         ...(updatecheck ? { updatecheck } : {}),
                     };
                 }),
@@ -171,7 +184,10 @@ export async function createResponse(
     }
 }
 
-export const addToPoolFromResponse = (id: ServiceId, { response }: OmahaResponse) => {
+export const addToPoolFromResponse = (
+    id: ServiceId,
+    { response }: OmahaResponse,
+) => {
     if (!response.app) {
         return;
     }
@@ -179,8 +195,8 @@ export const addToPoolFromResponse = (id: ServiceId, { response }: OmahaResponse
     response.app
         .map((app) => {
             if (
-                app.updatecheck?.status === 'ok' &&
-                app.updatecheck.manifest.version
+                app.updatecheck?.status === 'ok'
+                && app.updatecheck.manifest.version
             ) {
                 return {
                     appid: app.appid,

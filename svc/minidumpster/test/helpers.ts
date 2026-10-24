@@ -1,3 +1,6 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { Config } from '../src/config.ts';
 import { Db } from '../src/db.ts';
 import { dbPath, ensureDataDirs } from '../src/paths.ts';
@@ -8,7 +11,7 @@ import {
     TextReader,
     Uint8ArrayReader,
     ZipWriter,
-} from '@zip-js/zip-js';
+} from '@zip.js/zip.js';
 
 export function testConfig(
     dataDir: string,
@@ -37,8 +40,7 @@ export function testConfig(
         artifactCrawlerPollMs: 15 * 60 * 1000,
         artifactCrawlerMaxBytes: 20 * 1024 * 1024 * 1024,
         artifactCrawlerMaxAgeDays: 7,
-        artifactCrawlerNamePattern: String
-            .raw`(?:^|[-_.])(symbols?|symbolicated|debug(?:-?symbols?)?|dsym|pdb)(?:$|[-_.])`,
+        artifactCrawlerNamePattern: String.raw`(?:^|[-_.])(symbols?|symbolicated|debug(?:-?symbols?)?|dsym|pdb)(?:$|[-_.])`,
         ...over,
     };
 }
@@ -67,12 +69,8 @@ export function chunked(
     });
 }
 
-export async function dirEntries(path: string): Promise<string[]> {
-    const entries: string[] = [];
-    for await (const entry of Deno.readDir(path)) {
-        entries.push(entry.name);
-    }
-    return entries;
+export function makeTempDir(): Promise<string> {
+    return mkdtemp(join(tmpdir(), 'minidumpster-test-'));
 }
 
 export async function makeZip(
@@ -116,7 +114,7 @@ export interface TestEnv {
 export async function makeTestEnv(
     over: Partial<Config> = {},
 ): Promise<TestEnv> {
-    const dir = await Deno.makeTempDir({ prefix: 'minidumpster-test-' });
+    const dir = await makeTempDir();
     await ensureDataDirs(dir);
     const config = testConfig(dir, over);
     const db = new Db(dbPath(dir));
@@ -126,7 +124,7 @@ export async function makeTestEnv(
         db,
         async cleanup() {
             db.close();
-            await Deno.remove(dir, { recursive: true }).catch(() => {});
+            await rm(dir, { recursive: true }).catch(() => {});
         },
     };
 }
@@ -135,10 +133,7 @@ export async function gzipBytes(
     data: Uint8Array,
 ): Promise<Uint8Array<ArrayBuffer>> {
     const stream = new Response(data.slice()).body!.pipeThrough(
-        new CompressionStream('gzip') as unknown as TransformStream<
-            Uint8Array,
-            Uint8Array
-        >,
+        new CompressionStream('gzip'),
     );
     return new Uint8Array(await new Response(stream).arrayBuffer());
 }
@@ -156,22 +151,25 @@ export async function encodeMultipart(
 }
 
 export function fixtureResponse(): Promise<string> {
-    return Deno.readTextFile(
+    return readFile(
         new URL('./fixtures/symbolicator_completed.json', import.meta.url),
+        'utf8',
     );
 }
 
 export function appleCrashFixture(): Promise<string> {
-    return Deno.readTextFile(
+    return readFile(
         new URL('./fixtures/apple_report.txt', import.meta.url),
+        'utf8',
     );
 }
 
 export function appleFixtureResponse(): Promise<string> {
-    return Deno.readTextFile(
+    return readFile(
         new URL(
             './fixtures/symbolicator_apple_completed.json',
             import.meta.url,
         ),
+        'utf8',
     );
 }

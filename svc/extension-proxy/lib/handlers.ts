@@ -27,10 +27,7 @@ const handlePayloadProxy = async (request: Request) => {
     const originalURL = await ExtensionProxy.unwrap(request.url);
     return handleProxy(
         originalURL,
-        Util.filterHeaders(
-            request.headers,
-            Util.SAFE_REQUEST_HEADERS,
-        ),
+        Util.filterHeaders(request.headers, Util.SAFE_REQUEST_HEADERS),
     );
 };
 
@@ -55,8 +52,7 @@ const handleSnippetProxy = (request: Request) => {
     headers.set('X-HTTP-Method-Override', 'GET');
 
     return handleProxy(
-        CHROME_WEBSTORE_SNIPPET
-            .replace('{}', extensionId),
+        CHROME_WEBSTORE_SNIPPET.replace('{}', extensionId),
         headers,
         'POST',
     );
