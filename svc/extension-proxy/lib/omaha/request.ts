@@ -46,7 +46,6 @@ const craftRequest = async (apps: App[], version: ProtocolVersion) => {
                 installsource: 'ondemand',
                 lang: '',
                 packages: { package: [{ fp: `2.${app.version}` }] },
-                ping: { r: -1 },
                 updatecheck: app.updatecheck || {},
             };
 
@@ -57,7 +56,6 @@ const craftRequest = async (apps: App[], version: ProtocolVersion) => {
                 enabled: true,
                 installsource: 'ondemand',
                 lang: '',
-                ping: { r: -2 },
                 updatecheck: app.updatecheck || {},
             };
 
