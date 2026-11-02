@@ -9,8 +9,6 @@ import { CloseStatus } from '../rfc/6455.ts';
 import { env } from '../env.ts';
 import { isDraining } from '../lifecycle.ts';
 
-// Owns UA websockets.
-
 type UAID = string;
 type CHID = string;
 type MessageVersion = string;

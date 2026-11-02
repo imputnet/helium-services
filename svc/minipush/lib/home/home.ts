@@ -12,8 +12,6 @@ import type {
 } from '../mesh/protocol.ts';
 import { Mailbox, type StoredMessage } from './mailbox.ts';
 
-// Stores messages until they're acked, and knows where their UA is.
-
 const mailbox = new Mailbox({
     perChannel: env.maxQueuedPerChannel,
     maxBytes: env.maxMailboxBytes,
