@@ -6,6 +6,7 @@ import type { ConnectionState } from './state.ts';
 import { ServerMessage } from './server-schema.ts';
 import { type ClientMessage, clientMessage } from './client-schema.ts';
 
+import { env } from '../env.ts';
 import { assert } from '@std/assert';
 
 const waitForHelloTimeout = (state: ConnectionState) => {
@@ -88,7 +89,9 @@ export const handleWebsocketSetup = (req: Request) => {
     const maybeError = HTTP.checkMethod(req, 'GET');
     if (maybeError) return maybeError;
 
-    const { socket, response } = Deno.upgradeWebSocket(req);
+    const { socket, response } = Deno.upgradeWebSocket(req, {
+        idleTimeout: env.idleTimeoutSeconds,
+    });
     const state = g_state.newConnection(socket);
     waitForHelloTimeout(state);
     handleWebsocketConnection(state);

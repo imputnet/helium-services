@@ -24,6 +24,7 @@ export type Node = {
     proc: Deno.ChildProcess;
     output: () => string;
     stop: (signal?: Deno.Signal) => Promise<Deno.CommandStatus>;
+    exited: () => Promise<Deno.CommandStatus>;
 };
 
 export const waitFor = async (
@@ -54,7 +55,6 @@ export const startNode = async (
             ...sharedSecrets(),
             MINIPUSH_PORT: String(port),
             MINIPUSH_BASE_URL: url,
-            MINIPUSH_RATE_LIMIT: '100000',
             ...env,
         },
         stdout: 'piped',
@@ -120,6 +120,7 @@ export const startNode = async (
         proc,
         output: () => output,
         stop,
+        exited: () => status,
     };
 };
 

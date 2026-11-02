@@ -5,6 +5,9 @@ import * as Mesh from '../mesh/mesh.ts';
 import type { MemberId } from '../mesh/protocol.ts';
 import type { StoredMessage } from '../home/mailbox.ts';
 import { counters, gauge } from '../stats.ts';
+import { CloseStatus } from '../rfc/6455.ts';
+import { env } from '../env.ts';
+import { isDraining } from '../lifecycle.ts';
 
 // Owns UA websockets.
 
@@ -15,7 +18,10 @@ type MessageVersion = string;
 type Inflight = {
     home: MemberId;
     chid: CHID;
+    sentAt: number;
 };
+
+const MAX_BUFFERED_BYTES = 1024 * 1024;
 
 export type ConnectionState = {
     ws: WebSocket;
@@ -23,6 +29,8 @@ export type ConnectionState = {
     helloTimeoutId?: ReturnType<typeof setTimeout>;
     uaidInternal?: UAID;
     ready?: true;
+    // more is sent once the UA has acked what it got so far
+    throttled?: true;
     channels: Set<CHID>;
     // messages sent to the UA which it hasn't acked yet, and which member
     // to forward the ack to
@@ -31,17 +39,25 @@ export type ConnectionState = {
     homes: Set<MemberId>;
 };
 
+const openConnections = new Set<ConnectionState>();
 const connectedClients = new Map<UAID, ConnectionState>();
+
+const awaitingAck = new Set<ConnectionState>();
 
 gauge('connectedClients', () => connectedClients.size);
 
-export const newConnection = (ws: WebSocket): ConnectionState => ({
-    ws,
-    id: encodeBase64Url(Crypto.rand(9)),
-    channels: new Set(),
-    inflight: new Map(),
-    homes: new Set(),
-});
+export const newConnection = (ws: WebSocket) => {
+    const state: ConnectionState = {
+        ws,
+        id: encodeBase64Url(Crypto.rand(9)),
+        channels: new Set(),
+        inflight: new Map(),
+        homes: new Set(),
+    };
+
+    openConnections.add(state);
+    return state;
+};
 
 const getUaid = (state: ConnectionState) => {
     const uaid = state.uaidInternal;
@@ -53,6 +69,12 @@ const getUaid = (state: ConnectionState) => {
 // Called once the hello response has been sent to the UA.
 export const onClientReady = (state: ConnectionState) => {
     const uaid = getUaid(state);
+
+    const previous = connectedClients.get(uaid);
+    if (previous && previous !== state) {
+        previous.ws.close(CloseStatus.GOING_AWAY, 'superseded');
+    }
+
     connectedClients.set(uaid, state);
 
     for (const home of Mesh.homes(uaid)) {
@@ -72,6 +94,8 @@ const announce = (state: ConnectionState) => {
 };
 
 export const onClientDisconnected = (state: ConnectionState) => {
+    openConnections.delete(state);
+
     const uaid = state.uaidInternal;
     if (!uaid) {
         return;
@@ -87,12 +111,15 @@ export const onClientDisconnected = (state: ConnectionState) => {
 
     state.homes.clear();
     state.inflight.clear();
+    awaitingAck.delete(state);
 };
 
 export const onChannelRegistered = (state: ConnectionState, chid: CHID) => {
     chid = chid.toLowerCase();
     if (state.channels.has(chid)) {
-        return;
+        return true;
+    } else if (state.channels.size >= env.maxChannelsPerUaid) {
+        return false;
     }
 
     state.channels.add(chid);
@@ -102,6 +129,8 @@ export const onChannelRegistered = (state: ConnectionState, chid: CHID) => {
     if (state.ready && connectedClients.get(getUaid(state)) === state) {
         announce(state);
     }
+
+    return true;
 };
 
 export const onChannelUnregistered = (state: ConnectionState, chid: CHID) => {
@@ -118,6 +147,21 @@ export const onChannelUnregistered = (state: ConnectionState, chid: CHID) => {
     const uaid = getUaid(state);
     for (const home of state.homes) {
         Mesh.send(home, { t: 'unregister', uaid, chid });
+    }
+
+    onInflightRemoved(state);
+};
+
+const onInflightRemoved = (state: ConnectionState) => {
+    if (state.inflight.size > 0) {
+        return;
+    }
+
+    awaitingAck.delete(state);
+
+    if (state.throttled) {
+        delete state.throttled;
+        announce(state);
     }
 };
 
@@ -139,6 +183,8 @@ const ackToHomes = (
     for (const [home, versions] of byHome) {
         Mesh.send(home, { t: 'ack', uaid: getUaid(state), versions });
     }
+
+    onInflightRemoved(state);
 };
 
 export const onClientAck = (
@@ -161,13 +207,14 @@ export const onDeliver = (
 ) => {
     const state = connectedClients.get(uaid);
     if (
-        !state || state.id !== conn || !state.ready ||
+        !state || state.id !== conn || !state.ready || isDraining() ||
         state.ws.readyState !== WebSocket.OPEN
     ) {
         Mesh.send(from, { t: 'undeliverable', uaid, conn });
         return;
     }
 
+    const sentAt = Date.now();
     for (const { data } of messages) {
         // Leave messages for channels which the UA hasn't told us about
         // (yet) with the home, it might still register them.
@@ -176,8 +223,63 @@ export const onDeliver = (
             continue;
         }
 
-        state.inflight.set(data.version, { home: from, chid });
+        if (state.ws.bufferedAmount > MAX_BUFFERED_BYTES) {
+            state.throttled = true;
+            continue;
+        }
+
+        state.inflight.set(data.version, { home: from, chid, sentAt });
         state.ws.send(JSON.stringify(data));
+        awaitingAck.add(state);
         counters.dispatchedMessages++;
+    }
+};
+
+const checkAckTimeouts = () => {
+    const cutoff = Date.now() - env.ackTimeoutMs;
+    for (const state of awaitingAck) {
+        const oldest = state.inflight.values().next().value;
+        if (!oldest) {
+            awaitingAck.delete(state);
+        } else if (oldest.sentAt < cutoff) {
+            awaitingAck.delete(state);
+            state.ws.close(CloseStatus.TIMED_OUT, 'ack timeout');
+        }
+    }
+};
+
+Deno.unrefTimer(
+    setInterval(checkAckTimeouts, Math.min(5000, env.ackTimeoutMs / 2)),
+);
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export const drain = async (ackGraceMs: number, spreadMs: number) => {
+    const ackDeadline = Date.now() + ackGraceMs;
+    while (awaitingAck.size > 0 && Date.now() < ackDeadline) {
+        await sleep(50);
+    }
+
+    const states = [...openConnections];
+    for (let i = states.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [states[i], states[j]] = [states[j], states[i]];
+    }
+
+    const STEP_MS = 100;
+    const perStep = Math.ceil(states.length / Math.max(1, spreadMs / STEP_MS));
+    for (let i = 0; i < states.length; i += perStep) {
+        if (i > 0) {
+            await sleep(STEP_MS);
+        }
+
+        for (const state of states.slice(i, i + perStep)) {
+            state.ws.close(CloseStatus.SERVICE_RESTART, 'draining');
+        }
+    }
+
+    const closeDeadline = Date.now() + 2000;
+    while (openConnections.size > 0 && Date.now() < closeDeadline) {
+        await sleep(50);
     }
 };

@@ -17,7 +17,7 @@ type ServerRegister = {
     messageType: 'register';
     channelID: string;
     status: number;
-    pushEndpoint: string;
+    pushEndpoint?: string;
 };
 
 type ServerUnregister = {
