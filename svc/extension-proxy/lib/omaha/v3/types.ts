@@ -18,7 +18,6 @@ export type AppInternal = App & {
     packages: {
         package: { fp: string }[];
     };
-    ping: { r: -1 };
     updatecheck: UpdateCheck;
 };
 

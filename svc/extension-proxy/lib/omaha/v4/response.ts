@@ -114,7 +114,7 @@ const filterResponse = async ({ response }: OmahaResponse) => {
                 status: app.status,
                 cohort: '',
                 cohortname: '',
-                ping: {
+                ping: app.ping && {
                     status: app.ping.status,
                 },
                 updatecheck: await filterUpdatecheck(app.updatecheck),

@@ -1,28 +1,63 @@
-import { env } from '../env.ts';
-import { UUID_SHAPE } from '../util/uuid.ts';
-import { expired, NotificationInternal } from '../webpush/notification.ts';
+import { encodeBase64Url } from '@std/encoding/base64url';
 import { assert } from '@std/assert/assert';
+import * as Crypto from '../util/crypto.ts';
+import * as Mesh from '../mesh/mesh.ts';
+import type { MemberId } from '../mesh/protocol.ts';
+import type { StoredMessage } from '../home/mailbox.ts';
+import { counters, gauge } from '../stats.ts';
+import { CloseStatus } from '../rfc/6455.ts';
+import { env } from '../env.ts';
+import { isDraining } from '../lifecycle.ts';
 
-export type ConnectionState = {
-    ws: WebSocket;
-    helloTimeoutId?: number;
-    uaidInternal?: string;
-    ready?: true;
-    channels?: Set<CHID>;
-};
+// Owns UA websockets.
 
 type UAID = string;
 type CHID = string;
 type MessageVersion = string;
 
-type ChannelRecord = {
-    uaid: UAID;
-    bucket: Set<MessageVersion>;
+type Inflight = {
+    home: MemberId;
+    chid: CHID;
+    sentAt: number;
 };
 
-const connectedClients = new Map<UAID, WeakRef<ConnectionState>>();
-const channels = new Map<CHID, ChannelRecord>();
-const notifications = new Map<MessageVersion, NotificationInternal>();
+const MAX_BUFFERED_BYTES = 1024 * 1024;
+
+export type ConnectionState = {
+    ws: WebSocket;
+    id: string;
+    helloTimeoutId?: ReturnType<typeof setTimeout>;
+    uaidInternal?: UAID;
+    ready?: true;
+    // more is sent once the UA has acked what it got so far
+    throttled?: true;
+    channels: Set<CHID>;
+    // messages sent to the UA which it hasn't acked yet, and which member
+    // to forward the ack to
+    inflight: Map<MessageVersion, Inflight>;
+    // home members which were told about this connection
+    homes: Set<MemberId>;
+};
+
+const openConnections = new Set<ConnectionState>();
+const connectedClients = new Map<UAID, ConnectionState>();
+
+const awaitingAck = new Set<ConnectionState>();
+
+gauge('connectedClients', () => connectedClients.size);
+
+export const newConnection = (ws: WebSocket) => {
+    const state: ConnectionState = {
+        ws,
+        id: encodeBase64Url(Crypto.rand(9)),
+        channels: new Set(),
+        inflight: new Map(),
+        homes: new Set(),
+    };
+
+    openConnections.add(state);
+    return state;
+};
 
 const getUaid = (state: ConnectionState) => {
     const uaid = state.uaidInternal;
@@ -31,176 +66,220 @@ const getUaid = (state: ConnectionState) => {
     return uaid;
 };
 
-export const stats = {
-    get connectedClients() {
-        return connectedClients.size;
-    },
-    get openChannels() {
-        return channels.size;
-    },
-    get queuedMessages() {
-        return notifications.size;
-    },
-    dispatchedMessages: 0,
-    expiredMessages: 0,
+// Called once the hello response has been sent to the UA.
+export const onClientReady = (state: ConnectionState) => {
+    const uaid = getUaid(state);
+
+    const previous = connectedClients.get(uaid);
+    if (previous && previous !== state) {
+        previous.ws.close(CloseStatus.GOING_AWAY, 'superseded');
+    }
+
+    connectedClients.set(uaid, state);
+
+    for (const home of Mesh.homes(uaid)) {
+        state.homes.add(home);
+    }
+
+    announce(state);
 };
 
-export const onClientConnected = (state: ConnectionState) => {
+// Tells the home members where the UA is, which makes them deliver
+// whatever they have for it.
+const announce = (state: ConnectionState) => {
     const uaid = getUaid(state);
-    state.channels = new Set();
-    connectedClients.set(uaid, new WeakRef(state));
+    for (const home of state.homes) {
+        Mesh.send(home, { t: 'presence', uaid, conn: state.id, up: true });
+    }
 };
 
 export const onClientDisconnected = (state: ConnectionState) => {
+    openConnections.delete(state);
+
     const uaid = state.uaidInternal;
     if (!uaid) {
         return;
     }
 
-    if (connectedClients.get(uaid)?.deref() !== state) {
-        return;
+    if (connectedClients.get(uaid) === state) {
+        connectedClients.delete(uaid);
     }
 
-    connectedClients.delete(uaid);
+    for (const home of state.homes) {
+        Mesh.send(home, { t: 'presence', uaid, conn: state.id, up: false });
+    }
+
+    state.homes.clear();
+    state.inflight.clear();
+    awaitingAck.delete(state);
 };
 
-export const onChannelRegistered = (state: ConnectionState, chid: string) => {
-    const uaid = getUaid(state);
-    if (!UUID_SHAPE.test(chid)) {
-        throw 'invalid channel ID';
-    }
-
-    state.channels!.add(chid);
-
-    if (!channels.has(chid)) {
-        channels.set(chid, {
-            uaid,
-            bucket: new Set(),
-        });
-    } else if (channels.get(chid)?.uaid !== uaid) {
-        throw `cannot take over another UAID's channel`;
-    }
-};
-
-export const onChannelUnregistered = (state: ConnectionState, chid: string) => {
-    const uaid = getUaid(state);
-    const record = channels.get(chid);
-    if (!record) {
-        return;
-    }
-
-    if (record.uaid !== uaid) {
-        return;
-    }
-
-    for (const messageId of record.bucket) {
-        notifications.delete(messageId);
-    }
-
-    channels.delete(chid);
-    state.channels!.delete(chid);
-};
-
-const maybeSendImmediately = (message: NotificationInternal) => {
-    const chid = message.data.channelID;
-    const uaid = channels.get(chid)?.uaid;
-    if (!uaid) {
-        return false;
-    }
-
-    const client = connectedClients.get(uaid);
-    const ref = client?.deref();
-    if (ref && ref.channels?.has(chid)) {
-        return sendMessage(ref, message);
-    }
-
-    return false;
-};
-
-export const onNewNotification = (message: NotificationInternal) => {
-    const chid = message.data.channelID;
-    if (maybeSendImmediately(message)) {
+export const onChannelRegistered = (state: ConnectionState, chid: CHID) => {
+    chid = chid.toLowerCase();
+    if (state.channels.has(chid)) {
         return true;
-    }
-
-    let bucket: Set<MessageVersion> = new Set();
-    if (!channels.has(chid)) {
-        channels.set(chid, { uaid: message.uaid, bucket });
-    } else {
-        bucket = channels.get(chid)!.bucket;
-    }
-
-    if (bucket.size >= env.maxQueuedPerChannel) {
+    } else if (state.channels.size >= env.maxChannelsPerUaid) {
         return false;
     }
 
-    bucket.add(message.data.version);
-    notifications.set(message.data.version, message);
+    state.channels.add(chid);
+
+    // There might be messages waiting for it already. A superseded
+    // connection mustn't replace the newer one at the homes.
+    if (state.ready && connectedClients.get(getUaid(state)) === state) {
+        announce(state);
+    }
+
     return true;
 };
 
-export const onDeleteNotification = (id: string) => {
-    const message = notifications.get(id);
-    if (!message) {
+export const onChannelUnregistered = (state: ConnectionState, chid: CHID) => {
+    chid = chid.toLowerCase();
+    state.channels.delete(chid);
+
+    // The UA won't ack these anymore.
+    for (const [version, inflight] of state.inflight) {
+        if (inflight.chid === chid) {
+            state.inflight.delete(version);
+        }
+    }
+
+    const uaid = getUaid(state);
+    for (const home of state.homes) {
+        Mesh.send(home, { t: 'unregister', uaid, chid });
+    }
+
+    onInflightRemoved(state);
+};
+
+const onInflightRemoved = (state: ConnectionState) => {
+    if (state.inflight.size > 0) {
         return;
     }
 
-    message.delete = true;
-    notifications.delete(id);
-};
+    awaitingAck.delete(state);
 
-export const onNackNotification = (version: string) => {
-    const message = notifications.get(version);
-    if (!message) {
-        return;
+    if (state.throttled) {
+        delete state.throttled;
+        announce(state);
     }
-
-    delete message.delete;
-    maybeSendImmediately(message);
 };
 
-const sendMessage = (
+const ackToHomes = (
     state: ConnectionState,
-    notification: NotificationInternal,
+    versions: Iterable<MessageVersion>,
 ) => {
-    if (!state.ready || notification.delete) {
-        return false;
-    }
-
-    state?.ws.send(JSON.stringify(notification.data));
-    notification.delete = true;
-    stats.dispatchedMessages++;
-    return true;
-};
-
-const onTick = () => {
-    for (const [chid, { uaid, bucket }] of channels) {
-        const state = uaid && connectedClients.get(uaid)?.deref();
-        const expectingMessage = state && state.channels?.has(chid);
-
-        for (const id of bucket) {
-            const noti = notifications.get(id);
-
-            if (!noti) {
-                bucket.delete(id);
-                continue;
-            } else if (expired(noti)) {
-                noti.delete = true;
-                stats.expiredMessages++;
-            } else if (expectingMessage) {
-                sendMessage(state, noti);
-            }
-
-            if (noti.delete) {
-                bucket.delete(id);
-                notifications.delete(noti.data.version);
-            }
+    const byHome = new Map<MemberId, MessageVersion[]>();
+    for (const version of versions) {
+        const home = state.inflight.get(version)?.home;
+        if (!home) {
+            continue;
         }
 
-        if (bucket.size === 0 && !expectingMessage) {
-            channels.delete(chid);
+        state.inflight.delete(version);
+        byHome.set(home, [...byHome.get(home) ?? [], version]);
+    }
+
+    for (const [home, versions] of byHome) {
+        Mesh.send(home, { t: 'ack', uaid: getUaid(state), versions });
+    }
+
+    onInflightRemoved(state);
+};
+
+export const onClientAck = (
+    state: ConnectionState,
+    versions: MessageVersion[],
+) => ackToHomes(state, versions);
+
+// We don't attempt redelivery of messages that the UA could not handle,
+// they're most likely undecryptable, so we just drop them.
+export const onClientNack = (state: ConnectionState, version: string) => {
+    counters.nackedMessages++;
+    ackToHomes(state, [version]);
+};
+
+export const onDeliver = (
+    from: MemberId,
+    uaid: UAID,
+    conn: string,
+    messages: StoredMessage[],
+) => {
+    const state = connectedClients.get(uaid);
+    if (
+        !state || state.id !== conn || !state.ready || isDraining() ||
+        state.ws.readyState !== WebSocket.OPEN
+    ) {
+        Mesh.send(from, { t: 'undeliverable', uaid, conn });
+        return;
+    }
+
+    const sentAt = Date.now();
+    for (const { data } of messages) {
+        // Leave messages for channels which the UA hasn't told us about
+        // (yet) with the home, it might still register them.
+        const chid = data.channelID.toLowerCase();
+        if (state.inflight.has(data.version) || !state.channels.has(chid)) {
+            continue;
+        }
+
+        if (state.ws.bufferedAmount > MAX_BUFFERED_BYTES) {
+            state.throttled = true;
+            continue;
+        }
+
+        state.inflight.set(data.version, { home: from, chid, sentAt });
+        state.ws.send(JSON.stringify(data));
+        awaitingAck.add(state);
+        counters.dispatchedMessages++;
+    }
+};
+
+const checkAckTimeouts = () => {
+    const cutoff = Date.now() - env.ackTimeoutMs;
+    for (const state of awaitingAck) {
+        const oldest = state.inflight.values().next().value;
+        if (!oldest) {
+            awaitingAck.delete(state);
+        } else if (oldest.sentAt < cutoff) {
+            awaitingAck.delete(state);
+            state.ws.close(CloseStatus.TIMED_OUT, 'ack timeout');
         }
     }
 };
 
-Deno.unrefTimer(setInterval(onTick, 1000));
+Deno.unrefTimer(
+    setInterval(checkAckTimeouts, Math.min(5000, env.ackTimeoutMs / 2)),
+);
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export const drain = async (ackGraceMs: number, spreadMs: number) => {
+    const ackDeadline = Date.now() + ackGraceMs;
+    while (awaitingAck.size > 0 && Date.now() < ackDeadline) {
+        await sleep(50);
+    }
+
+    const states = [...openConnections];
+    for (let i = states.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [states[i], states[j]] = [states[j], states[i]];
+    }
+
+    const STEP_MS = 100;
+    const perStep = Math.ceil(states.length / Math.max(1, spreadMs / STEP_MS));
+    for (let i = 0; i < states.length; i += perStep) {
+        if (i > 0) {
+            await sleep(STEP_MS);
+        }
+
+        for (const state of states.slice(i, i + perStep)) {
+            state.ws.close(CloseStatus.SERVICE_RESTART, 'draining');
+        }
+    }
+
+    const closeDeadline = Date.now() + 2000;
+    while (openConnections.size > 0 && Date.now() < closeDeadline) {
+        await sleep(50);
+    }
+};

@@ -3,7 +3,7 @@ import { deepFreeze } from '../../util.ts';
 export const REQUEST_TEMPLATE = deepFreeze({
     '@os': 'win',
     '@updater': 'chrome',
-    acceptformat: 'crx3,download,puff,run,xz,zucc',
+    acceptformat: 'crx3,download,run',
     apps: [],
     arch: 'x86_64',
     dedup: 'cr',

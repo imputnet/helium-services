@@ -2,9 +2,16 @@ import { assert } from '@std/assert/assert';
 import { unwrap } from './chid.ts';
 import { env } from '../env.ts';
 import { encodeBase64Url } from '@std/encoding/base64url';
-import { NotificationInternal } from './notification.ts';
+import type { StoredMessage } from '../home/mailbox.ts';
 import * as HTTP from '../util/http.ts';
-import * as g_state from '../ua/state.ts';
+import * as MessageId from './message-id.ts';
+import * as Router from '../mesh/router.ts';
+import { RateLimiter } from '../util/ratelimit.ts';
+
+const channelLimiter = new RateLimiter(
+    env.rateLimitPerChannel,
+    env.rateLimitWindowMs,
+);
 
 const getTtl = (req: Request) => {
     const max = env.maxTtlSeconds;
@@ -64,6 +71,15 @@ export const handleWebPushRequest = async (
     const { uaid, chid } = unwrapped;
     assert(uaid && chid, 'could not unwrap uaid/chid');
 
+    if (!channelLimiter.take(`${uaid}:${chid}`)) {
+        return new Response(null, {
+            status: HTTP.status.TOO_MANY_REQUESTS,
+            headers: {
+                'Retry-After': String(Math.ceil(env.rateLimitWindowMs / 1000)),
+            },
+        });
+    }
+
     const maxPayloadBytes = 4096;
     const bodyTimeoutMs = 10_000;
     const contentLength = request.headers.get('content-length');
@@ -82,7 +98,7 @@ export const handleWebPushRequest = async (
     const hasBody = body.byteLength > 0;
 
     const timestamp = Date.now();
-    const id = crypto.randomUUID();
+    const id = await MessageId.make(uaid);
 
     const ttl = getTtl(request);
 
@@ -107,7 +123,9 @@ export const handleWebPushRequest = async (
     if (topic) headers.topic = topic;
 
     // TODO: stricter-ish header validation
-    const notification: NotificationInternal = {
+    const message: StoredMessage = {
+        uaid,
+        expiresAt: timestamp + ttl * 1000,
         data: {
             messageType: 'notification',
             channelID: chid,
@@ -115,16 +133,21 @@ export const handleWebPushRequest = async (
             data: hasBody ? encodeBase64Url(body) : undefined,
             headers,
         },
-        uaid,
-        ttl,
-        timestamp,
     };
 
-    if (!g_state.onNewNotification(notification)) {
+    const status = await Router.route(message);
+    if (status === 'full') {
         return new Response(null, {
             status: HTTP.status.TOO_MANY_REQUESTS,
             headers: {
                 'Retry-After': '120',
+            },
+        });
+    } else if (status !== 'ok') {
+        return new Response(null, {
+            status: HTTP.status.SERVICE_UNAVAILABLE,
+            headers: {
+                'Retry-After': '30',
             },
         });
     }
@@ -138,7 +161,7 @@ export const handleWebPushRequest = async (
     });
 };
 
-export const handleWebPushDeletion = (
+export const handleWebPushDeletion = async (
     request: Request,
     params: URLPatternResult,
 ) => {
@@ -149,7 +172,15 @@ export const handleWebPushDeletion = (
 
     const { id } = params.pathname.groups;
     assert(id, 'id missing from url');
-    g_state.onDeleteNotification(id);
+
+    let uaid;
+    try {
+        uaid = await MessageId.unwrap(id);
+    } catch {
+        return new Response(null, { status: HTTP.status.NOT_FOUND });
+    }
+
+    Router.remove(uaid, id);
 
     return new Response(null, { status: HTTP.status.NO_CONTENT });
 };

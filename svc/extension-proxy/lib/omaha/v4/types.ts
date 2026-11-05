@@ -13,7 +13,6 @@ export type AppInternal = App & {
     enabled: boolean;
     installsource: string;
     lang: string;
-    ping: { r: -2 };
     updatecheck: UpdateCheck;
 };
 

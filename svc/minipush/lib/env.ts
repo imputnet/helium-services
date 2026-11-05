@@ -62,8 +62,39 @@ export const env = Object.freeze({
         64,
         Infinity,
     ),
+    maxChannelsPerUaid: getNumberClamped(
+        'MINIPUSH_MAX_CHANNELS_PER_UAID',
+        1,
+        1024,
+        Infinity,
+    ),
+    maxMailboxBytes: getNumberClamped(
+        'MINIPUSH_MAX_MAILBOX_BYTES',
+        0,
+        256 * 1024 * 1024,
+        Infinity,
+    ),
+    idleTimeoutSeconds: getNumberClamped(
+        'MINIPUSH_IDLE_TIMEOUT_SECONDS',
+        5,
+        60,
+        3600,
+    ),
+    ackTimeoutMs: getNumberClamped(
+        'MINIPUSH_ACK_TIMEOUT_MS',
+        100,
+        60_000,
+        Infinity,
+    ),
+    ackGraceMs: getNumberClamped('MINIPUSH_ACK_GRACE_MS', 0, 2000, Infinity),
+    drainSeconds: getNumberClamped('MINIPUSH_DRAIN_SECONDS', 0, 30, Infinity),
     rateLimitWindowMs: getNumber('MINIPUSH_RATE_LIMIT_WINDOW', 60 * 1000),
-    rateLimit: getNumber('MINIPUSH_RATE_LIMIT', 1000),
+    rateLimitPerChannel: getNumber('MINIPUSH_RATE_LIMIT_PER_CHANNEL', 300),
+    rateLimitConnectsPerIp: getNumber(
+        'MINIPUSH_RATE_LIMIT_CONNECTS_PER_IP',
+        600,
+    ),
+    trustProxy: getBoolean('MINIPUSH_TRUST_PROXY', false),
 
     // TODO: this is not actually implemented.
     requireVapid: getBoolean('MINIPUSH_REQUIRE_VAPID', false),

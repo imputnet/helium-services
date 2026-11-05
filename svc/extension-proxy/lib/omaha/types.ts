@@ -14,7 +14,7 @@ export type OmahaResponseAppBase = {
     status?: string;
     cohort: string;
     cohortname: string;
-    ping: { status: string };
+    ping?: { status: string };
 };
 
 export type OmahaResponseInnerBase = {
