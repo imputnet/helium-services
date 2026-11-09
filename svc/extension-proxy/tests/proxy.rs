@@ -440,3 +440,52 @@ async fn asks_for_snippets_as_chromium_does() {
     expected.extend_from_slice(UBOL.as_bytes());
     assert_eq!(body.as_ref(), expected);
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn answers_update2_requests() {
+    let s = setup(false).await;
+    let http = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .unwrap();
+    let signed = format!(
+        "http://{}/proxy?url=https%3A%2F%2Fdl.example%2Fa.crx&",
+        s.proxy
+    );
+
+    let xml = http
+        .get(format!("http://{}/?x=id%3D{UBOL}%26v%3D1.0%26uc", s.proxy))
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+    assert!(xml.contains(r#"version="2.0""#), "{xml}");
+    let codebase = xml
+        .split(r#"codebase=""#)
+        .nth(1)
+        .and_then(|rest| rest.split('"').next())
+        .unwrap()
+        .replace("&amp;", "&");
+    assert!(codebase.starts_with(&signed), "{codebase}");
+
+    let redirect = http
+        .get(format!(
+            "http://{}/?response=redirect&x=id%3D{UBOL}%26v%3D0.0.0.0%26uc",
+            s.proxy
+        ))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(redirect.status(), 302);
+    let location = redirect.headers()["location"].to_str().unwrap().to_owned();
+    assert!(location.starts_with(&signed), "{location}");
+
+    let download = http.get(&location).send().await.unwrap();
+    assert_eq!(
+        download.status(),
+        502,
+        "signed and fetched, but dl.example is unreachable"
+    );
+}
