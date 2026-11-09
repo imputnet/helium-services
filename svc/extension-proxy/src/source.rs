@@ -103,12 +103,7 @@ impl UpstreamSource {
         )
     }
 
-    async fn ask(
-        &self,
-        apps: &[&App],
-        exclude: &HashSet<&AppId>,
-        user_agent: &str,
-    ) -> Vec<AppResponse> {
+    async fn ask(&self, apps: &[&App], exclude: &HashSet<&AppId>) -> Vec<AppResponse> {
         let mut all: Vec<App> = apps.iter().map(|&app| app.clone()).collect();
         all.extend(
             self.pool
@@ -122,7 +117,7 @@ impl UpstreamSource {
         );
         all.shuffle(&mut rand::rng());
 
-        let answers = match self.upstream.check(&all, user_agent).await {
+        let answers = match self.upstream.check(&all).await {
             Ok(answers) => answers,
             Err(e) => {
                 eprintln!("upstream: {e}");
@@ -147,11 +142,6 @@ impl UpstreamSource {
 impl Source for UpstreamSource {
     fn check<'a>(&'a self, check: Check<'a>) -> BoxFuture<'a, Vec<AppResponse>> {
         Box::pin(async move {
-            let user_agent = check
-                .headers
-                .get(http::header::USER_AGENT)
-                .and_then(|v| v.to_str().ok())
-                .unwrap_or_default();
             let valid: Vec<&App> = check
                 .apps
                 .iter()
@@ -159,9 +149,7 @@ impl Source for UpstreamSource {
                 .filter(|app| is_valid_crx_id(app.appid.as_str()))
                 .collect();
             let exclude: HashSet<&AppId> = valid.iter().map(|app| &app.appid).collect();
-            let batches = valid
-                .chunks(BATCH)
-                .map(|batch| self.ask(batch, &exclude, user_agent));
+            let batches = valid.chunks(BATCH).map(|batch| self.ask(batch, &exclude));
             let answers: Vec<AppResponse> = join_all(batches).await.into_iter().flatten().collect();
 
             check

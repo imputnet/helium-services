@@ -5,6 +5,14 @@ use tokio::sync::Mutex;
 
 const REFRESH: Duration = Duration::from_secs(3600);
 
+pub fn user_agent(version: &Version) -> String {
+    let version = version.to_string();
+    let major = version.split('.').next().unwrap_or_default();
+    format!(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{major}.0.0.0 Safari/537.36"
+    )
+}
+
 pub struct ChromeVersions {
     http: reqwest::Client,
     url: String,
@@ -60,5 +68,18 @@ impl ChromeVersions {
             .into_iter()
             .filter_map(|r| r.version.parse().ok())
             .collect())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reduces_the_user_agent_to_the_major_version() {
+        assert_eq!(
+            user_agent(&"150.0.7000.12".parse().unwrap()),
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+        );
     }
 }

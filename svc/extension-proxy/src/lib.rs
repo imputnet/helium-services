@@ -55,6 +55,7 @@ pub struct Proxy {
     http: reqwest::Client,
     signer: Option<Arc<signed::UrlSigner>>,
     snippet_url: String,
+    versions: Arc<versions::ChromeVersions>,
 }
 
 impl Proxy {
@@ -99,6 +100,7 @@ impl Proxy {
             http,
             signer,
             snippet_url: config.snippet_url,
+            versions,
         })
     }
 
@@ -114,17 +116,30 @@ impl Proxy {
         response
     }
 
+    async fn user_agent(&self) -> Option<String> {
+        self.versions.pick().await.map(|v| versions::user_agent(&v))
+    }
+
     pub async fn handle(&self, request: http::Request<Incoming>) -> http::Response<Body> {
         match request.uri().path() {
             "/" => Self::update(&self.webstore, request).await,
             "/com" => Self::update(&self.components, request).await,
             "/proxy" => {
                 let (parts, _) = request.into_parts();
-                passthrough::proxy(&self.http, self.signer.as_deref(), &parts).await
+                let user_agent = self.user_agent().await;
+                passthrough::proxy(
+                    &self.http,
+                    self.signer.as_deref(),
+                    &parts,
+                    user_agent.as_deref(),
+                )
+                .await
             }
             "/cws_snippet" => {
                 let (parts, _) = request.into_parts();
-                passthrough::snippet(&self.http, &self.snippet_url, &parts).await
+                let user_agent = self.user_agent().await;
+                passthrough::snippet(&self.http, &self.snippet_url, &parts, user_agent.as_deref())
+                    .await
             }
             "/health" => http::Response::new(passthrough::full("ok")),
             _ => passthrough::error(StatusCode::NOT_FOUND, "Not Found"),

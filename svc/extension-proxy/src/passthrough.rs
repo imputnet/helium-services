@@ -2,8 +2,8 @@ use crate::signed::{UnwrapError, UrlSigner};
 use bytes::Bytes;
 use futures_util::TryStreamExt;
 use http::header::{
-    ACCEPT, ACCEPT_RANGES, CONTENT_RANGE, CONTENT_TYPE, ETAG, HeaderName, IF_MATCH,
-    IF_MODIFIED_SINCE, IF_NONE_MATCH, IF_RANGE, LAST_MODIFIED, RANGE, USER_AGENT, VARY,
+    ACCEPT_RANGES, CONTENT_RANGE, CONTENT_TYPE, ETAG, HeaderName, IF_MATCH, IF_MODIFIED_SINCE,
+    IF_NONE_MATCH, IF_RANGE, LAST_MODIFIED, RANGE, USER_AGENT, VARY,
 };
 use http::{HeaderMap, Method, StatusCode, request};
 use http_body_util::combinators::BoxBody;
@@ -15,14 +15,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 pub type Body = BoxBody<Bytes, BoxError>;
 
-const REQUEST_HEADERS: [HeaderName; 6] = [
-    USER_AGENT,
-    RANGE,
-    IF_MATCH,
-    IF_NONE_MATCH,
-    IF_MODIFIED_SINCE,
-    IF_RANGE,
-];
+const REQUEST_HEADERS: [HeaderName; 5] =
+    [RANGE, IF_MATCH, IF_NONE_MATCH, IF_MODIFIED_SINCE, IF_RANGE];
 
 const RESPONSE_HEADERS: [HeaderName; 6] = [
     CONTENT_TYPE,
@@ -83,6 +77,7 @@ pub async fn proxy(
     http: &reqwest::Client,
     signer: Option<&UrlSigner>,
     parts: &request::Parts,
+    user_agent: Option<&str>,
 ) -> http::Response<Body> {
     if parts.method != Method::GET {
         return error(StatusCode::METHOD_NOT_ALLOWED, "method not allowed");
@@ -101,12 +96,15 @@ pub async fn proxy(
         Err(UnwrapError::Malformed) => return error(StatusCode::BAD_REQUEST, "malformed url"),
     };
 
-    match http
+    let mut request = http
         .get(url)
-        .headers(filtered(&parts.headers, &REQUEST_HEADERS))
-        .send()
-        .await
-    {
+        .headers(filtered(&parts.headers, &REQUEST_HEADERS));
+
+    if let Some(user_agent) = user_agent {
+        request = request.header(USER_AGENT, user_agent);
+    }
+
+    match request.send().await {
         Ok(upstream) => forward(upstream),
         Err(e) => {
             eprintln!("proxy: {e}");
@@ -119,6 +117,7 @@ pub async fn snippet(
     http: &reqwest::Client,
     url_template: &str,
     parts: &request::Parts,
+    user_agent: Option<&str>,
 ) -> http::Response<Body> {
     if parts.method != Method::GET && parts.method != Method::POST {
         return error(StatusCode::METHOD_NOT_ALLOWED, "method not allowed");
@@ -132,14 +131,19 @@ pub async fn snippet(
         return error(StatusCode::BAD_REQUEST, "missing or invalid extension id");
     };
 
-    match http
+    let mut body = vec![0x0a, id.len() as u8];
+    body.extend_from_slice(id.as_bytes());
+    let mut request = http
         .post(url_template.replace("{}", &id))
-        .header(ACCEPT, "application/x-protobuf")
         .header(CONTENT_TYPE, "application/x-protobuf")
         .header("x-http-method-override", "GET")
-        .send()
-        .await
-    {
+        .body(body);
+
+    if let Some(user_agent) = user_agent {
+        request = request.header(USER_AGENT, user_agent);
+    }
+
+    match request.send().await {
         Ok(upstream) => forward(upstream),
         Err(e) => {
             eprintln!("snippet: {e}");

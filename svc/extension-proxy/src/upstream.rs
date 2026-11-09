@@ -1,5 +1,5 @@
 use crate::passthrough::BoxError;
-use crate::versions::ChromeVersions;
+use crate::versions::{ChromeVersions, user_agent};
 use omaha_protocol::v4::{self, RequestIds};
 use omaha_protocol::{App, AppResponse, Client, Hardware, Platform, Protocol, Request, Version};
 use rand::Rng;
@@ -100,11 +100,7 @@ impl Upstream {
         }
     }
 
-    pub async fn check(
-        &self,
-        apps: &[App],
-        user_agent: &str,
-    ) -> Result<Vec<AppResponse>, BoxError> {
+    pub async fn check(&self, apps: &[App]) -> Result<Vec<AppResponse>, BoxError> {
         let chrome = self.versions.pick().await.ok_or("no chrome version")?;
         let ids = RequestIds {
             session_id: uuid(),
@@ -127,7 +123,7 @@ impl Upstream {
         let response = self
             .http
             .post(url)
-            .header(http::header::USER_AGENT, user_agent)
+            .header(http::header::USER_AGENT, user_agent(&chrome))
             .header(http::header::CONTENT_TYPE, "application/json")
             .header("priority", "u=4, i")
             .header("sec-fetch-dest", "empty")

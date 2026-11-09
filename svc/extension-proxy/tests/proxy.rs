@@ -13,11 +13,13 @@ use tokio::net::TcpListener;
 const UBOL: &str = "ddkjiahejlhfcafbddmgiahcphecmpfh";
 const OTHER: &str = "cjpalhdlnbpafiamejdnhcphjbkeiagm";
 const CRLSET: &str = "hfnkpimlhhgieaddgfemjhofmfblmnib";
+const CHROME_UA: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36";
 const CRX: &[u8] = b"Cr24 pretend this is a crx";
 
 #[derive(Default)]
 struct Seen {
     checks: Vec<(http::HeaderMap, String)>,
+    snippets: Vec<(http::Method, http::HeaderMap, Bytes)>,
 }
 
 struct Google {
@@ -91,6 +93,18 @@ async fn google_service(
     let body = body.collect().await.unwrap().to_bytes();
 
     match parts.uri.path() {
+        path if path.starts_with("/snippet/") => {
+            google
+                .seen
+                .lock()
+                .unwrap()
+                .snippets
+                .push((parts.method, parts.headers, body));
+            http::Response::builder()
+                .header("content-type", "application/x-protobuf")
+                .body(Full::new(Bytes::from_static(b"\x0a\x03abc")))
+                .unwrap()
+        }
         "/versions" => http::Response::new(Full::new(Bytes::from(
             r#"[{"version":"150.0.7000.1"},{"version":"150.0.7000.2"}]"#,
         ))),
@@ -262,7 +276,7 @@ async fn rewrites_answers_and_hides_the_client() {
 
     let seen = s.google.seen.lock().unwrap();
     let (headers, body) = &seen.checks[0];
-    assert_eq!(headers["user-agent"], "Helium/157 test");
+    assert_eq!(headers["user-agent"], CHROME_UA);
     assert_eq!(headers["x-goog-update-interactivity"], "bg");
     for private in [
         "aaaaaaaa",
@@ -395,4 +409,34 @@ async fn batches_never_mix_in_the_clients_own_apps() {
         .filter(|id| *id == UBOL)
         .count();
     assert_eq!(sent, 1);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn asks_for_snippets_as_chromium_does() {
+    let s = setup(false).await;
+    let response = reqwest::Client::new()
+        .get(format!("http://{}/cws_snippet?id={UBOL}", s.proxy))
+        .header("user-agent", "Helium/157 test")
+        .header("cookie", "secret=1")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), 200);
+    assert_eq!(response.bytes().await.unwrap().as_ref(), b"\x0a\x03abc");
+
+    let seen = s.google.seen.lock().unwrap();
+    let (method, headers, body) = &seen.snippets[0];
+    assert_eq!(method, http::Method::POST);
+    assert_eq!(headers["x-http-method-override"], "GET");
+    assert_eq!(headers["content-type"], "application/x-protobuf");
+    assert_eq!(headers["user-agent"], CHROME_UA);
+    assert!(
+        headers
+            .get("accept")
+            .is_none_or(|a| a != "application/x-protobuf")
+    );
+    assert!(headers.get("cookie").is_none());
+    let mut expected = vec![0x0a, 32];
+    expected.extend_from_slice(UBOL.as_bytes());
+    assert_eq!(body.as_ref(), expected);
 }
