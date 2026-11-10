@@ -16,9 +16,12 @@ const secret = () =>
 export const sharedSecrets = () => ({
     MINIPUSH_HMAC_SECRET: secret(),
     MINIPUSH_ENDPOINT_SECRET: secret(),
+    MINIPUSH_MESH_SECRET: secret(),
 });
 
 export type Node = {
+    id: string;
+    env: Record<string, string>;
     url: string;
     wsUrl: string;
     proc: Deno.ChildProcess;
@@ -46,17 +49,21 @@ export const waitFor = async (
 export const startNode = async (
     env: Record<string, string> = {},
 ): Promise<Node> => {
-    const port = freePort();
+    const port = env.MINIPUSH_PORT ?? String(freePort());
     const url = `http://127.0.0.1:${port}/`;
+    const id = env.MINIPUSH_NODE_ID ?? 'local';
+    env = {
+        ...sharedSecrets(),
+        MINIPUSH_PORT: port,
+        MINIPUSH_MESH_PORT: String(freePort()),
+        MINIPUSH_BASE_URL: url,
+        ...env,
+    };
+
     const proc = new Deno.Command(Deno.execPath(), {
         args: ['run', '-A', 'main.ts'],
         cwd: ROOT,
-        env: {
-            ...sharedSecrets(),
-            MINIPUSH_PORT: String(port),
-            MINIPUSH_BASE_URL: url,
-            ...env,
-        },
+        env,
         stdout: 'piped',
         stderr: 'piped',
     }).spawn();
@@ -115,6 +122,8 @@ export const startNode = async (
     }
 
     return {
+        id,
+        env,
         url,
         wsUrl: url.replace(/^http/, 'ws'),
         proc,
@@ -123,6 +132,40 @@ export const startNode = async (
         exited: () => status,
     };
 };
+
+// Starts a stopped node again, on the same ports and with the same config.
+export const restartNode = (node: Node) => startNode(node.env);
+
+export type ClusterMember = {
+    id: string;
+    meshPort: number;
+};
+
+// Starts members which all know about each other. `env` is applied to
+// every member, `perMember` to specific ones.
+export const startCluster = async (
+    ids: string[],
+    env: Record<string, string> = {},
+    perMember: Record<string, Record<string, string>> = {},
+) => {
+    const secrets = sharedSecrets();
+    const members = ids.map((id) => ({ id, meshPort: freePort() }));
+    const peers = clusterPeers(members);
+
+    return await Promise.all(members.map((m) =>
+        startNode({
+            ...secrets,
+            MINIPUSH_NODE_ID: m.id,
+            MINIPUSH_MESH_PORT: String(m.meshPort),
+            MINIPUSH_PEERS: peers,
+            ...env,
+            ...perMember[m.id],
+        })
+    ));
+};
+
+export const clusterPeers = (members: ClusterMember[]) =>
+    members.map((m) => `${m.id}=ws://127.0.0.1:${m.meshPort}`).join(',');
 
 // deno-lint-ignore no-explicit-any
 type Json = any;

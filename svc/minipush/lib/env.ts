@@ -44,10 +44,32 @@ const getBoolean = (name: string, byDefault = false) => {
 const getHostname = () => get('MINIPUSH_BIND_HOSTNAME', '127.0.0.1');
 const getPort = () => getNumber('MINIPUSH_PORT', 10001);
 
+// MINIPUSH_PEERS=a=ws://10.0.0.1:10002,b=ws://10.0.0.2:10002
+const getPeers = () =>
+    (Deno.env.get('MINIPUSH_PEERS') || '')
+        .split(',')
+        .map((peer) => peer.trim())
+        .filter(Boolean)
+        .map((peer) => {
+            const [id, url] = peer.split(/=(.*)/s);
+            if (!id || !url || !URL.canParse(url)) {
+                throw `invalid peer in MINIPUSH_PEERS: ${peer}`;
+            }
+
+            return { id, url };
+        });
+
+const peers = getPeers();
+
 export const env = Object.freeze({
     bindHostname: getHostname(),
     port: getPort(),
     baseUrl: get('MINIPUSH_BASE_URL', `http://${getHostname()}:${getPort()}/`),
+    nodeId: get('MINIPUSH_NODE_ID', 'local'),
+    peers,
+    meshHostname: get('MINIPUSH_MESH_HOSTNAME', '127.0.0.1'),
+    meshPort: getNumber('MINIPUSH_MESH_PORT', 10002),
+    meshSecret: peers.length > 0 ? get('MINIPUSH_MESH_SECRET') : '',
     hmacSecret: get('MINIPUSH_HMAC_SECRET'),
     endpointSecret: get('MINIPUSH_ENDPOINT_SECRET'),
     maxTtlSeconds: getNumberClamped(
