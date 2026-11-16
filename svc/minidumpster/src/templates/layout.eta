@@ -6,6 +6,7 @@
 <title><%= it.title %> · minidumpster</title>
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/style.css">
+<script src="/static/app.js"></script>
 </head>
 <body>
 <header>
@@ -27,6 +28,5 @@
   <% } %>
 </header>
 <%~ it.body %>
-<script src="/static/app.js" defer></script>
 </body>
 </html>

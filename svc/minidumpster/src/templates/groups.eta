@@ -2,14 +2,14 @@
 
 <%~ include('reports-chart', { chart: it.chart, filter: it.filter, action: '/' }) %>
 
-<form class="filters" method="get" action="/">
+<form class="filters" method="get" action="/" data-autosubmit>
   <%~ include('select', { name: 'product', values: it.options.products, selected: it.filter.product }) %>
   <%~ include('select', { name: 'version', values: it.options.versions, selected: it.filter.version }) %>
   <%~ include('select', { name: 'platform', values: it.options.platforms, selected: it.filter.platform }) %>
   <%~ include('select', { name: 'ptype', values: it.options.ptypes, selected: it.filter.ptype }) %>
   <input type="hidden" name="breakdown" value="<%= it.chart.breakdown %>">
   <input type="hidden" name="sort" value="<%= it.sort %>">
-  <button type="submit">Filter</button>
+  <button type="submit" class="apply">Filter</button>
 </form>
 
 <div class="overflow">

@@ -146,7 +146,7 @@ Deno.test('OAuth callback grants a session to active org members', async () => {
             assert(homeHtml.includes('minidumpster'));
             assert(
                 homeHtml.includes(
-                    '<script src="/static/app.js" defer></script>',
+                    '<script src="/static/app.js"></script>',
                 ),
             );
             assertEquals(homeHtml.includes('<script>'), false);

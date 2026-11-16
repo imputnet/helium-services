@@ -3,11 +3,11 @@
     <div class="muted">
       Reports per day, last <%= it.chart.days %> days (<%= it.chart.total %> total, UTC)
     </div>
-    <form method="get" action="<%= it.action %>">
+    <form method="get" action="<%= it.action %>" data-autosubmit>
       <% Object.entries(it.filter).forEach(([key, value]) => { if (value) { %>
       <input type="hidden" name="<%= key %>" value="<%= value %>">
       <% } }) %>
-      <select name="breakdown" aria-label="Break down reports by" data-chart-breakdown>
+      <select name="breakdown" aria-label="Break down reports by">
         <% const choices = [['total', 'Total'], ['version', 'Version'], ['platform', 'Platform']]; choices.forEach(([value, label]) => { %>
         <option value="<%= value %>"<%~ value === it.chart.breakdown ? ' selected' : '' %>><%= label %></option>
         <% }) %>

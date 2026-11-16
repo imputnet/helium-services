@@ -135,6 +135,11 @@ form.filters {
     }
 }
 
+/* filters apply on change, so the button is only needed without js */
+.js form.filters .apply {
+    display: none;
+}
+
 .actions {
     display: flex;
     gap: .5rem;
