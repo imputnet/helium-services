@@ -1,0 +1,19 @@
+<% layout('layout') %>
+<%~ include('filters', it) %>
+<p class="muted"><%= it.h.n(it.logs) %> logs &middot; <%= it.h.n(it.names) %> names</p>
+<% if (it.rows.length === 0) { %>
+<p class="muted">No histograms<% if (it.q) { %> matching &ldquo;<%= it.q %>&rdquo;<% } %>.</p>
+<% } else { %>
+<div class="wide"><table>
+  <tr><th>histogram</th><th class="num">in logs</th><th class="num">samples</th><th class="num">mean</th></tr>
+  <% for (const r of it.rows) { %>
+  <tr>
+    <td><a class="mono name<%= r.name ? '' : ' muted' %>" href="/h/<%= r.hex %><%= it.query({ q: null }) %>"><%~ it.h.name(r.name ?? r.hex) %></a></td>
+    <td class="num"><%= it.h.pct(r.logs, it.logs) %></td>
+    <td class="num"><%= it.h.n(r.samples) %></td>
+    <td class="num"><%= it.h.v(r.mean) %></td>
+  </tr>
+  <% } %>
+</table></div>
+<% if (it.rows.length >= 500) { %><p class="muted">First 500 shown.</p><% } %>
+<% } %>

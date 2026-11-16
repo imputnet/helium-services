@@ -1,0 +1,27 @@
+<% layout('layout') %>
+<%~ include('filters', it) %>
+<% if (!it.compare.pair) { %>
+<p class="muted">Need two versions with enough daily users<%= it.compare.channel ? ` on ${it.compare.channel}` : '' %>.</p>
+<% } else { %>
+<% if (it.mix) { %>
+<p class="warn"><%= it.mix.dimension %> mix differs:
+  <% for (const [i, m] of it.mix.rows.entries()) { %><%= i ? ', ' : '' %><%= m.value %> <%= it.h.pct(m.a, 1) %> &rarr; <%= it.h.pct(m.b, 1) %><% } %>
+</p>
+<% } %>
+<% if (it.rows.length === 0) { %>
+<p class="muted">No changes beyond noise.</p>
+<% } else { %>
+<div class="wide"><table>
+  <tr><th>histogram</th><th class="num">shift</th><th class="num">p50</th><th class="num">p95</th><th class="num">samples</th></tr>
+  <% for (const r of it.rows) { %>
+  <tr>
+    <td><a class="mono name<%= r.name ? '' : ' muted' %>" href="/h/<%= r.hex %><%= it.query({ a: null, b: null, os: r.os ?? it.filter.os ?? null }) %>"><%~ it.h.name(r.name ?? r.hex) %></a><% if (r.os && !it.filter.os) { %><span class="tag"><%= r.os %></span><% } %></td>
+    <td class="num"><%= it.h.pct(r.shift, 1) %></td>
+    <td class="num"><% if (r.enumLike) { %>-<% } else { %><%= it.h.v(r.a.p50) %> &rarr; <%= it.h.v(r.b.p50) %> <span class="muted">(<%= it.h.change(r.p50Change) %>)</span><% } %></td>
+    <td class="num"><% if (r.enumLike) { %>-<% } else { %><%= it.h.v(r.a.p95) %> &rarr; <%= it.h.v(r.b.p95) %><% } %></td>
+    <td class="num muted"><%= it.h.n(r.a.samples) %> / <%= it.h.n(r.b.samples) %></td>
+  </tr>
+  <% } %>
+</table></div>
+<% } %>
+<% } %>

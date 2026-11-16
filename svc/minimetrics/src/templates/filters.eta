@@ -1,0 +1,32 @@
+<form class="filters" method="get">
+  <% if (it.q) { %><input type="hidden" name="q" value="<%= it.q %>"><% } %>
+  <label class="control"><span>range</span>
+    <select name="days">
+      <% for (const d of it.ranges) { %>
+      <option value="<%= d %>"<%= d === it.days ? ' selected' : '' %>><%= d === 1 ? 'today' : `${d} days` %></option>
+      <% } %>
+    </select>
+  </label>
+  <% if (it.compare) { %>
+  <% for (const [key, i] of [['a', 0], ['b', 1]]) { %>
+  <label class="control"><span><%= key === 'a' ? 'from' : 'to' %></span>
+    <select name="<%= key %>">
+      <% for (const v of it.compare.versions) { %>
+      <option<%= it.compare.pair?.[i] === v ? ' selected' : '' %>><%= v %></option>
+      <% } %>
+    </select>
+  </label>
+  <% } %>
+  <% } %>
+  <% for (const key of ['version', 'channel', 'os', 'arch'].filter((k) => !(it.compare && k === 'version'))) { %>
+  <label class="control"><span><%= key %></span>
+    <select name="<%= key %>">
+      <option value="">all</option>
+      <% for (const v of it.options[key]) { %>
+      <option<%= it.filter[key] === v ? ' selected' : '' %>><%= v %></option>
+      <% } %>
+    </select>
+  </label>
+  <% } %>
+  <button class="control apply">apply</button>
+</form>

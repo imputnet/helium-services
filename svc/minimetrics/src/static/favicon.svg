@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" fill="none">
+    <clipPath id="tile">
+        <rect width="256" height="256" rx="60" />
+    </clipPath>
+    <rect width="256" height="256" fill="#3450d1" rx="60" />
+    <path clip-path="url(#tile)" stroke="#fff" stroke-linecap="square"
+        stroke-width="31.808" d="M64 300V164M128 300V108M192 300V52" />
+</svg>

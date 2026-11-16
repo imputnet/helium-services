@@ -1,0 +1,24 @@
+{
+    "lineWidth": 80,
+    "indentWidth": 4,
+    "typescript": {
+        "deno": true,
+        "lineWidth": 80,
+        "indentWidth": 4,
+        "quoteStyle": "preferSingle",
+        "trailingCommas": "onlyMultiLine",
+        "operatorPosition": "nextLine",
+        "binaryExpression.operatorPosition": "nextLine",
+        "conditionalExpression.operatorPosition": "nextLine",
+        "conditionalType.operatorPosition": "nextLine"
+    },
+    "json": {
+        "indentWidth": 4
+    },
+    "includes": ["src/**/*.ts", "test/**/*.ts", "*.json"],
+    "excludes": ["node_modules", "package-lock.json"],
+    "plugins": [
+        "npm:@dprint/typescript@0.101.0",
+        "npm:@dprint/json@0.26.0"
+    ]
+}

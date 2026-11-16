@@ -1,0 +1,314 @@
+:root {
+    color-scheme: light dark;
+    --bg: #fff;
+    --fg: #1c1d21;
+    --muted: #6b6f78;
+    --line: #e4e5e9;
+    --surface: #f6f7f9;
+    --accent: #2f4fd1;
+    --warn: #b45309;
+    --control: 1.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #16171a;
+        --fg: #e6e7ea;
+        --muted: #8d919b;
+        --line: #2c2e33;
+        --surface: #1e2024;
+        --accent: #7d95f5;
+        --warn: #f0a04b;
+    }
+}
+
+body {
+    font: 14px/1.5 system-ui, sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+    margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+    max-width: 1100px;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+h1 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 1.25rem 0 .25rem;
+}
+
+h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 2rem 0 .5rem;
+}
+
+.mono {
+    font-family: ui-monospace, monospace;
+    font-size: .92em;
+}
+
+/* Histogram names break at the <wbr> after each dot, not mid-word. */
+.name {
+    overflow-wrap: anywhere;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.control,
+form.filters label,
+header input {
+    box-sizing: border-box;
+    height: var(--control);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: inherit;
+    font: inherit;
+    font-size: .875rem;
+}
+
+.control {
+    padding: 0 .6rem;
+    cursor: pointer;
+
+    &:hover {
+        border-color: var(--muted);
+    }
+}
+
+header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .25rem 1.25rem;
+    padding: .75rem 0;
+    border-bottom: 1px solid var(--line);
+
+    .brand {
+        display: flex;
+
+        img {
+            width: 22px;
+            height: 22px;
+        }
+    }
+
+    nav {
+        display: flex;
+        gap: 1rem;
+
+        a {
+            color: var(--muted);
+            padding: .2rem 0;
+            border-bottom: 2px solid transparent;
+
+            &:hover {
+                color: var(--fg);
+                text-decoration: none;
+            }
+
+            &[aria-current='page'] {
+                color: var(--fg);
+                font-weight: 600;
+                border-bottom-color: var(--accent);
+            }
+        }
+    }
+
+    input {
+        width: 16rem;
+        max-width: 100%;
+        padding: 0 .6rem;
+    }
+
+    .user {
+        margin-left: auto;
+        color: var(--muted);
+        font-size: .875rem;
+    }
+}
+
+form.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin: 1rem 0;
+
+    label {
+        display: inline-flex;
+        align-items: center;
+        padding-left: .6rem;
+
+        span {
+            color: var(--muted);
+        }
+
+        &:focus-within {
+            border-color: var(--accent);
+        }
+    }
+
+    select {
+        height: 100%;
+        max-width: 13rem;
+        padding: 0 .4rem;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        outline: none;
+    }
+}
+
+/* Filters apply as soon as they change; the button is only needed without
+   JavaScript. */
+.js form.filters .apply {
+    display: none;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    gap: .5rem;
+    margin: 1rem 0;
+
+    > div {
+        padding: .45rem .7rem;
+        border-radius: 6px;
+        background: var(--surface);
+    }
+
+    span {
+        display: block;
+        color: var(--muted);
+        font-size: .75rem;
+    }
+
+    strong {
+        font-size: 1.1rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+
+    th,
+    td {
+        text-align: left;
+        padding: .35rem .6rem;
+        border-bottom: 1px solid var(--line);
+        vertical-align: middle;
+    }
+
+    th {
+        color: var(--muted);
+        font-size: .8rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    tr:hover td {
+        background: var(--surface);
+    }
+
+    &.bars .bar {
+        width: 45%;
+    }
+
+    svg {
+        display: block;
+    }
+
+    rect {
+        fill: var(--accent);
+    }
+}
+
+/* Wide tables scroll sideways on narrow screens instead of crushing the
+   histogram name column. */
+.wide {
+    overflow-x: auto;
+
+    td:first-child {
+        min-width: 16em;
+    }
+}
+
+.hash {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: 0;
+
+    .control {
+        height: 1.5rem;
+        font-size: .8rem;
+        color: var(--accent);
+    }
+}
+
+.tag {
+    display: inline-block;
+    margin-left: .35rem;
+    padding: 0 .4rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--muted);
+    font-size: .75rem;
+}
+
+.warn {
+    padding: .4rem .7rem;
+    border-left: 3px solid var(--warn);
+    border-radius: 0 4px 4px 0;
+    background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+
+td.flag {
+    color: var(--warn);
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 0 1rem 2rem;
+    }
+
+    header form,
+    header input {
+        width: 100%;
+    }
+
+    form.filters {
+        label {
+            flex: 1 1 9rem;
+        }
+
+        select {
+            flex: 1;
+            max-width: none;
+        }
+    }
+}

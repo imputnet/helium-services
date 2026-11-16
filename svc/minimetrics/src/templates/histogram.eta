@@ -1,0 +1,66 @@
+<% layout('layout') %>
+<h1 class="mono name"><%~ it.h.name(it.name ?? it.hex) %></h1>
+<form class="hash" method="post" action="/h/<%= it.hex %>/<%= it.pinned ? 'unpin' : 'pin' %><%= it.query() %>">
+  <span class="muted mono"><%= it.hex %><% if (!it.name) { %> &middot; unnamed<% } %></span>
+  <button class="control"><%= it.pinned ? 'unpin' : 'pin' %></button>
+</form>
+<%~ include('filters', it) %>
+
+<div class="stats">
+  <div><span class="muted">samples</span><strong><%= it.h.n(it.summary.samples) %></strong></div>
+  <div><span class="muted">in logs</span><strong><%= it.h.pct(it.histogramLogs, it.logs) %></strong></div>
+  <% if (!it.enumLike) { %>
+  <div><span class="muted">mean</span><strong><%= it.h.v(it.summary.mean) %></strong></div>
+  <div><span class="muted">p50</span><strong><%= it.h.v(it.summary.p50) %></strong></div>
+  <div><span class="muted">p95</span><strong><%= it.h.v(it.summary.p95) %></strong></div>
+  <div><span class="muted">p99</span><strong><%= it.h.v(it.summary.p99) %></strong></div>
+  <% } %>
+</div>
+
+<h2>Distribution</h2>
+<% const max = Math.max(0, ...it.buckets.map((b) => b.count)) %>
+<% let acc = 0 %>
+<table class="bars">
+  <tr><th><%= it.enumLike ? 'value' : 'bucket' %></th><th class="num">count</th><th class="num">%</th><th class="num">cumulative</th><th class="bar"></th></tr>
+  <% for (const b of it.buckets) { acc += b.count %>
+  <tr>
+    <td class="mono"><%= it.h.bucketLabel(b) %></td>
+    <td class="num"><%= it.h.n(b.count) %></td>
+    <td class="num"><%= it.h.pct(b.count, it.summary.samples) %></td>
+    <td class="num muted"><%= it.h.pct(acc, it.summary.samples) %></td>
+    <td class="bar"><svg width="100%" height="12" aria-hidden="true"><rect width="<%= it.h.bar(b.count, max) %>%" height="12" rx="2"/></svg></td>
+  </tr>
+  <% } %>
+</table>
+
+<% if (it.versions.length > 1 && !it.enumLike) { %>
+<h2>By version</h2>
+<table>
+  <tr><th>version</th><th class="num">samples</th><th class="num">&asymp;mean</th><th class="num">p50</th><th class="num">p95</th><th class="num">p99</th></tr>
+  <% for (const v of it.versions) { %>
+  <tr>
+    <td class="mono"><a href="<%= it.query({ version: v.version }) %>"><%= v.version %></a></td>
+    <td class="num"><%= it.h.n(v.summary.samples) %></td>
+    <td class="num"><%= it.h.v(v.mean) %></td>
+    <td class="num"><%= it.h.v(v.summary.p50) %></td>
+    <td class="num"><%= it.h.v(v.summary.p95) %></td>
+    <td class="num"><%= it.h.v(v.summary.p99) %></td>
+  </tr>
+  <% } %>
+</table>
+<% } %>
+
+<% if (it.daily.length > 1) { %>
+<h2>Daily</h2>
+<table>
+  <tr><th>day</th><th class="num">in logs</th><th class="num">samples</th><% if (!it.enumLike) { %><th class="num">mean</th><% } %></tr>
+  <% for (const d of [...it.daily].reverse()) { %>
+  <tr>
+    <td class="mono"><%= it.h.day(d.day) %></td>
+    <td class="num"><%= it.h.pct(d.logs, d.totalLogs) %></td>
+    <td class="num"><%= it.h.n(d.samples) %></td>
+    <% if (!it.enumLike) { %><td class="num"><%= it.h.v(d.mean) %></td><% } %>
+  </tr>
+  <% } %>
+</table>
+<% } %>

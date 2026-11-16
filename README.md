@@ -15,6 +15,8 @@ Chrome Web Store.
 - [bangs](svc/bangs) provides the list of !bangs used in Helium, generated
 from [Kagi's bangs](https://github.com/kagisearch/bangs) with our own extras.
 - [minidumpster](svc/minidumpster) handles and symbolicates crash reports.
+- [minimetrics](svc/minimetrics) collects opt-in usage metrics (UMA
+histograms) as daily aggregates.
 
 ## Utilities
 - [sparkler](util/sparkler) generates the Sparkle appcast for macOS updates
@@ -34,6 +36,8 @@ Everything else runs on its own:
 - minidumpster has its own [compose.yml](svc/minidumpster/compose.yml) and
 [example .env file](svc/minidumpster/.env.example), and runs alongside
 Sentry's symbolicator.
+- minimetrics has its own [compose.yml](svc/minimetrics/compose.yml) and
+[example .env file](svc/minimetrics/.env.example).
 - minipush runs from its Dockerfile. Generate its secrets with
 `deno task gen`.
 - sparkler writes its output to disk every hour, or once with `--oneshot`.

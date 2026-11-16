@@ -1,0 +1,60 @@
+<% layout('layout') %>
+<%~ include('filters', it) %>
+
+<% const max = Math.max(0, ...it.daily.map((d) => d.users)) %>
+<% const counted = it.daily.filter((d) => d.users > 0) %>
+<div class="stats">
+  <div><span class="muted">users today</span><strong><%= it.h.n(it.today) %></strong></div>
+  <div><span class="muted">avg daily users</span><strong><%= it.h.n(counted.length ? Math.round(counted.reduce((n, d) => n + d.users, 0) / counted.length) : null) %></strong></div>
+  <div><span class="muted">peak daily users</span><strong><%= it.h.n(max || null) %></strong></div>
+  <div><span class="muted">logs received</span><strong><%= it.h.n(it.daily.reduce((n, d) => n + d.logs, 0)) %></strong></div>
+</div>
+
+<% if (it.pinCount > 0) { %>
+<h2>Pinned</h2>
+<% if (!it.visible) { %>
+<p class="muted">Fewer than <%= it.minUsers %> daily users match.</p>
+<% } else { %>
+<div class="wide"><table>
+  <tr>
+    <th>histogram</th>
+    <% if (it.pair) { %>
+    <th class="num mono"><%= it.pair[0] %></th><th class="num mono"><%= it.pair[1] %></th><th class="num">p50</th><th class="num">shift</th>
+    <% } else { %>
+    <th class="num">p50</th><th class="num">p95</th>
+    <% } %>
+  </tr>
+  <% for (const p of it.pinned) { const c = p.comparison %>
+  <tr>
+    <td><a class="mono name<%= p.name ? '' : ' muted' %>" href="/h/<%= p.hex %><%= it.query() %>"><%~ it.h.name(p.name ?? p.hex) %></a></td>
+    <% if (it.pair) { %>
+    <td class="num"><%= c && !c.enumLike ? it.h.v(c.a.p50) : '-' %></td>
+    <td class="num"><%= c && !c.enumLike ? it.h.v(c.b.p50) : '-' %></td>
+    <td class="num<%= c?.significant ? ' flag' : '' %>"><%= it.h.change(c?.p50Change ?? null) %></td>
+    <td class="num<%= c?.significant ? ' flag' : '' %>"><%= c ? it.h.pct(c.shift, 1) : '-' %></td>
+    <% } else { %>
+    <td class="num"><%= it.h.v(p.overall.p50) %></td>
+    <td class="num"><%= it.h.v(p.overall.p95) %></td>
+    <% } %>
+  </tr>
+  <% } %>
+</table></div>
+<% } %>
+<% } %>
+
+<h2>Daily users</h2>
+<% if (it.daily.length === 0) { %>
+<p class="muted">No data.</p>
+<% } else { %>
+<table class="bars">
+  <tr><th>day</th><th class="num">users</th><th class="num">logs</th><th class="bar"></th></tr>
+  <% for (const d of [...it.daily].reverse()) { %>
+  <tr>
+    <td class="mono"><%= it.h.day(d.day) %></td>
+    <td class="num"><%= it.h.n(d.users) %></td>
+    <td class="num muted"><%= it.h.n(d.logs) %></td>
+    <td class="bar"><svg width="100%" height="12" aria-hidden="true"><rect width="<%= it.h.bar(d.users, max) %>%" height="12" rx="2"/></svg></td>
+  </tr>
+  <% } %>
+</table>
+<% } %>

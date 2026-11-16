@@ -1,0 +1,31 @@
+{
+    "name": "minimetrics",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "start": "node src/main.ts",
+        "dev": "node --watch-path=src src/dev.ts",
+        "test": "node --test 'test/**/*_test.ts'",
+        "check": "tsc",
+        "fmt": "dprint fmt",
+        "fmt:check": "dprint check",
+        "lint": "oxlint --deny-warnings src test",
+        "dev:seed": "node src/dev-seed.ts"
+    },
+    "dependencies": {
+        "@hono/node-server": "^2.1.8",
+        "@hono/oauth-providers": "^0.9.1",
+        "eta": "^4.6.0",
+        "hono": "^4.13.19",
+        "hono-rate-limiter": "^0.5.4"
+    },
+    "devDependencies": {
+        "@types/node": "^26.6.6",
+        "dprint": "^0.64.3",
+        "oxlint": "^1.94.0",
+        "typescript": "^7.0.2"
+    },
+    "engines": {
+        "node": ">=26"
+    }
+}

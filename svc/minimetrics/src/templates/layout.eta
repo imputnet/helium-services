@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= it.title %> &middot; minimetrics</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/app.js"></script>
+</head>
+<body>
+<header>
+  <a class="brand" href="/" aria-label="minimetrics"><img src="/static/favicon.svg" alt=""></a>
+  <nav>
+    <% for (const [section, path] of [['overview', '/'], ['histograms', '/histograms'], ['changes', '/changes']]) { %>
+    <a href="<%= path %><%= it.query ? it.query({ q: null, a: null, b: null }) : '' %>"<%~ it.section === section ? ' aria-current="page"' : '' %>><%= section %></a>
+    <% } %>
+  </nav>
+  <form method="get" action="/histograms">
+    <input name="q" placeholder="search histograms" value="<%= it.q ?? '' %>" aria-label="search histograms">
+  </form>
+  <% if (it.user) { %>
+  <span class="user"><%= it.user %> &middot; <a href="/auth/logout">log out</a></span>
+  <% } %>
+</header>
+<%~ it.body %>
+</body>
+</html>
