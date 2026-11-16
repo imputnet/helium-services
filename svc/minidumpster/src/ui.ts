@@ -116,7 +116,7 @@ function fmtTime(ms: number | null): string {
         return '—';
     }
 
-    return new Date(ms).toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+    return new Date(ms).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
 }
 
 const eta = new Eta({
