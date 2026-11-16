@@ -1,61 +1,64 @@
 <% layout('layout') %>
 
-<div class="crumbs">
-  <a href="/">← all groups</a>
+<nav class="crumbs">
+  <a href="/">crash reports</a>
   <% if (it.group) { %>
-  / <a href="/groups/<%= it.group.id %>" class="mono"><%~ include('cpp-name', { name: it.group.title, collapseCppName: it.collapseCppName }) %></a>
+  <span>/</span>
+  <a href="/groups/<%= it.group.id %>" class="mono"><%~ include('cpp-name', { name: it.group.title, collapseCppName: it.collapseCppName }) %></a>
   <% } %>
-</div>
-
-<h2>Report <span class="mono"><%= it.report.id %></span></h2>
-<p>
-  <strong><%= it.report.product ?? 'unknown product' %> <%= it.report.version ?? '' %></strong>
-  <% if (it.report.platform) { %> · <%= it.report.platform %><% } %>
-</p>
-
-<p>
+</nav>
+<h1>
+  Report <span class="mono"><%= it.report.id %></span>
   <span class="pill"><%= it.report.kind === 'apple' ? 'macOS crash report' : 'minidump' %></span>
   <% if (it.report.status === 'processed' && !it.report.symbolicated) { %>
   <span class="pill pill-warn" title="Symbols for this build were not available when the report was processed. Uploading them requeues it automatically.">missing symbols</span>
   <% } %>
-  Status: <span class="status-<%= it.report.status %>"><%= it.report.status %></span>
-  <% if (it.report.error) { %> — <code><%= it.report.error %></code><% } %>
-  · received <%= it.fmtTime(it.report.received_at) %>
-  <% if (it.report.processed_at) { %> · processed <%= it.fmtTime(it.report.processed_at) %><% } %>
-  · deletes at <%= it.fmtTime(it.retentionDeadline) %>
-</p>
+</h1>
 
-<p>
-  <a href="/reports/<%= it.report.id %>/dump">Download raw <%= it.report.kind === 'apple' ? 'crash report' : '.dmp' %></a>
-  <% if (it.report.status === 'processed') { %>
-  · <a href="/reports/<%= it.report.id %>/json">Download processed JSON</a>
+<div class="stats">
+  <div><span>product</span><strong><%= it.report.product ?? 'unknown' %> <%= it.report.version ?? '' %></strong></div>
+  <div><span>platform</span><strong><%= it.report.platform ?? '—' %></strong></div>
+  <div>
+    <span>status</span>
+    <strong class="status status-<%= it.report.status %>"><%= it.report.status %></strong>
+  </div>
+  <div><span>received</span><strong><%= it.fmtTime(it.report.received_at) %></strong></div>
+  <% if (it.report.processed_at) { %>
+  <div><span>processed</span><strong><%= it.fmtTime(it.report.processed_at) %></strong></div>
   <% } %>
-</p>
+  <div><span>deletes at</span><strong><%= it.fmtTime(it.retentionDeadline) %></strong></div>
+</div>
+
+<% if (it.report.error) { %>
+<p class="warn mono"><%= it.report.error %></p>
+<% } %>
 
 <div class="actions">
-<% if (it.githubIssueUrl) { %>
-<a class="button" href="<%= it.githubIssueUrl %>" target="_blank"
-   rel="noopener noreferrer">Open GitHub issue</a>
-<% } %>
-<% if (it.hasProcessedResponse) { %>
-<button type="button" data-copy-report>Copy</button>
-<% } %>
-<% if (it.report.status === 'processed') { %>
-<form method="post" action="/reports/<%= it.report.id %>/reprocess">
-  <button type="submit">Reprocess report</button>
-</form>
-<% } %>
-<form method="post" action="/reports/<%= it.report.id %>/delete"
-      data-confirm="Delete this report and its files?">
-  <button type="submit" class="danger">Delete report</button>
-</form>
+  <% if (it.githubIssueUrl) { %>
+  <a class="control primary" href="<%= it.githubIssueUrl %>" target="_blank"
+     rel="noopener noreferrer">open GitHub issue</a>
+  <% } %>
+  <% if (it.hasProcessedResponse) { %>
+  <button type="button" class="control" data-copy-report>copy</button>
+  <% } %>
+  <a class="control" href="/reports/<%= it.report.id %>/dump">raw <%= it.report.kind === 'apple' ? 'crash report' : '.dmp' %></a>
+  <% if (it.report.status === 'processed') { %>
+  <a class="control" href="/reports/<%= it.report.id %>/json">processed JSON</a>
+  <form method="post" action="/reports/<%= it.report.id %>/reprocess">
+    <button type="submit" class="control">reprocess report</button>
+  </form>
+  <% } %>
+  <form method="post" action="/reports/<%= it.report.id %>/delete"
+        data-confirm="Delete this report and its files?">
+    <button type="submit" class="control danger">delete report</button>
+  </form>
 </div>
 
 <h2>Annotations</h2>
 <div class="overflow">
-<table>
+<table class="kv">
   <thead>
-    <tr><th>Key</th><th>Value</th></tr>
+    <tr><th>key</th><th>value</th></tr>
   </thead>
   <tbody>
     <% if (it.annotations.length === 0) { %>

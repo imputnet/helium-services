@@ -38,7 +38,7 @@ document.addEventListener('click', (event) => {
             return response.text();
         }).then((text) => navigator.clipboard.writeText(text)).then(() => {
             const original = copy.textContent;
-            copy.textContent = 'Copied';
+            copy.textContent = 'copied';
             setTimeout(() => {
                 copy.textContent = original;
             }, 1200);

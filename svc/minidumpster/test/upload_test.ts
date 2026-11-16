@@ -235,7 +235,7 @@ Deno.test('authenticated report responses are not cached', async () => {
             initialPage.headers.get('cache-control'),
             'private, no-store',
         );
-        assert((await initialPage.text()).includes('Open GitHub issue'));
+        assert((await initialPage.text()).includes('open GitHub issue'));
 
         const dump = await app.request(`/reports/${id}/dump`, {
             headers: { cookie },
@@ -312,8 +312,8 @@ Deno.test('processed reports can be manually requeued', async () => {
             headers: { cookie },
         });
         const pageText = await page.text();
-        assert(pageText.includes('Reprocess report'));
-        assertFalse(pageText.includes('Open GitHub issue'));
+        assert(pageText.includes('reprocess report'));
+        assertFalse(pageText.includes('open GitHub issue'));
 
         const response = await app.request(`/reports/${id}/reprocess`, {
             method: 'POST',
@@ -380,7 +380,7 @@ Deno.test('reports can be deleted and empty groups are pruned', async () => {
         const page = await app.request(`/reports/${ids[0]}`, {
             headers: { cookie },
         });
-        assert((await page.text()).includes('Delete report'));
+        assert((await page.text()).includes('delete report'));
 
         const first = await app.request(`/reports/${ids[0]}/delete`, {
             method: 'POST',
@@ -451,7 +451,7 @@ Deno.test('groups can be deleted with all reports and payloads', async () => {
         const page = await app.request(`/groups/${groupId}`, {
             headers: { cookie },
         });
-        assert((await page.text()).includes('Delete group'));
+        assert((await page.text()).includes('delete group'));
 
         const response = await app.request(`/groups/${groupId}/delete`, {
             method: 'POST',
@@ -518,7 +518,7 @@ Deno.test('all reports in a group can be manually requeued', async () => {
         const page = await app.request(`/groups/${groupId}`, {
             headers: { cookie },
         });
-        assert((await page.text()).includes('Reprocess group'));
+        assert((await page.text()).includes('reprocess group'));
 
         const response = await app.request(`/groups/${groupId}/reprocess`, {
             method: 'POST',

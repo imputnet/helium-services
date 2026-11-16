@@ -195,6 +195,5 @@ Deno.test('symbolsPage renders release and installed bundle state', () => {
     assert(html.includes('x86_64'));
     assert(html.includes('temporary failure'));
     assert(html.includes('helium-0.14.5.1'));
-    assert(html.includes('<span class="muted">symbols</span>'));
-    assert(!html.includes('href="/symbols"'));
+    assert(html.includes('<a href="/symbols" aria-current="page">symbols</a>'));
 });

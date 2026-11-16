@@ -3,21 +3,25 @@
 <% } else { %>
 
 <p class="muted">
-  <%= it.crashReason %><% if (it.sysInfo) { %> · <%= it.sysInfo %><% } %>
+  <span class="mono"><%= it.crashReason %></span><% if (it.sysInfo) { %> · <%= it.sysInfo %><% } %>
 </p>
 
 <% it.threads.forEach((t) => { %>
-<h3>Thread <%= t.id %><% if (t.name) { %> — <%= t.name %><% } %><% if (t.crashed) { %> (crashed)<% } %></h3>
+<h3>
+  Thread <%= t.id %><% if (t.name) { %> <span class="muted"><%= t.name %></span><% } %>
+  <% if (t.crashed) { %><span class="pill pill-warn">crashed</span><% } %>
+</h3>
 <div class="overflow">
 <table class="frames">
   <thead>
-    <tr><th>#</th><th>Function</th><th>File</th><th>Module</th></tr>
+    <tr><th class="num">#</th><th>function</th><th>file</th><th>module</th></tr>
   </thead>
   <tbody>
     <% t.rows.forEach((row) => { %>
     <% if (row.kind === 'fold') { const first = row.frames[0].index; const last = row.frames[row.frames.length - 1].index; %>
     <tr class="stack-fold-summary">
-      <td colspan="4">
+      <td></td>
+      <td colspan="3">
         <button type="button" class="stack-fold-toggle mono" data-stack-fold-toggle="<%= row.id %>" aria-expanded="false">
           frames #<%= first %>–#<%= last %> · <%= row.frames.length %> folded frames
         </button>
