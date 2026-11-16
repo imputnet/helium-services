@@ -130,7 +130,7 @@ Deno.test('stackHtml folds consecutive crash machinery frames', () => {
                 { function: 'content::ActualCrashOrigin()' },
             ],
         }],
-    }, false);
+    }, false).replaceAll('<wbr>', '');
 
     assert(html.includes('7 folded frames'));
     assert(html.includes('data-stack-fold-row="stack-fold-0-0" hidden'));

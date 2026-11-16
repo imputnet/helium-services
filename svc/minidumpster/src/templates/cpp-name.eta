@@ -1,10 +1,11 @@
 <% const short = it.collapseCppName(it.name) %>
+<% const parts = (name) => name.split('::') %>
 <% if (short === it.name) { %>
-<%= it.name %>
+<% parts(it.name).forEach((p, i) => { %><% if (i) { %>::<wbr><% } %><%= p %><% }) %>
 <% } else { %>
 <span
   class="expandable"
   data-full="<%= it.name %>"
   title="<%= it.name %>"
-><%= short %></span>
+><% parts(short).forEach((p, i) => { %><% if (i) { %>::<wbr><% } %><%= p %><% }) %></span>
 <% } %>
