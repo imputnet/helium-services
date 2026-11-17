@@ -1,0 +1,42 @@
+[package]
+name = "components"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.95"
+publish = false
+
+[dependencies]
+omaha-protocol = "0.3"
+omaha-diff = "0.1.2"
+omaha-server = { version = "0.1.7", features = ["metrics", "serve"] }
+crx3 = "2.0.1"
+aws-lc-rs = "1"
+cup2 = "1.0.1"
+bytes = "1"
+http = "1"
+http-body-util = "0.1"
+hyper = { version = "1", features = ["server", "http1"] }
+metrics-exporter-prometheus = { version = "0.18", default-features = false, features = ["http-listener"] }
+pem-rfc7468 = { version = "1", features = ["alloc"] }
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "http2"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "signal", "sync", "fs"] }
+tower = { version = "0.5", default-features = false, features = ["util"] }
+tower-http = { version = "0.6", features = ["fs"] }
+tower-service = "0.3"
+zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
+flate2 = "1"
+zstd = "0.13"
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
