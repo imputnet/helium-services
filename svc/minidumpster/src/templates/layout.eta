@@ -6,27 +6,24 @@
 <title><%= it.title %> · minidumpster</title>
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/style.css">
+<script src="/static/app.js"></script>
 </head>
 <body>
 <header>
   <a class="brand" href="/" aria-label="minidumpster"><img src="/static/favicon.svg" alt=""></a>
-  <% if (!it.section || it.section === 'reports') { %>
-  <span class="muted">crash reports</span>
-  <% } else { %><a href="/">crash reports</a><% } %>
-  <% if (it.section === 'upload') { %>
-  <span class="muted">upload report</span>
-  <% } else { %><a href="/upload">upload report</a><% } %>
-  <% if (it.section === 'symbols') { %>
-  <span class="muted">symbols</span>
-  <% } else { %><a href="/symbols">symbols</a><% } %>
-  <form class="search" method="get" action="/search">
-    <input name="q" placeholder="report id / guid / function" required>
+  <nav>
+    <% const current = it.section ?? 'reports' %>
+    <% for (const [section, path, label] of [['reports', '/', 'crash reports'], ['upload', '/upload', 'upload report'], ['symbols', '/symbols', 'symbols']]) { %>
+    <a href="<%= path %>"<%~ current === section ? ' aria-current="page"' : '' %>><%= label %></a>
+    <% } %>
+  </nav>
+  <form method="get" action="/search">
+    <input name="q" placeholder="report id / guid / function" value="<%= it.query ?? '' %>" aria-label="search reports" required>
   </form>
   <% if (it.user) { %>
-  <span class="user"><%= it.user %> · <a href="/auth/logout">logout</a></span>
+  <span class="user"><%= it.user %> · <a href="/auth/logout">log out</a></span>
   <% } %>
 </header>
 <%~ it.body %>
-<script src="/static/app.js" defer></script>
 </body>
 </html>

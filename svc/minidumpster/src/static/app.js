@@ -1,5 +1,7 @@
 // deno-lint-ignore-file
 
+document.documentElement.classList.add('js');
+
 document.addEventListener('submit', (event) => {
     const message = event.target.dataset.confirm;
     if (message && !globalThis.confirm(message)) {
@@ -8,9 +10,7 @@ document.addEventListener('submit', (event) => {
 });
 
 document.addEventListener('change', (event) => {
-    if (event.target.matches('[data-chart-breakdown]')) {
-        event.target.form.requestSubmit();
-    }
+    event.target.closest('form[data-autosubmit]')?.requestSubmit();
 });
 
 document.addEventListener('click', (event) => {
@@ -38,7 +38,7 @@ document.addEventListener('click', (event) => {
             return response.text();
         }).then((text) => navigator.clipboard.writeText(text)).then(() => {
             const original = copy.textContent;
-            copy.textContent = 'Copied';
+            copy.textContent = 'copied';
             setTimeout(() => {
                 copy.textContent = original;
             }, 1200);

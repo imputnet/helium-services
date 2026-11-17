@@ -75,17 +75,17 @@ Deno.test('daily charts aggregate breakdowns, filters, and entire groups', async
             '/?breakdown=platform&product=Helium&version=2.0',
         );
         assert(overview.includes('(1 total, UTC)'));
-        assert(overview.includes('Windows (1)'));
+        assert(overview.includes('Windows <small>(1)</small>'));
         assert(overview.includes('breakdown=platform'));
         assert(overview.includes('name="version" value="2.0"'));
         const group = await page(`/groups/${groupId}?breakdown=version`);
         assert(group.includes('(52 total, UTC)'));
-        assert(group.includes('1.0 (51)'));
-        assert(group.includes('2.0 (1)'));
-        assert(!group.includes('old (1)'));
+        assert(group.includes('1.0 <small>(51)</small>'));
+        assert(group.includes('2.0 <small>(1)</small>'));
+        assert(!group.includes('old <small>(1)</small>'));
         assertEquals((group.match(/class="bar"/g) ?? []).length, 14);
         const unknown = await page('/?breakdown=platform');
-        assert(unknown.includes('Unknown (1)'));
+        assert(unknown.includes('Unknown <small>(1)</small>'));
         const fallback = await page(`/groups/${groupId}?breakdown=invalid`);
         assert(fallback.includes('value="total" selected'));
         assert(fallback.includes('(52 total, UTC)'));

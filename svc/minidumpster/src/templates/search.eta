@@ -1,18 +1,18 @@
 <% layout('layout') %>
-<h2>Search results for <span class="mono"><%= it.query %></span></h2>
+<h1>Results for <span class="mono"><%= it.query %></span></h1>
 <% if (it.groups.length > 0) { %>
-<h3>Groups</h3>
+<h2>Groups</h2>
 <div class="overflow">
 <table>
   <thead>
-    <tr><th>Group</th><th class="num">Reports</th><th>Last seen</th></tr>
+    <tr><th>group</th><th class="num">reports</th><th>last seen</th></tr>
   </thead>
   <tbody>
     <% it.groups.forEach((g) => { %>
     <tr>
       <td><a href="/groups/<%= g.id %>" class="mono"><%~ include('cpp-name', { name: g.title, collapseCppName: it.collapseCppName }) %></a></td>
       <td class="num"><%= g.report_count %></td>
-      <td class="muted"><%= it.fmtTime(g.last_seen) %></td>
+      <td class="time"><%= it.fmtTime(g.last_seen) %></td>
     </tr>
     <% }) %>
   </tbody>
@@ -21,7 +21,7 @@
 <% } %>
 
 <% if (it.reports.length > 0) { %>
-<h3>Reports</h3>
+<h2>Reports</h2>
 <%~ include('reports-table', { reports: it.reports, fmtTime: it.fmtTime }) %>
 <% } %>
 

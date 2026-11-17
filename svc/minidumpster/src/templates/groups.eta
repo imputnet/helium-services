@@ -1,27 +1,27 @@
 <% layout('layout') %>
 
-<%~ include('reports-chart', { chart: it.chart, filter: it.filter, action: '/' }) %>
-
-<form class="filters" method="get" action="/">
+<form class="filters" method="get" action="/" data-autosubmit>
   <%~ include('select', { name: 'product', values: it.options.products, selected: it.filter.product }) %>
   <%~ include('select', { name: 'version', values: it.options.versions, selected: it.filter.version }) %>
   <%~ include('select', { name: 'platform', values: it.options.platforms, selected: it.filter.platform }) %>
   <%~ include('select', { name: 'ptype', values: it.options.ptypes, selected: it.filter.ptype }) %>
   <input type="hidden" name="breakdown" value="<%= it.chart.breakdown %>">
   <input type="hidden" name="sort" value="<%= it.sort %>">
-  <button type="submit">Filter</button>
+  <button class="control apply">apply</button>
 </form>
 
+<%~ include('reports-chart', { chart: it.chart, filter: it.filter, action: '/' }) %>
+
 <div class="overflow">
-<table>
+<table class="groups">
   <thead>
     <tr>
-      <th>Signature</th>
-      <th class="num"><a href="<%= it.countHref %>">Count<%= it.sort === 'count' ? ' ▾' : '' %></a></th>
-      <th>Versions</th>
-      <th>Platforms</th>
-      <th>First seen</th>
-      <th><a href="<%= it.lastSeenHref %>">Last seen<%= it.sort === 'last_seen' ? ' ▾' : '' %></a></th>
+      <th>signature</th>
+      <th class="num"<%~ it.sort === 'count' ? ' aria-sort="descending"' : '' %>><a href="<%= it.countHref %>">reports<%= it.sort === 'count' ? ' ↓' : '' %></a></th>
+      <th>versions</th>
+      <th>platforms</th>
+      <th>first seen</th>
+      <th<%~ it.sort === 'last_seen' ? ' aria-sort="descending"' : '' %>><a href="<%= it.lastSeenHref %>">last seen<%= it.sort === 'last_seen' ? ' ↓' : '' %></a></th>
     </tr>
   </thead>
   <tbody>
@@ -37,18 +37,10 @@
         <% } %>
       </td>
       <td class="num"><%= g.report_count %></td>
-      <td>
-        <% g.versions.forEach((v) => { %>
-        <span class="pill"><%= v %></span>
-        <% }) %>
-      </td>
-      <td>
-        <% g.platforms.forEach((p) => { %>
-        <span class="pill"><%= p %></span>
-        <% }) %>
-      </td>
-      <td class="muted"><%= it.fmtTime(g.first_seen) %></td>
-      <td class="muted"><%= it.fmtTime(g.last_seen) %></td>
+      <td><div class="tags"><% g.versions.forEach((v) => { %><span class="pill"><%= v %></span><% }) %></div></td>
+      <td><div class="tags"><% g.platforms.forEach((p) => { %><span class="pill"><%= p %></span><% }) %></div></td>
+      <td class="time"><%= it.fmtTime(g.first_seen) %></td>
+      <td class="time"><%= it.fmtTime(g.last_seen) %></td>
     </tr>
     <% }) %>
   </tbody>
