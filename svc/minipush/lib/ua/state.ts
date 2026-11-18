@@ -247,7 +247,9 @@ const ackToHomes = (
         }
 
         state.inflight.delete(version);
-        byHome.set(home, [...byHome.get(home) ?? [], version]);
+        const forHome = byHome.get(home) ?? [];
+        byHome.set(home, forHome);
+        forHome.push(version);
     }
 
     for (const [home, versions] of byHome) {
