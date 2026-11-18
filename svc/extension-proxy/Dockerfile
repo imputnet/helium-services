@@ -1,14 +1,16 @@
-FROM denoland/deno:alpine-2.9.8@sha256:75749604f68aea01d39bead15fd1c86343639e44eb8c58ab051da8a924799d01 AS base
-RUN apk add --no-cache curl
-USER deno
-
-FROM base AS builder
-
-WORKDIR /app
+FROM rust:1.99.1-alpine3.24@sha256:44819b27be4c97b0e4d7203bd2e02c4820f97700211b6a37fb4c246a2de59383 AS builder
+WORKDIR /src
 COPY . .
-RUN deno cache main.ts
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/src/target \
+    cargo build --release --locked && cp target/release/extension-proxy /
+
+FROM alpine:3.24.3@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
+RUN apk add --no-cache ca-certificates curl
+COPY --from=builder /extension-proxy /usr/local/bin/
+USER nobody
 
 HEALTHCHECK --start-period=3s --start-interval=5s --interval=5m --timeout=10s \
-        CMD curl -f "http://localhost:8000/?response=redirect&x=id%3Daeblfdkhhhdcdjpifhhbdiojplfjncoa%26uc"
+        CMD curl -f "http://localhost:8000/health"
 
-CMD ["deno", "task", "run"]
+CMD ["extension-proxy"]
