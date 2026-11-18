@@ -34,8 +34,8 @@ Everything else runs on its own:
 - minidumpster has its own [compose.yml](svc/minidumpster/compose.yml) and
 [example .env file](svc/minidumpster/.env.example), and runs alongside
 Sentry's symbolicator.
-- minipush runs from its Dockerfile. Generate its secrets with
-`deno task gen`.
+- minipush has its own [compose.yml](svc/minipush/compose.yml) and
+[example .env file](svc/minipush/.env.example).
 - sparkler writes its output to disk every hour, or once with `--oneshot`.
 release-collector runs once, so it's meant to be run on a schedule.
 sparkler needs a GitHub repo, an Ed25519 signing key, and output dirs, as

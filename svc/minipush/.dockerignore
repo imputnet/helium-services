@@ -1,0 +1,4 @@
+.env
+test/
+*.md
+.git/

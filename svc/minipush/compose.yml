@@ -1,0 +1,19 @@
+services:
+    minipush:
+        build: .
+        restart: unless-stopped
+        read_only: true
+        cap_drop: [ALL]
+        security_opt:
+            - no-new-privileges:true
+        # leaves time to drain connections, see MINIPUSH_DRAIN_SECONDS
+        stop_grace_period: 1m
+        ulimits:
+            nofile: 65536
+        ports:
+            - '127.0.0.1:${PORT:-10001}:10001'
+        env_file: .env
+        environment:
+            MINIPUSH_BIND_HOSTNAME: '::'
+            MINIPUSH_PORT: '10001'
+            MINIPUSH_TRUST_PROXY: '1'
