@@ -37,4 +37,7 @@ Deno.unrefTimer(setInterval(logStats, 5 * 60 * 1000));
 
 await startServer({
     signal: abortController.signal,
+}).catch((e) => {
+    console.error('could not start:', e);
+    Deno.exit(1);
 });
