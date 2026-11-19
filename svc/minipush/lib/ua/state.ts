@@ -9,8 +9,6 @@ import { CloseStatus } from '../rfc/6455.ts';
 import { env } from '../env.ts';
 import { isDraining } from '../lifecycle.ts';
 
-// Owns UA websockets.
-
 type UAID = string;
 type CHID = string;
 type MessageVersion = string;
@@ -337,23 +335,10 @@ export const drain = async (ackGraceMs: number, spreadMs: number) => {
         await sleep(50);
     }
 
-    const states = [...openConnections];
-    for (let i = states.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [states[i], states[j]] = [states[j], states[i]];
-    }
-
-    const STEP_MS = 100;
-    const perStep = Math.ceil(states.length / Math.max(1, spreadMs / STEP_MS));
-    for (let i = 0; i < states.length; i += perStep) {
-        if (i > 0) {
-            await sleep(STEP_MS);
-        }
-
-        for (const state of states.slice(i, i + perStep)) {
-            state.ws.close(CloseStatus.SERVICE_RESTART, 'draining');
-        }
-    }
+    await Promise.all([...openConnections].map(async (state) => {
+        await sleep(Math.random() * spreadMs);
+        state.ws.close(CloseStatus.SERVICE_RESTART, 'draining');
+    }));
 
     const closeDeadline = Date.now() + 2000;
     while (openConnections.size > 0 && Date.now() < closeDeadline) {

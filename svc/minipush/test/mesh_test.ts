@@ -269,6 +269,24 @@ Deno.test('a draining home hands off its messages', async () => {
     }
 });
 
+Deno.test('exposes metrics on the mesh listener', async () => {
+    const nodes = await startCluster(['a', 'b']);
+    const ua = await FakeUA.connect(nodes[0].wsUrl);
+    try {
+        await ua.hello();
+        const res = await fetch(
+            `http://127.0.0.1:${nodes[0].env.MINIPUSH_MESH_PORT}/metrics`,
+        );
+        const metrics = await res.text();
+        assert(metrics.includes('minipush_connected_clients 1'), metrics);
+        assert(metrics.includes('minipush_reachable_peers 1'), metrics);
+        assert(metrics.includes('minipush_dispatched_messages_total 0'));
+    } finally {
+        await ua.close();
+        await stopAll(nodes);
+    }
+});
+
 Deno.test('messages move to their homes when members come back', async () => {
     const nodes = await startCluster(['a', 'b', 'c']);
     const byId = (id: string) => nodes.find((n) => n.id === id)!;
