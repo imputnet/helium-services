@@ -37,6 +37,20 @@ app server --POST--> any member --route--> home --deliver--> ua's member --> ua
   for in-flight acks, and closes connections with 1012 spread over
   `MINIPUSH_DRAIN_SECONDS`. a second signal exits right away.
 
+## setup
+
+```sh
+cp .env.example .env
+# fill in the secrets from `deno task gen`
+
+docker compose up -d --build
+```
+
+minipush then listens on `127.0.0.1:10001`. the reverse proxy in front of it has
+to pass websocket upgrades, overwrite `X-Forwarded-For`, and keep idle
+websockets open for longer than `MINIPUSH_IDLE_TIMEOUT_SECONDS`. any variable
+from the table below can be set in `.env`.
+
 ## configuration
 
 `deno task gen` generates all secrets.
