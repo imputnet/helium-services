@@ -2,11 +2,9 @@ services:
   nginx:
     init: true
     read_only: true
-    build:
-      context: ./svc
-      dockerfile: ./nginx/Dockerfile
-      args:
-        SERVICES_HOSTNAME: ${SERVICES_HOSTNAME}
+    build: ./svc/nginx
+    environment:
+      - SERVICES_HOSTNAME=${SERVICES_HOSTNAME}
     volumes:
       - ./private/acme-tmp:/var/tmp/acme.sh:ro
       - ./private/certs:/certs:ro

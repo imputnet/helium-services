@@ -8,5 +8,5 @@ fi
 inotifywait -m -e close_write "$SSL_CERT_PATH" |
 while read event; do
     echo "reloading nginx rn"
-    nginx -s reload
+    nginx -c "$NGINX_CONF" -s reload
 done
