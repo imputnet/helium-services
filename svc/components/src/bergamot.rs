@@ -122,6 +122,7 @@ fn pack(records: &[&Record], attachments: &str, keys: &Keys) -> Option<Spec> {
         })),
         version: version.parse().ok()?,
         files,
+        signed_by: None,
     })
 }
 

@@ -67,6 +67,7 @@ async fn latest(
         version: latest.sequence.to_string().parse()?,
         manifest: None,
         files: vec![file("crl-set")?, file("manifest.json")?],
+        signed_by: None,
     })
 }
 

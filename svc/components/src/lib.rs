@@ -6,6 +6,7 @@ pub mod crlset;
 pub mod keys;
 mod provider;
 mod server;
+pub mod ublock;
 
 pub use provider::{Provider, Spec, SpecFile};
 pub use server::{Body, Components, Config, component_key, serve};
