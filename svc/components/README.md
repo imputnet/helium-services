@@ -15,6 +15,7 @@ is built the first time a browser needs it.
   newest published release, served as it is once it checks out: signed by
   uBlock's own key (so not derived from `COMPONENT_KEY`), and with the
   release's version in its manifest.
+- **pki metadata** and **ssl error assistant**: proxied from google
 
 browsers that have an older release cached get a [puffin][] patch to the
 newest one, made the first time it's needed. responses are signed with

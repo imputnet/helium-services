@@ -5,6 +5,7 @@
 use bytes::Bytes;
 use components::bergamot::Bergamot;
 use components::crlset::CrlSet;
+use components::google::Google;
 use components::keys::Keys;
 use components::ublock::UBlock;
 use components::{Components, Config, Provider, serve};
@@ -110,12 +111,7 @@ impl Upstream {
     }
 
     fn publish_ublock(&self, version: &str, key: &crx3::aws_lc::EcdsaSigner) -> Vec<u8> {
-        let mut zip = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
-        zip.start_file("manifest.json", zip::write::SimpleFileOptions::default())
-            .unwrap();
-        write!(zip, r#"{{"manifest_version": 2, "version": "{version}"}}"#).unwrap();
-        let archive = zip.finish().unwrap().into_inner();
-        let crx = crx3::Builder::new().signer(key).build(&archive).unwrap();
+        let crx = crx(version, key);
         let name = format!("uBlock0_{version}.chromium.crx");
         let path = format!("/ublock/download/{name}");
         let release = serde_json::json!({
@@ -131,6 +127,63 @@ impl Upstream {
         self.put("/ublock/latest", serde_json::to_vec(&release).unwrap());
         crx
     }
+
+    fn publish_google(&self, version: &str, key: &crx3::aws_lc::EcdsaSigner) -> Vec<u8> {
+        let appid = crx3::id_from_public_key(google_key().public_key());
+        let (app, crx) = self.google_app(&appid, version, key);
+        self.answer_google(vec![app]);
+        crx
+    }
+
+    /// google's answer for one app: `version`, signed by `key`.
+    fn google_app(
+        &self,
+        appid: &str,
+        version: &str,
+        key: &crx3::aws_lc::EcdsaSigner,
+    ) -> (serde_json::Value, Vec<u8>) {
+        let crx = crx(version, key);
+        let sha256 = hex(&sha2::Sha256::digest(&crx));
+        let path = format!("/google/{sha256}.crx3");
+        let url = format!("{}{path}", self.base.lock().unwrap());
+        let app = serde_json::json!({
+            "appid": appid,
+            "status": "ok",
+            "updatecheck": {"status": "ok", "nextversion": version, "pipelines": [{
+                "pipeline_id": "full",
+                "operations": [
+                    {"type": "download", "out": {"sha256": sha256}, "size": crx.len(),
+                     "urls": [{"url": url}]},
+                    {"type": "crx3", "in": {"sha256": sha256}},
+                ],
+            }]},
+        });
+        self.put(&path, crx.clone());
+        (app, crx)
+    }
+
+    fn answer_google(&self, apps: Vec<serde_json::Value>) {
+        let response = serde_json::json!({"response": {"protocol": "4.0", "apps": apps}});
+        self.put("/google/update", format!(")]}}'\n{response}").into_bytes());
+        self.put("/google/version", b"158.0.8127.36\n".to_vec());
+    }
+}
+
+fn crx(version: &str, key: &crx3::aws_lc::EcdsaSigner) -> Vec<u8> {
+    let mut zip = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+    zip.start_file("manifest.json", zip::write::SimpleFileOptions::default())
+        .unwrap();
+    write!(zip, r#"{{"manifest_version": 2, "version": "{version}"}}"#).unwrap();
+    let archive = zip.finish().unwrap().into_inner();
+    crx3::Builder::new().signer(key).build(&archive).unwrap()
+}
+
+fn google_key() -> crx3::aws_lc::EcdsaSigner {
+    Keys::new(b"google").signer("pki-metadata").unwrap()
+}
+
+fn other_google_key() -> crx3::aws_lc::EcdsaSigner {
+    Keys::new(b"google").signer("ssl-error-assistant").unwrap()
 }
 
 fn ublock_key() -> crx3::aws_lc::EcdsaSigner {
@@ -233,6 +286,17 @@ async fn setup(
                 Arc::new(CrlSet::new(
                     format!("{upstream_url}/crls/"),
                     "standard".into(),
+                )),
+                Arc::new(Google::new(
+                    format!("{upstream_url}/google/update"),
+                    format!("{upstream_url}/google/version"),
+                    vec![
+                        ("pki-metadata", crx3::key_hash(google_key().public_key())),
+                        (
+                            "ssl-error-assistant",
+                            crx3::key_hash(other_google_key().public_key()),
+                        ),
+                    ],
                 )),
                 Arc::new(UBlock::new(
                     format!("{upstream_url}/ublock/latest"),
@@ -540,4 +604,45 @@ async fn serves_ublock_releases_as_published_if_signed_by_its_key() {
     s.components.refresh().await;
     let second = s.check(&appid, "1.76.4", None).await;
     assert_eq!(s.download(&second).await, newer);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn mirrors_googles_components_if_signed_by_their_keys() {
+    let data = tempfile::tempdir().unwrap();
+    let s = fresh(data.path()).await;
+    let appid = crx3::id_from_public_key(google_key().public_key());
+
+    let published = s.upstream.publish_google("1844", &google_key());
+    s.components.refresh().await;
+    let first = s.check(&appid, "1800", None).await;
+    assert_eq!(s.download(&first).await, published);
+
+    let stranger = crx3::aws_lc::EcdsaSigner::generate().unwrap();
+    s.upstream.publish_google("1845", &stranger);
+    s.components.refresh().await;
+    let refused = s.check(&appid, "1844", None).await;
+    assert_eq!(outcome(&refused), &Outcome::NoUpdate);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn updates_one_google_component_while_the_other_fails() {
+    let data = tempfile::tempdir().unwrap();
+    let s = fresh(data.path()).await;
+    let pki = crx3::id_from_public_key(google_key().public_key());
+    let ssl = crx3::id_from_public_key(other_google_key().public_key());
+
+    let (pki_app, _) = s.upstream.google_app(&pki, "1844", &google_key());
+    let (ssl_app, ssl_crx) = s.upstream.google_app(&ssl, "7", &other_google_key());
+    s.upstream.answer_google(vec![pki_app, ssl_app]);
+    s.components.refresh().await;
+
+    let (pki_app, newer) = s.upstream.google_app(&pki, "1845", &google_key());
+    let failed = serde_json::json!({"appid": ssl, "status": "error-unknownApplication"});
+    s.upstream.answer_google(vec![pki_app, failed]);
+    s.components.refresh().await;
+
+    let updated = s.check(&pki, "1844", None).await;
+    assert_eq!(s.download(&updated).await, newer);
+    let kept = s.check(&ssl, "1", None).await;
+    assert_eq!(s.download(&kept).await, ssl_crx);
 }
