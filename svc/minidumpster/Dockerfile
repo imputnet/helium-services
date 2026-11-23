@@ -5,7 +5,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends curl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-ARG SYMSORTER_VERSION=26.6.0
+ARG SYMSORTER_VERSION=26.11.0
 ARG TARGETARCH
 RUN arch="x86_64"; [ "$TARGETARCH" = "arm64" ] && arch="aarch64"; \
   curl -fsSL -o /usr/local/bin/symsorter \
