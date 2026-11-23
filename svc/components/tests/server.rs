@@ -6,14 +6,16 @@ use bytes::Bytes;
 use components::bergamot::Bergamot;
 use components::crlset::CrlSet;
 use components::keys::Keys;
+use components::ublock::UBlock;
 use components::{Components, Config, Provider, serve};
+use crx3::Signer as _;
 use http_body_util::Full;
 use hyper::service::service_fn;
 use omaha_protocol::{AppStatus, Outcome, Pipeline, Response, Sha256, UpdateCheckError, v4};
 use sha2::Digest;
 use std::collections::HashMap;
 use std::convert::Infallible;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tokio::net::TcpListener;
@@ -27,6 +29,7 @@ fn hex(bytes: &[u8]) -> String {
 
 #[derive(Default)]
 struct Upstream {
+    base: Mutex<String>,
     files: Mutex<HashMap<String, Vec<u8>>>,
     fetched: Mutex<Vec<String>>,
 }
@@ -105,6 +108,33 @@ impl Upstream {
         self.put("/crls/latest.json", serde_json::to_vec(&latest).unwrap());
         crl_set
     }
+
+    fn publish_ublock(&self, version: &str, key: &crx3::aws_lc::EcdsaSigner) -> Vec<u8> {
+        let mut zip = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        zip.start_file("manifest.json", zip::write::SimpleFileOptions::default())
+            .unwrap();
+        write!(zip, r#"{{"manifest_version": 2, "version": "{version}"}}"#).unwrap();
+        let archive = zip.finish().unwrap().into_inner();
+        let crx = crx3::Builder::new().signer(key).build(&archive).unwrap();
+        let name = format!("uBlock0_{version}.chromium.crx");
+        let path = format!("/ublock/download/{name}");
+        let release = serde_json::json!({
+            "tag_name": version,
+            "assets": [{
+                "name": name,
+                "browser_download_url": format!("{}{path}", self.base.lock().unwrap()),
+                "size": crx.len(),
+                "digest": format!("sha256:{}", hex(&sha2::Sha256::digest(&crx))),
+            }],
+        });
+        self.put(&path, crx.clone());
+        self.put("/ublock/latest", serde_json::to_vec(&release).unwrap());
+        crx
+    }
+}
+
+fn ublock_key() -> crx3::aws_lc::EcdsaSigner {
+    Keys::new(b"ublock release ci").signer("ublock").unwrap()
 }
 
 async fn spawn<F, Fut>(listener: TcpListener, handler: F)
@@ -179,6 +209,7 @@ async fn setup(
 ) -> Setup {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let upstream_url = format!("http://{}", listener.local_addr().unwrap());
+    *upstream.base.lock().unwrap() = upstream_url.clone();
     let u = upstream.clone();
     spawn(listener, move |r| upstream_service(u.clone(), r)).await;
 
@@ -202,6 +233,10 @@ async fn setup(
                 Arc::new(CrlSet::new(
                     format!("{upstream_url}/crls/"),
                     "standard".into(),
+                )),
+                Arc::new(UBlock::new(
+                    format!("{upstream_url}/ublock/latest"),
+                    crx3::key_hash(ublock_key().public_key()),
                 )),
             ],
         )
@@ -482,4 +517,27 @@ async fn refuses_unknown_apps_and_paths_outside_the_files() {
     for path in ["/files/../puffin", "/files/..%2fpuffin", &state] {
         assert_eq!(raw_status(&s.url, path).await, "404", "{path}");
     }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn serves_ublock_releases_as_published_if_signed_by_its_key() {
+    let data = tempfile::tempdir().unwrap();
+    let s = fresh(data.path()).await;
+    let appid = crx3::id_from_public_key(ublock_key().public_key());
+
+    let published = s.upstream.publish_ublock("1.76.4", &ublock_key());
+    s.components.refresh().await;
+    let first = s.check(&appid, "0.0.0.0", None).await;
+    assert_eq!(s.download(&first).await, published);
+
+    let stranger = crx3::aws_lc::EcdsaSigner::generate().unwrap();
+    s.upstream.publish_ublock("1.76.5", &stranger);
+    s.components.refresh().await;
+    let refused = s.check(&appid, "1.76.4", None).await;
+    assert_eq!(outcome(&refused), &Outcome::NoUpdate);
+
+    let newer = s.upstream.publish_ublock("1.77.0", &ublock_key());
+    s.components.refresh().await;
+    let second = s.check(&appid, "1.76.4", None).await;
+    assert_eq!(s.download(&second).await, newer);
 }

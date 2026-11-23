@@ -11,6 +11,10 @@ is built the first time a browser needs it.
 - **translation models**: one component per direction, packed from
   mozilla's [firefox translations](https://github.com/mozilla/translations)
   models, as the components `translation-<from>-<to>`.
+- **ublock**: the crx from [imputnet/uBlock](https://github.com/imputnet/uBlock)'s
+  newest published release, served as it is once it checks out: signed by
+  uBlock's own key (so not derived from `COMPONENT_KEY`), and with the
+  release's version in its manifest.
 
 browsers that have an older release cached get a [puffin][] patch to the
 newest one, made the first time it's needed. responses are signed with

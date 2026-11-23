@@ -4,6 +4,7 @@
 use components::bergamot::Bergamot;
 use components::crlset::CrlSet;
 use components::keys::Keys;
+use components::ublock::UBlock;
 use components::{BoxError, Components, Config, Provider, component_key, serve};
 use std::net::SocketAddr;
 use std::process::ExitCode;
@@ -23,11 +24,11 @@ async fn print_keys(providers: &[Arc<dyn Provider>]) -> Result<(), BoxError> {
 
     for provider in providers {
         for spec in provider.fetch(&http, &keys).await? {
-            let hash: String = keys
-                .hash(&spec.label)?
-                .iter()
-                .map(|b| format!("{b:02x}"))
-                .collect();
+            let hash = match spec.signed_by {
+                Some(key) => *key.as_bytes(),
+                None => keys.hash(&spec.label)?,
+            };
+            let hash: String = hash.iter().map(|b| format!("{b:02x}")).collect();
             lines.push(format!("{} {} {hash}", spec.appid, spec.label));
         }
     }
@@ -47,6 +48,8 @@ async fn run() -> Result<(), BoxError> {
     if let Some(crlset) = CrlSet::from_env() {
         providers.push(Arc::new(crlset));
     }
+
+    providers.push(Arc::new(UBlock::default()));
 
     if std::env::args().nth(1).as_deref() == Some("keys") {
         return print_keys(&providers).await;

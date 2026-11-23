@@ -14,7 +14,7 @@ use omaha_server::{BoxFuture, Check, Source};
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
 use std::collections::HashMap;
-use std::io::{Cursor, Write};
+use std::io::{Cursor, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::Duration;
@@ -181,6 +181,37 @@ fn crx(
     Ok(crx3::Builder::new().signer(signer).build(&archive)?)
 }
 
+/// Checks a crx that was signed elsewhere: by `key`, as the app, and with
+/// the version its spec says.
+fn signed(
+    spec: &Spec,
+    files: Vec<(String, Vec<u8>)>,
+    key: crx3::KeyHash,
+) -> Result<Vec<u8>, BoxError> {
+    let [(_, crx)]: [_; 1] = files
+        .try_into()
+        .map_err(|_| format!("{}: expected one crx", spec.label))?;
+    let verified = crx3::verify(&crx, &crx3::Policy::new().required_keys(&[key]))?;
+
+    if verified.id != spec.appid.as_str() {
+        return Err(format!("{}: crx is {}, not {}", spec.label, verified.id, spec.appid).into());
+    }
+
+    let mut zip = zip::ZipArchive::new(Cursor::new(crx3::split(&crx)?.archive))?;
+    let mut json = Vec::new();
+    zip.by_name("manifest.json")?.read_to_end(&mut json)?;
+
+    if manifest_version(&json).as_ref() != Some(&spec.version) {
+        return Err(format!(
+            "{}: manifest.json isn't version {}",
+            spec.label, spec.version
+        )
+        .into());
+    }
+
+    Ok(crx)
+}
+
 async fn write(path: &Path, bytes: &[u8]) -> Result<(), BoxError> {
     let mut partial = path.as_os_str().to_owned();
     partial.push(".partial");
@@ -300,14 +331,18 @@ impl Builds {
             downloads.push((file.clone(), self.download(file).await?));
         }
 
-        let signer = self.keys.signer(&spec.label)?;
+        let keys = self.keys.clone();
         let task_spec = spec.clone();
         let crx = tokio::task::spawn_blocking(move || -> Result<Vec<u8>, BoxError> {
             let files = downloads
                 .iter()
                 .map(|(file, bytes)| Ok((file.name.clone(), contents(file, bytes)?)))
                 .collect::<Result<Vec<_>, BoxError>>()?;
-            crx(&task_spec, files, &signer)
+
+            match task_spec.signed_by {
+                Some(key) => signed(&task_spec, files, key),
+                None => crx(&task_spec, files, &keys.signer(&task_spec.label)?),
+            }
         })
         .await??;
 

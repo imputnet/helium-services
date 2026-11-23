@@ -26,6 +26,9 @@ pub struct Spec {
     pub version: Version,
     pub manifest: Option<serde_json::Value>,
     pub files: Vec<SpecFile>,
+    /// The one file is a crx that has to be signed by this key, served as
+    /// it is instead of packed and signed here.
+    pub signed_by: Option<crx3::KeyHash>,
 }
 
 pub trait Provider: Send + Sync {
@@ -47,6 +50,7 @@ pub(crate) async fn get(
 ) -> Result<Vec<u8>, BoxError> {
     let mut response = http
         .get(url)
+        .header(http::header::USER_AGENT, "helium-components")
         .timeout(FETCH_TIMEOUT)
         .send()
         .await?
