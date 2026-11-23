@@ -1,0 +1,31 @@
+services:
+    components:
+        build: .
+        restart: unless-stopped
+        user: '${APP_UID:-1000}:${APP_GID:-1000}'
+        read_only: true
+        cap_drop: [ALL]
+        security_opt:
+            - no-new-privileges:true
+        ulimits:
+            nofile: 65536
+        tmpfs:
+            - /tmp
+        ports:
+            - '127.0.0.1:${PORT:-8000}:8000'
+        environment:
+            BASE_URL: ${BASE_URL:?set in .env}
+            COMPONENT_KEY: /keys/component.pem
+            CUP_KEYS: ${CUP_KEYS:-}
+        volumes:
+            - type: bind
+              source: ./data
+              target: /data
+              bind:
+                  create_host_path: false
+            - type: bind
+              source: ./keys
+              target: /keys
+              read_only: true
+              bind:
+                  create_host_path: false
