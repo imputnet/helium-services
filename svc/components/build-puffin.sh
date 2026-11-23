@@ -37,7 +37,6 @@ cat > out/puffin/args.gn <<'ARGS'
 is_debug = false
 is_component_build = false
 symbol_level = 0
-use_glib = false
 use_remoteexec = false
 treat_warnings_as_errors = false
 ARGS

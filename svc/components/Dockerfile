@@ -5,22 +5,21 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/src/target \
     cargo build --release --locked && cp target/release/components /
 
-FROM --platform=linux/amd64 debian:trixie-slim AS puffin
+FROM debian:trixie-slim AS puffin
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl python3 zstd \
+    && apt-get install -y --no-install-recommends ca-certificates curl pkgconf python3 zstd \
     && rm -rf /var/lib/apt/lists/*
 COPY build-puffin.sh /
 RUN OUT=/out /build-puffin.sh
 
-FROM alpine:3.24.3@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
-RUN apk add --no-cache ca-certificates curl gcompat libgcc \
-    && adduser -D -H -u 10001 components \
+FROM debian:trixie-slim
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --no-create-home --uid 10001 components \
     && mkdir /data && chown components /data
 COPY --from=builder /components /usr/local/bin/
 COPY --from=puffin /out/puffin /usr/local/bin/
-RUN printf a > /tmp/a && printf b > /tmp/b \
-    && puffin -puffdiff /tmp/a /tmp/b /tmp/patch \
-    && rm /tmp/a /tmp/b /tmp/patch
 ENV PUFFIN=/usr/local/bin/puffin
 USER components
 VOLUME /data
