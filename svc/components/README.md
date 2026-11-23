@@ -30,7 +30,7 @@ its public key, which the browser pins.
 | `BASE_URL` | where this server is reachable, e.g. `https://components.helium.computer/` |
 | `COMPONENT_KEY` | pkcs#8 pem key that every component's signing key is derived from |
 | `CUP_KEYS` | `<version>=<key.pem>`, comma separated; ml-dsa-44 or ecdsa p-256 |
-| `PUFFIN` | chromium's `puffin`; without it, no patches. `VERSION=<chromium version> OUT=<dir> ./build-puffin.sh` builds one (about 20 gib of disk) |
+| `PUFFIN` | chromium's `puffin`; without it, no patches. the image has one; elsewhere, `OUT=<dir> ./build-puffin.sh` builds one (about 20 gib of disk while building) |
 | `DATA_DIR` | where builds are kept, `/data` by default |
 | `CRLSET_URL`, `CRLSET_TIER` | `https://crls.helium.computer/`, `standard`; empty url leaves the crlset out |
 | `BERGAMOT_CHANGESET`, `BERGAMOT_ATTACHMENTS` | mozilla's model list and where its files are; an empty changeset leaves translations out |

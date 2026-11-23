@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-: "${VERSION:?}" "${OUT:?}"
+: "${OUT:?}"
+VERSION=${VERSION:-$(curl -fsSL https://raw.githubusercontent.com/imputnet/helium/main/chromium_version.txt)}
 mkdir -p "$OUT"
 OUT=$(cd "$OUT" && pwd)
 TARBALLS_URL=${TARBALLS_URL:-https://tarballs.imput.net}
@@ -36,6 +37,7 @@ cat > out/puffin/args.gn <<'ARGS'
 is_debug = false
 is_component_build = false
 symbol_level = 0
+use_glib = false
 use_remoteexec = false
 treat_warnings_as_errors = false
 ARGS
