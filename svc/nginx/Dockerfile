@@ -1,4 +1,4 @@
-FROM nginx:1.30.7-alpine3.24-slim@sha256:4e48c17c655fc5e3bded909a60ff5a710457746591b03ddaab046984e97a56a3
+FROM nginx:1.30.7-alpine3.24-slim@sha256:8c950211a641ec5b23f265450517001f6bcca533666120ebe36cb4cff3d00a55
 
 RUN apk add --no-cache inotify-tools curl
 
