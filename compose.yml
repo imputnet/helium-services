@@ -50,7 +50,7 @@ services:
       - PROXY_BASE_URL=${PROXY_BASE_URL}
 
   acme.sh:
-    image: "neilpang/acme.sh@sha256:6960358a673694fc18d895f812585ca73f973ed278c2750c7b3f74485f493485"
+    image: "neilpang/acme.sh:3.1.6@sha256:fd072646a6acf330795e63ff231ec9fd65d80ca00ddaa83ca10617ab7fd48a9b"
     volumes:
       - acme.sh:/acme.sh
       - ./private/certs:/certs
