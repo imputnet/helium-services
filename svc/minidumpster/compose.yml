@@ -37,7 +37,7 @@ services:
             - symbolicator
 
     symbolicator:
-        image: ghcr.io/getsentry/symbolicator:25.12.1@sha256:6885a72b10e360c2eb6889be72c83c815f9f9c19a913bb2a578ccdf5d7e95139
+        image: ghcr.io/getsentry/symbolicator:26.11.0@sha256:ef1c1b6e2b72ebc425308aae1ac869f2f1c783e9a02aac0cdf19dd1c4937e820
         restart: unless-stopped
         read_only: true
         cap_drop: [ALL]
