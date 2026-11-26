@@ -1,5 +1,5 @@
-//! answers update checks: builds and signs releases when they're first
-//! needed, makes puffin patches from older ones, and keeps them on disk.
+//! answers update checks: builds and signs releases, makes puffin patches to
+//! them from older ones, and keeps them on disk.
 
 use crate::BoxError;
 use crate::keys::Keys;
@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use std::io::{Cursor, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::{Semaphore, watch};
 use tokio::time::Instant;
 
@@ -25,9 +25,13 @@ const MAX_DOWNLOAD: u64 = 256 << 20;
 const MAX_FILE: u64 = 512 << 20;
 const PARALLEL_WORK: usize = 2;
 const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(300);
-const DIFF_TIMEOUT: Duration = Duration::from_secs(300);
+/// Only stops a stuck puffin.
+const DIFF_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 const KEEP: usize = 4;
+const KEEP_FOR: Duration = Duration::from_secs(7 * 24 * 60 * 60);
+const MAX_KEEP: usize = 32;
 const MAX_PATCH_RATIO: f64 = 0.8;
+const STORE_RATIO: f64 = 0.8;
 const WAIT: Duration = Duration::from_secs(15);
 const BUILD_RETRY: Duration = Duration::from_secs(600);
 
@@ -47,6 +51,9 @@ struct Built {
     version: String,
     sha256: String,
     size: u64,
+    /// When it became the newest, in unix seconds.
+    #[serde(default)]
+    built: u64,
     #[serde(default)]
     patches: Vec<BuiltPatch>,
     #[serde(default)]
@@ -62,6 +69,12 @@ struct BuiltPatch {
 
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+fn now() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs())
 }
 
 fn crx_path(appid: &AppId, sha256: &str) -> String {
@@ -103,6 +116,16 @@ impl Built {
     }
 }
 
+/// Keeps the newest `KEEP` releases, and older ones that were the newest
+/// within `KEEP_FOR`.
+fn retain(releases: &mut Vec<Built>, now: u64) {
+    let recent = releases
+        .iter()
+        .take_while(|b| now.saturating_sub(b.built) < KEEP_FOR.as_secs())
+        .count();
+    releases.truncate((recent + 1).clamp(KEEP, MAX_KEEP));
+}
+
 fn internal(appid: &AppId) -> AppResponse {
     let mut answer = AppResponse::new(appid.clone(), AppStatus::Ok);
     answer.updatecheck = Some(UpdateCheckResponse::new(Outcome::Error(
@@ -138,6 +161,22 @@ fn manifest_version(json: &[u8]) -> Option<Version> {
     manifest.get("version")?.as_str()?.parse().ok()
 }
 
+/// Stores files that deflate barely shrinks, like the crlset, since deflate
+/// makes their patches much larger.
+fn compression(data: &[u8]) -> zip::CompressionMethod {
+    let deflated = std::io::copy(
+        &mut flate2::read::DeflateEncoder::new(data, flate2::Compression::default()),
+        &mut std::io::sink(),
+    );
+
+    match deflated {
+        Ok(size) if (size as f64) < data.len() as f64 * STORE_RATIO => {
+            zip::CompressionMethod::Deflated
+        }
+        _ => zip::CompressionMethod::Stored,
+    }
+}
+
 fn crx(
     spec: &Spec,
     files: Vec<(String, Vec<u8>)>,
@@ -168,12 +207,11 @@ fn crx(
     entries.sort_by(|a, b| a.0.cmp(&b.0));
     let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let options = zip::write::SimpleFileOptions::default()
-        .compression_method(zip::CompressionMethod::Deflated)
         .last_modified_time(zip::DateTime::default())
         .unix_permissions(0o644);
 
     for (name, data) in entries {
-        zip.start_file(name, options)?;
+        zip.start_file(name, options.compression_method(compression(&data)))?;
         zip.write_all(&data)?;
     }
 
@@ -228,7 +266,14 @@ pub struct Builds {
     states: Mutex<HashMap<AppId, State>>,
     jobs: Mutex<HashMap<AppId, watch::Receiver<bool>>>,
     failed: Mutex<HashMap<AppId, (Version, Instant)>>,
+    /// Changes whenever a state is saved.
+    progress: watch::Sender<()>,
     work: Semaphore,
+}
+
+enum Step {
+    Build(Spec),
+    Patch { label: String, from: String },
 }
 
 impl Builds {
@@ -242,6 +287,7 @@ impl Builds {
             states: Mutex::new(states),
             jobs: Mutex::default(),
             failed: Mutex::default(),
+            progress: watch::channel(()).0,
             work: Semaphore::new(PARALLEL_WORK),
         }
     }
@@ -261,11 +307,24 @@ impl Builds {
             .collect()
     }
 
-    pub fn set_catalog(&self, provider: &'static str, specs: Vec<Spec>) {
-        let specs = specs.into_iter().map(|s| (s.appid.clone(), s)).collect();
+    /// Takes a provider's newest releases, and builds those of apps that
+    /// browsers already use.
+    pub fn set_catalog(self: &Arc<Self>, provider: &'static str, specs: Vec<Spec>) {
+        let specs: HashMap<AppId, Spec> = specs.into_iter().map(|s| (s.appid.clone(), s)).collect();
+        let asked: Vec<AppId> = specs
+            .keys()
+            .filter(|appid| !self.state(appid).releases.is_empty())
+            .cloned()
+            .collect();
 
         if let Ok(mut catalogs) = self.catalogs.write() {
             catalogs.insert(provider, Arc::new(specs));
+        }
+
+        for appid in asked {
+            if self.next_step(&appid).is_some() {
+                self.start(&appid);
+            }
         }
     }
 
@@ -291,6 +350,7 @@ impl Builds {
             states.insert(appid.clone(), state);
         }
 
+        self.progress.send_replace(());
         Ok(())
     }
 
@@ -352,17 +412,25 @@ impl Builds {
         write(&dir.join(format!("{sha256}.crx3")), &crx).await?;
 
         let mut state = self.state(&spec.appid);
+
+        // only the newest is offered, so only patches to it are kept
+        for older in &mut state.releases {
+            older.patches.clear();
+            older.unpatchable.clear();
+        }
+
         state.releases.insert(
             0,
             Built {
                 version: spec.version.to_string(),
                 sha256,
                 size: crx.len() as u64,
+                built: now(),
                 patches: Vec::new(),
                 unpatchable: Vec::new(),
             },
         );
-        state.releases.truncate(KEEP);
+        retain(&mut state.releases, now());
         self.save(&spec.appid, state.clone()).await?;
         prune(&dir, &state).await;
         eprintln!(
@@ -401,28 +469,43 @@ impl Builds {
         }))
     }
 
-    async fn patch(&self, spec: &Spec, puffin: &Path, from: &str) -> Result<(), BoxError> {
+    async fn patch(&self, appid: &AppId, label: &str, from: &str) -> Result<(), BoxError> {
+        let Some(puffin) = &self.config.puffin else {
+            return Ok(());
+        };
         let _work = self.work.acquire().await?;
-        let mut state = self.state(&spec.appid);
-        let Some(to) = state.releases.first().map(|b| b.sha256.clone()) else {
+        let mut state = self.state(appid);
+        let Some((newest, older)) = state.releases.split_first_mut() else {
             return Ok(());
         };
-        let made = self.diff(&spec.appid, puffin, from, &to).await;
-        let Some(newest) = state.releases.first_mut() else {
-            return Ok(());
-        };
+        let old = older
+            .iter()
+            .find(|b| b.sha256 == from)
+            .map_or(from, |b| b.version.as_str());
+        let started = Instant::now();
 
         // a failed diff isn't retried, or every check from that cache would rerun it
-        match made {
-            Ok(Some(patch)) => newest.patches.push(patch),
-            Ok(None) => newest.unpatchable.push(from.into()),
+        match self.diff(appid, puffin, from, &newest.sha256).await {
+            Ok(Some(patch)) => {
+                eprintln!(
+                    "patched {label} {old} to {} ({} bytes, {:.1}s)",
+                    newest.version,
+                    patch.size,
+                    started.elapsed().as_secs_f64()
+                );
+                newest.patches.push(patch);
+            }
+            Ok(None) => {
+                eprintln!("patching {label} from {old}: too large");
+                newest.unpatchable.push(from.into());
+            }
             Err(e) => {
-                eprintln!("patching {} from {from}: {e}", spec.label);
+                eprintln!("patching {label} from {old}: {e}");
                 newest.unpatchable.push(from.into());
             }
         }
 
-        self.save(&spec.appid, state).await
+        self.save(appid, state).await
     }
 
     fn needs_build(&self, spec: &Spec) -> bool {
@@ -444,62 +527,127 @@ impl Builds {
         !failed.is_some_and(|(version, at)| version == spec.version && at.elapsed() < BUILD_RETRY)
     }
 
-    fn patch_source(&self, appid: &AppId, cached: &[String]) -> Option<String> {
-        self.config.puffin.as_ref()?;
+    /// The older releases that the newest has no patch from yet, newest first.
+    fn unpatched(&self, appid: &AppId) -> Vec<String> {
+        if self.config.puffin.is_none() {
+            return Vec::new();
+        }
+
         let state = self.state(appid);
-        let (newest, older) = state.releases.split_first()?;
-        cached
+        let Some((newest, older)) = state.releases.split_first() else {
+            return Vec::new();
+        };
+        older
             .iter()
-            .find(|c| older.iter().any(|b| b.sha256 == **c) && !newest.has_patch_from(c))
-            .cloned()
+            .filter(|b| !newest.has_patch_from(&b.sha256))
+            .map(|b| b.sha256.clone())
+            .collect()
     }
 
-    async fn prepare(&self, spec: &Spec, cached: &[String]) -> Result<(), BoxError> {
-        if self.needs_build(spec)
-            && let Err(e) = self.build(spec).await
-        {
-            if let Ok(mut failed) = self.failed.lock() {
-                failed.insert(spec.appid.clone(), (spec.version.clone(), Instant::now()));
-            }
+    fn next_step(&self, appid: &AppId) -> Option<Step> {
+        let spec = self.spec(appid);
 
-            return Err(format!("building {}: {e}", spec.label).into());
+        if let Some(spec) = spec.as_ref().filter(|spec| self.needs_build(spec)) {
+            return Some(Step::Build(spec.clone()));
         }
 
-        if let (Some(puffin), Some(from)) =
-            (&self.config.puffin, self.patch_source(&spec.appid, cached))
-        {
-            self.patch(spec, puffin, &from).await?;
-        }
-
-        Ok(())
+        let from = self.unpatched(appid).into_iter().next()?;
+        let label = spec.map_or_else(|| appid.to_string(), |spec| spec.label);
+        Some(Step::Patch { label, from })
     }
 
-    /// Runs `prepare` in the background, once per app at a time; the
-    /// receiver turns true when it's done.
-    fn start(self: &Arc<Self>, spec: Spec, cached: Vec<String>) -> watch::Receiver<bool> {
+    /// Builds an app's newest release and its patches in the background, one
+    /// job per app. The receiver turns true when it's done.
+    fn start(self: &Arc<Self>, appid: &AppId) -> watch::Receiver<bool> {
         let Ok(mut jobs) = self.jobs.lock() else {
             return watch::channel(true).1;
         };
 
-        if let Some(running) = jobs.get(&spec.appid) {
+        if let Some(running) = jobs.get(appid) {
             return running.clone();
         }
 
         let (done, receiver) = watch::channel(false);
-        jobs.insert(spec.appid.clone(), receiver.clone());
+        jobs.insert(appid.clone(), receiver.clone());
         let this = self.clone();
+        let appid = appid.clone();
         tokio::spawn(async move {
-            if let Err(e) = this.prepare(&spec, &cached).await {
-                eprintln!("{e}");
-            }
+            while let Some(step) = this.step(&appid) {
+                if let Err(e) = this.run(&appid, step).await {
+                    eprintln!("{e}");
 
-            if let Ok(mut jobs) = this.jobs.lock() {
-                jobs.remove(&spec.appid);
+                    if let Ok(mut jobs) = this.jobs.lock() {
+                        jobs.remove(&appid);
+                    }
+
+                    break;
+                }
             }
 
             let _ = done.send(true);
         });
         receiver
+    }
+
+    /// The job's next step, or none once it's off `jobs`, under the same lock
+    /// so a job found there will pick up what's asked of it.
+    fn step(&self, appid: &AppId) -> Option<Step> {
+        let mut jobs = self.jobs.lock().ok()?;
+        let step = self.next_step(appid);
+
+        if step.is_none() {
+            jobs.remove(appid);
+        }
+
+        step
+    }
+
+    async fn run(&self, appid: &AppId, step: Step) -> Result<(), BoxError> {
+        match step {
+            Step::Build(spec) => {
+                if let Err(e) = self.build(&spec).await {
+                    eprintln!("building {}: {e}", spec.label);
+
+                    if let Ok(mut failed) = self.failed.lock() {
+                        failed.insert(spec.appid.clone(), (spec.version.clone(), Instant::now()));
+                    }
+                }
+
+                Ok(())
+            }
+            Step::Patch { label, from } => self.patch(appid, &label, &from).await,
+        }
+    }
+
+    /// Waits until the deadline for `spec` to be built and patched from `cached`.
+    async fn wait(self: &Arc<Self>, spec: &Spec, cached: &[String], deadline: Instant) {
+        let mut progress = self.progress.subscribe();
+        let ready = || {
+            !self.needs_build(spec)
+                && !self
+                    .unpatched(&spec.appid)
+                    .iter()
+                    .any(|from| cached.contains(from))
+        };
+
+        if ready() {
+            return;
+        }
+
+        let mut done = self.start(&spec.appid);
+        let _ = tokio::time::timeout_at(deadline, async {
+            while !ready() {
+                tokio::select! {
+                    _ = done.wait_for(|done| *done) => break,
+                    changed = progress.changed() => {
+                        if changed.is_err() {
+                            break;
+                        }
+                    }
+                }
+            }
+        })
+        .await;
     }
 
     async fn answer(
@@ -525,10 +673,7 @@ impl Builds {
                 };
 
             // anything that isn't done by the deadline is offered on a later check
-            if self.needs_build(&spec) || self.patch_source(&spec.appid, &cached).is_some() {
-                let mut done = self.start(spec, cached);
-                let _ = tokio::time::timeout_at(deadline, done.wait_for(|done| *done)).await;
-            }
+            self.wait(&spec, &cached, deadline).await;
         }
 
         let releases: Vec<Release> = self
@@ -557,15 +702,20 @@ impl Builds {
     }
 }
 
+/// Removes crxs and patches that `state` no longer lists.
 async fn prune(dir: &Path, state: &State) {
     let Ok(mut entries) = tokio::fs::read_dir(dir).await else {
         return;
     };
+    let newest = state.releases.first().map(|b| b.sha256.as_str());
 
     while let Ok(Some(entry)) = entries.next_entry().await {
         let name = entry.file_name().to_string_lossy().into_owned();
-        let stem = name.strip_suffix(".crx3").unwrap_or(&name);
-        let kept = name == "state.json" || state.releases.iter().any(|b| b.sha256 == stem);
+        let kept = name == "state.json"
+            || Some(name.as_str()) == newest
+            || name
+                .strip_suffix(".crx3")
+                .is_some_and(|sha256| state.releases.iter().any(|b| b.sha256 == sha256));
 
         if !kept {
             let path = entry.path();
@@ -608,6 +758,7 @@ mod tests {
             version: "29903472".into(),
             sha256: "ab".repeat(32),
             size: 7,
+            built: 0,
             patches: vec![BuiltPatch {
                 from: "cd".repeat(32),
                 sha256: "ef".repeat(32),
@@ -626,5 +777,134 @@ mod tests {
             release.patches[0].file.path,
             format!("{appid}/{}/{}.puff", "ab".repeat(32), "cd".repeat(32))
         );
+    }
+
+    #[test]
+    fn reads_state_saved_before_build_times() {
+        let json = format!(
+            r#"{{"releases":[{{"version":"29928054","sha256":"{}","size":7}}]}}"#,
+            "ab".repeat(32)
+        );
+        let state: State = serde_json::from_str(&json).unwrap();
+        assert_eq!(state.releases[0].built, 0);
+    }
+
+    fn release(version: u64, built: u64) -> Built {
+        Built {
+            version: version.to_string(),
+            sha256: format!("{version:064}"),
+            size: 7,
+            built,
+            patches: Vec::new(),
+            unpatchable: Vec::new(),
+        }
+    }
+
+    fn versions(releases: &[Built]) -> Vec<&str> {
+        releases.iter().map(|b| b.version.as_str()).collect()
+    }
+
+    #[test]
+    fn keeps_releases_that_were_the_newest_within_a_week() {
+        const HOUR: u64 = 60 * 60;
+        let now = 100 * 24 * HOUR;
+
+        // one every 12 hours: the newest, and 14 that were the newest in the last week
+        let mut releases: Vec<Built> = (0..40)
+            .map(|i| release(100 - i, now - i * 12 * HOUR))
+            .collect();
+        retain(&mut releases, now);
+        assert_eq!(releases.len(), 15);
+        assert_eq!(releases[14].version, "86");
+
+        // one an hour: capped
+        let mut releases: Vec<Built> = (0..40).map(|i| release(100 - i, now - i * HOUR)).collect();
+        retain(&mut releases, now);
+        assert_eq!(releases.len(), MAX_KEEP);
+
+        // nothing new for a month: still the newest few
+        let mut releases: Vec<Built> = (0..10)
+            .map(|i| release(100 - i, now - (30 + i) * 24 * HOUR))
+            .collect();
+        retain(&mut releases, now);
+        assert_eq!(versions(&releases), ["100", "99", "98", "97"]);
+
+        // saved before build times were: as many as before
+        let mut releases: Vec<Built> = (0..10).map(|i| release(100 - i, 0)).collect();
+        releases.insert(0, release(101, now));
+        retain(&mut releases, now);
+        assert_eq!(versions(&releases), ["101", "100", "99", "98"]);
+    }
+
+    /// Bytes that deflate can't shrink, like a crlset's hashes and serials.
+    fn incompressible(len: usize) -> Vec<u8> {
+        (0u64..)
+            .flat_map(|i| sha2::Sha256::digest(i.to_le_bytes()))
+            .take(len)
+            .collect()
+    }
+
+    #[test]
+    fn stores_files_that_deflate_barely_shrinks() {
+        assert_eq!(
+            compression(&incompressible(1 << 16)),
+            zip::CompressionMethod::Stored
+        );
+        assert_eq!(
+            compression(&b"{\n  \"version\": \"1\"\n}\n".repeat(100)),
+            zip::CompressionMethod::Deflated
+        );
+        assert_eq!(compression(b""), zip::CompressionMethod::Stored);
+
+        // a tenth of the file is text: deflate saves about 10%, too little
+        let mut mostly = incompressible(1 << 16);
+        mostly.extend(b"a".repeat(1 << 13));
+        assert_eq!(compression(&mostly), zip::CompressionMethod::Stored);
+    }
+
+    #[test]
+    fn packs_a_crlset_with_its_serials_stored() {
+        let keys = Keys::new(b"test");
+        let spec = Spec {
+            appid: keys.appid("crlset").unwrap(),
+            label: "crlset".into(),
+            version: "29928387".parse().unwrap(),
+            manifest: None,
+            files: Vec::new(),
+            signed_by: None,
+        };
+        let crl_set = incompressible(1 << 20);
+        let manifest = br#"{
+  "manifest_version": 2,
+  "name": "crl-set-29928387.data",
+  "version": "29928387"
+}
+"#
+        .to_vec();
+        let files = vec![
+            ("crl-set".to_owned(), crl_set.clone()),
+            ("manifest.json".to_owned(), manifest.clone()),
+        ];
+        let crx = crx(&spec, files, &keys.signer("crlset").unwrap()).unwrap();
+
+        let verified = crx3::verify(&crx, &crx3::Policy::default()).unwrap();
+        assert_eq!(verified.id, spec.appid.as_str());
+        let archive = crx3::split(&crx).unwrap().archive;
+        let mut zip = zip::ZipArchive::new(Cursor::new(archive)).unwrap();
+
+        // the manifest is too small for deflate to save much either
+        for (name, data) in [("crl-set", &crl_set), ("manifest.json", &manifest)] {
+            let mut entry = zip.by_name(name).unwrap();
+            assert_eq!(
+                entry.compression(),
+                zip::CompressionMethod::Stored,
+                "{name}"
+            );
+            let mut read = Vec::new();
+            entry.read_to_end(&mut read).unwrap();
+            assert_eq!(&read, data, "{name}");
+        }
+
+        assert!(crx.len() > crl_set.len(), "the serials aren't deflated");
     }
 }
