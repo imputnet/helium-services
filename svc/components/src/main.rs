@@ -3,6 +3,7 @@
 
 use components::bergamot::Bergamot;
 use components::crlset::CrlSet;
+use components::google::Google;
 use components::keys::Keys;
 use components::ublock::UBlock;
 use components::{BoxError, Components, Config, Provider, component_key, serve};
@@ -50,6 +51,7 @@ async fn run() -> Result<(), BoxError> {
     }
 
     providers.push(Arc::new(UBlock::default()));
+    providers.push(Arc::new(Google::default()));
 
     if std::env::args().nth(1).as_deref() == Some("keys") {
         return print_keys(&providers).await;

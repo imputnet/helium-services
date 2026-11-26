@@ -48,9 +48,20 @@ pub(crate) async fn get(
     url: &str,
     max: usize,
 ) -> Result<Vec<u8>, BoxError> {
-    let mut response = http
+    let request = http
         .get(url)
-        .header(http::header::USER_AGENT, "helium-components")
+        .header(http::header::USER_AGENT, "helium-components");
+    read(request, url, max).await
+}
+
+/// Sends `request` and reads up to `max` bytes of its response, all within
+/// FETCH_TIMEOUT, so a stalled upstream can't hold anything up.
+pub(crate) async fn read(
+    request: reqwest::RequestBuilder,
+    url: &str,
+    max: usize,
+) -> Result<Vec<u8>, BoxError> {
+    let mut response = request
         .timeout(FETCH_TIMEOUT)
         .send()
         .await?

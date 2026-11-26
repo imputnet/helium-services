@@ -3,6 +3,7 @@
 pub mod bergamot;
 mod builds;
 pub mod crlset;
+pub mod google;
 pub mod keys;
 mod provider;
 mod server;
