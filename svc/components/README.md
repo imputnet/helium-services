@@ -17,9 +17,9 @@ is built the first time a browser needs it.
   release's version in its manifest.
 - **pki metadata** and **ssl error assistant**: proxied from google
 
-browsers that have an older release cached get a [puffin][] patch to the
-newest one, made the first time it's needed. responses are signed with
-cup.
+browsers that have a release from the last week cached get a [puffin][]
+patch to the newest one, made the first time it's needed. responses are
+signed with cup.
 
 `components keys` prints every component's app id, name and the sha-256 of
 its public key, which the browser pins.

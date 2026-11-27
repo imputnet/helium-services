@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use std::io::{Cursor, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::{Semaphore, watch};
 use tokio::time::Instant;
 
@@ -27,6 +27,11 @@ const PARALLEL_WORK: usize = 2;
 const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(300);
 const DIFF_TIMEOUT: Duration = Duration::from_secs(300);
 const KEEP: usize = 4;
+const KEEP_FOR: Duration = Duration::from_secs(7 * 24 * 60 * 60);
+const MAX_KEEP: usize = 32;
+/// Releases whose patches are kept: the newest, which is offered, and the one
+/// before it, so a patch offered just before a build can still be fetched.
+const PATCHED: usize = 2;
 const MAX_PATCH_RATIO: f64 = 0.8;
 const STORE_RATIO: f64 = 0.8;
 const WAIT: Duration = Duration::from_secs(15);
@@ -48,6 +53,9 @@ struct Built {
     version: String,
     sha256: String,
     size: u64,
+    /// When it became the newest, in unix seconds.
+    #[serde(default)]
+    built: u64,
     #[serde(default)]
     patches: Vec<BuiltPatch>,
     #[serde(default)]
@@ -63,6 +71,12 @@ struct BuiltPatch {
 
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+fn now() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs())
 }
 
 fn crx_path(appid: &AppId, sha256: &str) -> String {
@@ -102,6 +116,16 @@ impl Built {
     fn has_patch_from(&self, from: &str) -> bool {
         self.patches.iter().any(|p| p.from == from) || self.unpatchable.iter().any(|u| u == from)
     }
+}
+
+/// Keeps the newest `KEEP` releases, and older ones that were the newest
+/// within `KEEP_FOR`.
+fn retain(releases: &mut Vec<Built>, now: u64) {
+    let recent = releases
+        .iter()
+        .take_while(|b| now.saturating_sub(b.built) < KEEP_FOR.as_secs())
+        .count();
+    releases.truncate((recent + 1).clamp(KEEP, MAX_KEEP));
 }
 
 fn internal(appid: &AppId) -> AppResponse {
@@ -374,11 +398,18 @@ impl Builds {
                 version: spec.version.to_string(),
                 sha256,
                 size: crx.len() as u64,
+                built: now(),
                 patches: Vec::new(),
                 unpatchable: Vec::new(),
             },
         );
-        state.releases.truncate(KEEP);
+        retain(&mut state.releases, now());
+
+        for older in state.releases.iter_mut().skip(PATCHED) {
+            older.patches.clear();
+            older.unpatchable.clear();
+        }
+
         self.save(&spec.appid, state.clone()).await?;
         prune(&dir, &state).await;
         eprintln!(
@@ -573,6 +604,8 @@ impl Builds {
     }
 }
 
+/// Removes crxs that `state` no longer lists, and patches to releases older
+/// than the `PATCHED` newest.
 async fn prune(dir: &Path, state: &State) {
     let Ok(mut entries) = tokio::fs::read_dir(dir).await else {
         return;
@@ -580,8 +613,17 @@ async fn prune(dir: &Path, state: &State) {
 
     while let Ok(Some(entry)) = entries.next_entry().await {
         let name = entry.file_name().to_string_lossy().into_owned();
-        let stem = name.strip_suffix(".crx3").unwrap_or(&name);
-        let kept = name == "state.json" || state.releases.iter().any(|b| b.sha256 == stem);
+        let kept = match name.strip_suffix(".crx3") {
+            Some(sha256) => state.releases.iter().any(|b| b.sha256 == sha256),
+            None => {
+                name == "state.json"
+                    || state
+                        .releases
+                        .iter()
+                        .take(PATCHED)
+                        .any(|b| b.sha256 == name)
+            }
+        };
 
         if !kept {
             let path = entry.path();
@@ -624,6 +666,7 @@ mod tests {
             version: "29903472".into(),
             sha256: "ab".repeat(32),
             size: 7,
+            built: 0,
             patches: vec![BuiltPatch {
                 from: "cd".repeat(32),
                 sha256: "ef".repeat(32),
@@ -642,6 +685,63 @@ mod tests {
             release.patches[0].file.path,
             format!("{appid}/{}/{}.puff", "ab".repeat(32), "cd".repeat(32))
         );
+    }
+
+    #[test]
+    fn reads_state_saved_before_build_times() {
+        let json = format!(
+            r#"{{"releases":[{{"version":"29928054","sha256":"{}","size":7}}]}}"#,
+            "ab".repeat(32)
+        );
+        let state: State = serde_json::from_str(&json).unwrap();
+        assert_eq!(state.releases[0].built, 0);
+    }
+
+    fn release(version: u64, built: u64) -> Built {
+        Built {
+            version: version.to_string(),
+            sha256: format!("{version:064}"),
+            size: 7,
+            built,
+            patches: Vec::new(),
+            unpatchable: Vec::new(),
+        }
+    }
+
+    fn versions(releases: &[Built]) -> Vec<&str> {
+        releases.iter().map(|b| b.version.as_str()).collect()
+    }
+
+    #[test]
+    fn keeps_releases_that_were_the_newest_within_a_week() {
+        const HOUR: u64 = 60 * 60;
+        let now = 100 * 24 * HOUR;
+
+        // one every 12 hours: the newest, and 14 that were the newest in the last week
+        let mut releases: Vec<Built> = (0..40)
+            .map(|i| release(100 - i, now - i * 12 * HOUR))
+            .collect();
+        retain(&mut releases, now);
+        assert_eq!(releases.len(), 15);
+        assert_eq!(releases[14].version, "86");
+
+        // one an hour: capped
+        let mut releases: Vec<Built> = (0..40).map(|i| release(100 - i, now - i * HOUR)).collect();
+        retain(&mut releases, now);
+        assert_eq!(releases.len(), MAX_KEEP);
+
+        // nothing new for a month: still the newest few
+        let mut releases: Vec<Built> = (0..10)
+            .map(|i| release(100 - i, now - (30 + i) * 24 * HOUR))
+            .collect();
+        retain(&mut releases, now);
+        assert_eq!(versions(&releases), ["100", "99", "98", "97"]);
+
+        // saved before build times were: as many as before
+        let mut releases: Vec<Built> = (0..10).map(|i| release(100 - i, 0)).collect();
+        releases.insert(0, release(101, now));
+        retain(&mut releases, now);
+        assert_eq!(versions(&releases), ["101", "100", "99", "98"]);
     }
 
     /// Bytes that deflate can't shrink, like a crlset's hashes and serials.
