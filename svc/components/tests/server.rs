@@ -19,6 +19,7 @@ use std::convert::Infallible;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 use tokio::net::TcpListener;
 
 const CUP_VERSION: u32 = 7;
@@ -225,13 +226,14 @@ async fn upstream_service(
     }
 }
 
+/// Takes a second per patch once `<puffin>.slow` exists.
 fn fake_puffin(dir: &Path) -> PathBuf {
     use std::os::unix::fs::PermissionsExt;
 
     let path = dir.join("puffin");
     std::fs::write(
         &path,
-        "#!/bin/sh\ncase \"$1\" in\n  -puffdiff) printf %s \"$3\" > \"$4\" ;;\n  -puffpatch) cp \"$(cat \"$4\")\" \"$3\" ;;\nesac\n",
+        "#!/bin/sh\ncase \"$1\" in\n  -puffdiff) [ -e \"$0.slow\" ] && sleep 1; printf %s \"$3\" > \"$4\" ;;\n  -puffpatch) cp \"$(cat \"$4\")\" \"$3\" ;;\nesac\n",
     )
     .unwrap();
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
@@ -249,6 +251,7 @@ fn failing_puffin(dir: &Path) -> PathBuf {
 
 struct Setup {
     url: String,
+    dir: PathBuf,
     upstream: Arc<Upstream>,
     components: Arc<Components>,
     cup: cup2::Client,
@@ -317,6 +320,7 @@ async fn setup(
 
     Setup {
         url,
+        dir: data.join("files"),
         upstream,
         components,
         cup: cup2::Client::new(cup2::KeyId::MlDsa44(CUP_VERSION), cup_key.public_key()).unwrap(),
@@ -366,6 +370,29 @@ impl Setup {
         v4::decode_response(&answer).unwrap().response
     }
 
+    /// Waits for `name`'s job to build `version` and every patch to it.
+    async fn settled(&self, name: &str, version: &str) -> serde_json::Value {
+        let path = self.dir.join(self.appid(name)).join("state.json");
+
+        for _ in 0..200 {
+            if let Ok(json) = std::fs::read(&path) {
+                let state: serde_json::Value = serde_json::from_slice(&json).unwrap();
+                let releases = state["releases"].as_array().unwrap();
+                let newest = &releases[0];
+                let tried = newest["patches"].as_array().unwrap().len()
+                    + newest["unpatchable"].as_array().unwrap().len();
+
+                if newest["version"] == version && tried == releases.len() - 1 {
+                    return state;
+                }
+            }
+
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+
+        panic!("{name} {version} wasn't built with its patches");
+    }
+
     async fn download(&self, response: &Response) -> Vec<u8> {
         let (url, size, sha256) = full(response);
         let fetched = reqwest::get(&url).await.unwrap();
@@ -401,6 +428,16 @@ fn pipelines(response: &Response) -> &[Pipeline] {
 fn full(response: &Response) -> (String, u64, Sha256) {
     let (urls, sha256, size) = pipelines(response).last().unwrap().full_crx().unwrap();
     (urls[0].clone(), size, *sha256)
+}
+
+fn compression(crx: &[u8], name: &str) -> zip::CompressionMethod {
+    let archive = crx3::split(crx).unwrap().archive;
+    let mut zip = zip::ZipArchive::new(std::io::Cursor::new(archive.to_vec())).unwrap();
+    zip.by_name(name).unwrap().compression()
+}
+
+fn sha256(bytes: &[u8]) -> Sha256 {
+    Sha256::from_bytes(sha2::Sha256::digest(bytes).into())
 }
 
 fn entry(crx: &[u8], name: &str) -> Vec<u8> {
@@ -583,6 +620,99 @@ async fn gives_up_on_a_patch_that_fails() {
 
     let runs = std::fs::read_to_string(puffin.with_extension("runs")).unwrap();
     assert_eq!(runs.lines().count(), 1);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn builds_new_crlsets_and_their_patches_before_anyone_asks() {
+    let data = tempfile::tempdir().unwrap();
+    let s = fresh(data.path()).await;
+    let crlset = s.appid("crlset");
+    assert_eq!(
+        s.upstream.fetched("standard/crl-set"),
+        0,
+        "nothing is built before a browser asks for it"
+    );
+
+    let old = s.download(&s.check(&crlset, "1", None).await).await;
+    assert_eq!(compression(&old, "crl-set"), zip::CompressionMethod::Stored);
+
+    s.upstream.publish_crlset(101);
+    s.components.refresh().await;
+    s.settled("crlset", "101").await;
+    assert_eq!(s.upstream.fetched("builds/101/crlset/standard/crl-set"), 1);
+
+    let started = Instant::now();
+    let first = s.check(&crlset, "100", Some(&sha256(&old))).await;
+    assert!(
+        started.elapsed() < Duration::from_secs(1),
+        "nothing to wait for"
+    );
+    assert_eq!(pipelines(&first)[0].id, "puff");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn patches_from_every_release_of_the_last_week() {
+    let data = tempfile::tempdir().unwrap();
+    let s = fresh(data.path()).await;
+    let crlset = s.appid("crlset");
+    let oldest = s.download(&s.check(&crlset, "1", None).await).await;
+
+    for sequence in 101..=106 {
+        s.upstream.publish_crlset(sequence);
+        s.components.refresh().await;
+        s.settled("crlset", &sequence.to_string()).await;
+    }
+
+    let response = s.check(&crlset, "100", Some(&sha256(&oldest))).await;
+    assert_eq!(pipelines(&response)[0].id, "puff", "six releases behind");
+
+    let dir = s.dir.join(&crlset);
+    let mut crxs = 0;
+    let mut patches = 0;
+
+    for entry in std::fs::read_dir(&dir).unwrap().flatten() {
+        if entry.path().is_dir() {
+            patches += std::fs::read_dir(entry.path()).unwrap().count();
+        } else if entry.path().extension().is_some_and(|e| e == "crx3") {
+            crxs += 1;
+        }
+    }
+
+    assert_eq!(crxs, 7, "every release is kept");
+    assert_eq!(patches, 6 + 5, "patches to the newest and the one before");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn answers_once_its_own_patch_is_made() {
+    let data = tempfile::tempdir().unwrap();
+    let key = crx3::aws_lc::EcdsaSigner::generate().unwrap();
+    let puffin = fake_puffin(data.path());
+    let s = setup(data.path(), published(), key, puffin.clone()).await;
+    let crlset = s.appid("crlset");
+    let mut last = s.download(&s.check(&crlset, "1", None).await).await;
+
+    for sequence in 101..=104 {
+        s.upstream.publish_crlset(sequence);
+        s.components.refresh().await;
+        s.settled("crlset", &sequence.to_string()).await;
+        last = s.download(&s.check(&crlset, "1", None).await).await;
+    }
+
+    // five patches to make, a second each: the newest source goes first
+    std::fs::write(puffin.with_extension("slow"), "").unwrap();
+    s.upstream.publish_crlset(105);
+    s.components.refresh().await;
+    let started = Instant::now();
+    let response = s.check(&crlset, "104", Some(&sha256(&last))).await;
+    assert_eq!(pipelines(&response)[0].id, "puff");
+    assert!(
+        started.elapsed() < Duration::from_secs(3),
+        "{:?}",
+        started.elapsed()
+    );
+
+    let state = s.settled("crlset", "105").await;
+    assert_eq!(state["releases"][0]["patches"].as_array().unwrap().len(), 5);
 }
 
 async fn raw_status(url: &str, path: &str) -> String {

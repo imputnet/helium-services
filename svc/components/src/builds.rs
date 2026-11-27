@@ -1,5 +1,5 @@
-//! answers update checks: builds and signs releases when they're first
-//! needed, makes puffin patches from older ones, and keeps them on disk.
+//! answers update checks: builds and signs releases, makes puffin patches to
+//! them from older ones, and keeps them on disk.
 
 use crate::BoxError;
 use crate::keys::Keys;
@@ -25,7 +25,8 @@ const MAX_DOWNLOAD: u64 = 256 << 20;
 const MAX_FILE: u64 = 512 << 20;
 const PARALLEL_WORK: usize = 2;
 const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(300);
-const DIFF_TIMEOUT: Duration = Duration::from_secs(300);
+/// Only stops a stuck puffin.
+const DIFF_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 const KEEP: usize = 4;
 const KEEP_FOR: Duration = Duration::from_secs(7 * 24 * 60 * 60);
 const MAX_KEEP: usize = 32;
@@ -268,7 +269,14 @@ pub struct Builds {
     states: Mutex<HashMap<AppId, State>>,
     jobs: Mutex<HashMap<AppId, watch::Receiver<bool>>>,
     failed: Mutex<HashMap<AppId, (Version, Instant)>>,
+    /// Changes whenever a state is saved.
+    progress: watch::Sender<()>,
     work: Semaphore,
+}
+
+enum Step {
+    Build(Spec),
+    Patch { label: String, from: String },
 }
 
 impl Builds {
@@ -282,6 +290,7 @@ impl Builds {
             states: Mutex::new(states),
             jobs: Mutex::default(),
             failed: Mutex::default(),
+            progress: watch::channel(()).0,
             work: Semaphore::new(PARALLEL_WORK),
         }
     }
@@ -301,11 +310,24 @@ impl Builds {
             .collect()
     }
 
-    pub fn set_catalog(&self, provider: &'static str, specs: Vec<Spec>) {
-        let specs = specs.into_iter().map(|s| (s.appid.clone(), s)).collect();
+    /// Takes a provider's newest releases, and builds those of apps that
+    /// browsers already use.
+    pub fn set_catalog(self: &Arc<Self>, provider: &'static str, specs: Vec<Spec>) {
+        let specs: HashMap<AppId, Spec> = specs.into_iter().map(|s| (s.appid.clone(), s)).collect();
+        let asked: Vec<AppId> = specs
+            .keys()
+            .filter(|appid| !self.state(appid).releases.is_empty())
+            .cloned()
+            .collect();
 
         if let Ok(mut catalogs) = self.catalogs.write() {
             catalogs.insert(provider, Arc::new(specs));
+        }
+
+        for appid in asked {
+            if self.next_step(&appid).is_some() {
+                self.start(&appid);
+            }
         }
     }
 
@@ -331,6 +353,7 @@ impl Builds {
             states.insert(appid.clone(), state);
         }
 
+        self.progress.send_replace(());
         Ok(())
     }
 
@@ -448,28 +471,43 @@ impl Builds {
         }))
     }
 
-    async fn patch(&self, spec: &Spec, puffin: &Path, from: &str) -> Result<(), BoxError> {
+    async fn patch(&self, appid: &AppId, label: &str, from: &str) -> Result<(), BoxError> {
+        let Some(puffin) = &self.config.puffin else {
+            return Ok(());
+        };
         let _work = self.work.acquire().await?;
-        let mut state = self.state(&spec.appid);
-        let Some(to) = state.releases.first().map(|b| b.sha256.clone()) else {
+        let mut state = self.state(appid);
+        let Some((newest, older)) = state.releases.split_first_mut() else {
             return Ok(());
         };
-        let made = self.diff(&spec.appid, puffin, from, &to).await;
-        let Some(newest) = state.releases.first_mut() else {
-            return Ok(());
-        };
+        let old = older
+            .iter()
+            .find(|b| b.sha256 == from)
+            .map_or(from, |b| b.version.as_str());
+        let started = Instant::now();
 
         // a failed diff isn't retried, or every check from that cache would rerun it
-        match made {
-            Ok(Some(patch)) => newest.patches.push(patch),
-            Ok(None) => newest.unpatchable.push(from.into()),
+        match self.diff(appid, puffin, from, &newest.sha256).await {
+            Ok(Some(patch)) => {
+                eprintln!(
+                    "patched {label} {old} to {} ({} bytes, {:.1}s)",
+                    newest.version,
+                    patch.size,
+                    started.elapsed().as_secs_f64()
+                );
+                newest.patches.push(patch);
+            }
+            Ok(None) => {
+                eprintln!("patching {label} from {old}: too large");
+                newest.unpatchable.push(from.into());
+            }
             Err(e) => {
-                eprintln!("patching {} from {from}: {e}", spec.label);
+                eprintln!("patching {label} from {old}: {e}");
                 newest.unpatchable.push(from.into());
             }
         }
 
-        self.save(&spec.appid, state).await
+        self.save(appid, state).await
     }
 
     fn needs_build(&self, spec: &Spec) -> bool {
@@ -491,62 +529,127 @@ impl Builds {
         !failed.is_some_and(|(version, at)| version == spec.version && at.elapsed() < BUILD_RETRY)
     }
 
-    fn patch_source(&self, appid: &AppId, cached: &[String]) -> Option<String> {
-        self.config.puffin.as_ref()?;
+    /// The older releases that the newest has no patch from yet, newest first.
+    fn unpatched(&self, appid: &AppId) -> Vec<String> {
+        if self.config.puffin.is_none() {
+            return Vec::new();
+        }
+
         let state = self.state(appid);
-        let (newest, older) = state.releases.split_first()?;
-        cached
+        let Some((newest, older)) = state.releases.split_first() else {
+            return Vec::new();
+        };
+        older
             .iter()
-            .find(|c| older.iter().any(|b| b.sha256 == **c) && !newest.has_patch_from(c))
-            .cloned()
+            .filter(|b| !newest.has_patch_from(&b.sha256))
+            .map(|b| b.sha256.clone())
+            .collect()
     }
 
-    async fn prepare(&self, spec: &Spec, cached: &[String]) -> Result<(), BoxError> {
-        if self.needs_build(spec)
-            && let Err(e) = self.build(spec).await
-        {
-            if let Ok(mut failed) = self.failed.lock() {
-                failed.insert(spec.appid.clone(), (spec.version.clone(), Instant::now()));
-            }
+    fn next_step(&self, appid: &AppId) -> Option<Step> {
+        let spec = self.spec(appid);
 
-            return Err(format!("building {}: {e}", spec.label).into());
+        if let Some(spec) = spec.as_ref().filter(|spec| self.needs_build(spec)) {
+            return Some(Step::Build(spec.clone()));
         }
 
-        if let (Some(puffin), Some(from)) =
-            (&self.config.puffin, self.patch_source(&spec.appid, cached))
-        {
-            self.patch(spec, puffin, &from).await?;
-        }
-
-        Ok(())
+        let from = self.unpatched(appid).into_iter().next()?;
+        let label = spec.map_or_else(|| appid.to_string(), |spec| spec.label);
+        Some(Step::Patch { label, from })
     }
 
-    /// Runs `prepare` in the background, once per app at a time; the
-    /// receiver turns true when it's done.
-    fn start(self: &Arc<Self>, spec: Spec, cached: Vec<String>) -> watch::Receiver<bool> {
+    /// Builds an app's newest release and its patches in the background, one
+    /// job per app. The receiver turns true when it's done.
+    fn start(self: &Arc<Self>, appid: &AppId) -> watch::Receiver<bool> {
         let Ok(mut jobs) = self.jobs.lock() else {
             return watch::channel(true).1;
         };
 
-        if let Some(running) = jobs.get(&spec.appid) {
+        if let Some(running) = jobs.get(appid) {
             return running.clone();
         }
 
         let (done, receiver) = watch::channel(false);
-        jobs.insert(spec.appid.clone(), receiver.clone());
+        jobs.insert(appid.clone(), receiver.clone());
         let this = self.clone();
+        let appid = appid.clone();
         tokio::spawn(async move {
-            if let Err(e) = this.prepare(&spec, &cached).await {
-                eprintln!("{e}");
-            }
+            while let Some(step) = this.step(&appid) {
+                if let Err(e) = this.run(&appid, step).await {
+                    eprintln!("{e}");
 
-            if let Ok(mut jobs) = this.jobs.lock() {
-                jobs.remove(&spec.appid);
+                    if let Ok(mut jobs) = this.jobs.lock() {
+                        jobs.remove(&appid);
+                    }
+
+                    break;
+                }
             }
 
             let _ = done.send(true);
         });
         receiver
+    }
+
+    /// The job's next step, or none once it's off `jobs`, under the same lock
+    /// so a job found there will pick up what's asked of it.
+    fn step(&self, appid: &AppId) -> Option<Step> {
+        let mut jobs = self.jobs.lock().ok()?;
+        let step = self.next_step(appid);
+
+        if step.is_none() {
+            jobs.remove(appid);
+        }
+
+        step
+    }
+
+    async fn run(&self, appid: &AppId, step: Step) -> Result<(), BoxError> {
+        match step {
+            Step::Build(spec) => {
+                if let Err(e) = self.build(&spec).await {
+                    eprintln!("building {}: {e}", spec.label);
+
+                    if let Ok(mut failed) = self.failed.lock() {
+                        failed.insert(spec.appid.clone(), (spec.version.clone(), Instant::now()));
+                    }
+                }
+
+                Ok(())
+            }
+            Step::Patch { label, from } => self.patch(appid, &label, &from).await,
+        }
+    }
+
+    /// Waits until the deadline for `spec` to be built and patched from `cached`.
+    async fn wait(self: &Arc<Self>, spec: &Spec, cached: &[String], deadline: Instant) {
+        let mut progress = self.progress.subscribe();
+        let ready = || {
+            !self.needs_build(spec)
+                && !self
+                    .unpatched(&spec.appid)
+                    .iter()
+                    .any(|from| cached.contains(from))
+        };
+
+        if ready() {
+            return;
+        }
+
+        let mut done = self.start(&spec.appid);
+        let _ = tokio::time::timeout_at(deadline, async {
+            while !ready() {
+                tokio::select! {
+                    _ = done.wait_for(|done| *done) => break,
+                    changed = progress.changed() => {
+                        if changed.is_err() {
+                            break;
+                        }
+                    }
+                }
+            }
+        })
+        .await;
     }
 
     async fn answer(
@@ -572,10 +675,7 @@ impl Builds {
                 };
 
             // anything that isn't done by the deadline is offered on a later check
-            if self.needs_build(&spec) || self.patch_source(&spec.appid, &cached).is_some() {
-                let mut done = self.start(spec, cached);
-                let _ = tokio::time::timeout_at(deadline, done.wait_for(|done| *done)).await;
-            }
+            self.wait(&spec, &cached, deadline).await;
         }
 
         let releases: Vec<Release> = self
