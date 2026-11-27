@@ -28,6 +28,7 @@ const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(300);
 const DIFF_TIMEOUT: Duration = Duration::from_secs(300);
 const KEEP: usize = 4;
 const MAX_PATCH_RATIO: f64 = 0.8;
+const STORE_RATIO: f64 = 0.8;
 const WAIT: Duration = Duration::from_secs(15);
 const BUILD_RETRY: Duration = Duration::from_secs(600);
 
@@ -138,6 +139,22 @@ fn manifest_version(json: &[u8]) -> Option<Version> {
     manifest.get("version")?.as_str()?.parse().ok()
 }
 
+/// Stores files that deflate barely shrinks, like the crlset, since deflate
+/// makes their patches much larger.
+fn compression(data: &[u8]) -> zip::CompressionMethod {
+    let deflated = std::io::copy(
+        &mut flate2::read::DeflateEncoder::new(data, flate2::Compression::default()),
+        &mut std::io::sink(),
+    );
+
+    match deflated {
+        Ok(size) if (size as f64) < data.len() as f64 * STORE_RATIO => {
+            zip::CompressionMethod::Deflated
+        }
+        _ => zip::CompressionMethod::Stored,
+    }
+}
+
 fn crx(
     spec: &Spec,
     files: Vec<(String, Vec<u8>)>,
@@ -168,12 +185,11 @@ fn crx(
     entries.sort_by(|a, b| a.0.cmp(&b.0));
     let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let options = zip::write::SimpleFileOptions::default()
-        .compression_method(zip::CompressionMethod::Deflated)
         .last_modified_time(zip::DateTime::default())
         .unix_permissions(0o644);
 
     for (name, data) in entries {
-        zip.start_file(name, options)?;
+        zip.start_file(name, options.compression_method(compression(&data)))?;
         zip.write_all(&data)?;
     }
 
@@ -626,5 +642,77 @@ mod tests {
             release.patches[0].file.path,
             format!("{appid}/{}/{}.puff", "ab".repeat(32), "cd".repeat(32))
         );
+    }
+
+    /// Bytes that deflate can't shrink, like a crlset's hashes and serials.
+    fn incompressible(len: usize) -> Vec<u8> {
+        (0u64..)
+            .flat_map(|i| sha2::Sha256::digest(i.to_le_bytes()))
+            .take(len)
+            .collect()
+    }
+
+    #[test]
+    fn stores_files_that_deflate_barely_shrinks() {
+        assert_eq!(
+            compression(&incompressible(1 << 16)),
+            zip::CompressionMethod::Stored
+        );
+        assert_eq!(
+            compression(&b"{\n  \"version\": \"1\"\n}\n".repeat(100)),
+            zip::CompressionMethod::Deflated
+        );
+        assert_eq!(compression(b""), zip::CompressionMethod::Stored);
+
+        // a tenth of the file is text: deflate saves about 10%, too little
+        let mut mostly = incompressible(1 << 16);
+        mostly.extend(b"a".repeat(1 << 13));
+        assert_eq!(compression(&mostly), zip::CompressionMethod::Stored);
+    }
+
+    #[test]
+    fn packs_a_crlset_with_its_serials_stored() {
+        let keys = Keys::new(b"test");
+        let spec = Spec {
+            appid: keys.appid("crlset").unwrap(),
+            label: "crlset".into(),
+            version: "29928387".parse().unwrap(),
+            manifest: None,
+            files: Vec::new(),
+            signed_by: None,
+        };
+        let crl_set = incompressible(1 << 20);
+        let manifest = br#"{
+  "manifest_version": 2,
+  "name": "crl-set-29928387.data",
+  "version": "29928387"
+}
+"#
+        .to_vec();
+        let files = vec![
+            ("crl-set".to_owned(), crl_set.clone()),
+            ("manifest.json".to_owned(), manifest.clone()),
+        ];
+        let crx = crx(&spec, files, &keys.signer("crlset").unwrap()).unwrap();
+
+        let verified = crx3::verify(&crx, &crx3::Policy::default()).unwrap();
+        assert_eq!(verified.id, spec.appid.as_str());
+        let archive = crx3::split(&crx).unwrap().archive;
+        let mut zip = zip::ZipArchive::new(Cursor::new(archive)).unwrap();
+
+        // the manifest is too small for deflate to save much either
+        for (name, data) in [("crl-set", &crl_set), ("manifest.json", &manifest)] {
+            let mut entry = zip.by_name(name).unwrap();
+            assert_eq!(
+                entry.compression(),
+                zip::CompressionMethod::Stored,
+                "{name}"
+            );
+            let mut read = Vec::new();
+            entry.read_to_end(&mut read).unwrap();
+            assert_eq!(&read, data, "{name}");
+        }
+
+        assert!(crx.len() > crl_set.len(), "the serials aren't deflated");
     }
 }
