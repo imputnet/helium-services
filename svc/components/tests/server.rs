@@ -80,9 +80,10 @@ impl Upstream {
 
     fn publish_crlset(&self, sequence: u64) -> Vec<u8> {
         let build = format!("builds/{sequence}/");
-        let crl_set = format!("revoked serials as of {sequence}")
-            .repeat(100)
-            .into_bytes();
+        // hashes and serials, which deflate can't shrink
+        let crl_set: Vec<u8> = (0..128)
+            .flat_map(|i| sha2::Sha256::digest(format!("revoked as of {sequence}, {i}")))
+            .collect();
         let manifest = format!(
             "{{\n  \"manifest_version\": 2,\n  \"name\": \"crl-set-{sequence}.data\",\n  \"version\": \"{sequence}\"\n}}\n"
         )
