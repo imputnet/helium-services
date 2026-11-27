@@ -2,8 +2,7 @@
 
 the update server for helium's own browser components, at
 https://components.helium.computer/. each component is signed with its own
-key, derived from `COMPONENT_KEY` by the component's name, and each release
-is built the first time a browser needs it.
+key, derived from `COMPONENT_KEY` by the component's name.
 
 - **crlset**: [opencrlset](https://github.com/imputnet/opencrlset)'s
   newest build, its `crl-set` and `manifest.json` packed as they are,
@@ -18,8 +17,7 @@ is built the first time a browser needs it.
 - **pki metadata** and **ssl error assistant**: proxied from google
 
 browsers that have a release from the last week cached get a [puffin][]
-patch to the newest one, made the first time it's needed. responses are
-signed with cup.
+patch to the newest one. responses are signed with cup.
 
 `components keys` prints every component's app id, name and the sha-256 of
 its public key, which the browser pins.
