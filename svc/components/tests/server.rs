@@ -474,6 +474,36 @@ async fn packs_opencrlsets_files_and_patches_from_cached_releases() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn keeps_an_offered_patch_through_the_next_build() {
+    let data = tempfile::tempdir().unwrap();
+    let s = fresh(data.path()).await;
+    let crlset = s.appid("crlset");
+
+    let old = s.download(&s.check(&crlset, "1", None).await).await;
+    let old_sha = Sha256::from_bytes(sha2::Sha256::digest(&old).into());
+    s.upstream.publish_crlset(101);
+    s.components.refresh().await;
+    let offered = s.check(&crlset, "100", Some(&old_sha)).await;
+    let patch = &pipelines(&offered)[0];
+    assert_eq!(patch.id, "puff");
+    let omaha_protocol::Operation::Download { urls, .. } = &patch.operations[0] else {
+        panic!("{patch:?}");
+    };
+    let path = urls[0].trim_start_matches(&s.url).to_owned();
+
+    for (sequence, status) in [(102, "200"), (103, "404")] {
+        s.upstream.publish_crlset(sequence);
+        s.components.refresh().await;
+        let response = s.check(&crlset, "1", None).await;
+        let Outcome::Update { nextversion, .. } = outcome(&response) else {
+            panic!("no update to {sequence}");
+        };
+        assert_eq!(nextversion.to_string(), sequence.to_string());
+        assert_eq!(raw_status(&s.url, &path).await, status, "after {sequence}");
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn keeps_builds_across_restarts() {
     let data = tempfile::tempdir().unwrap();
     let first = fresh(data.path()).await;

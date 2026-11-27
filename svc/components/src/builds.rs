@@ -29,6 +29,9 @@ const DIFF_TIMEOUT: Duration = Duration::from_secs(300);
 const KEEP: usize = 4;
 const KEEP_FOR: Duration = Duration::from_secs(7 * 24 * 60 * 60);
 const MAX_KEEP: usize = 32;
+/// Releases whose patches are kept: the newest, which is offered, and the one
+/// before it, so a patch offered just before a build can still be fetched.
+const PATCHED: usize = 2;
 const MAX_PATCH_RATIO: f64 = 0.8;
 const STORE_RATIO: f64 = 0.8;
 const WAIT: Duration = Duration::from_secs(15);
@@ -389,13 +392,6 @@ impl Builds {
         write(&dir.join(format!("{sha256}.crx3")), &crx).await?;
 
         let mut state = self.state(&spec.appid);
-
-        // only the newest is offered, so only patches to it are kept
-        for older in &mut state.releases {
-            older.patches.clear();
-            older.unpatchable.clear();
-        }
-
         state.releases.insert(
             0,
             Built {
@@ -408,6 +404,12 @@ impl Builds {
             },
         );
         retain(&mut state.releases, now());
+
+        for older in state.releases.iter_mut().skip(PATCHED) {
+            older.patches.clear();
+            older.unpatchable.clear();
+        }
+
         self.save(&spec.appid, state.clone()).await?;
         prune(&dir, &state).await;
         eprintln!(
@@ -602,20 +604,26 @@ impl Builds {
     }
 }
 
-/// Removes crxs and patches that `state` no longer lists.
+/// Removes crxs that `state` no longer lists, and patches to releases older
+/// than the `PATCHED` newest.
 async fn prune(dir: &Path, state: &State) {
     let Ok(mut entries) = tokio::fs::read_dir(dir).await else {
         return;
     };
-    let newest = state.releases.first().map(|b| b.sha256.as_str());
 
     while let Ok(Some(entry)) = entries.next_entry().await {
         let name = entry.file_name().to_string_lossy().into_owned();
-        let kept = name == "state.json"
-            || Some(name.as_str()) == newest
-            || name
-                .strip_suffix(".crx3")
-                .is_some_and(|sha256| state.releases.iter().any(|b| b.sha256 == sha256));
+        let kept = match name.strip_suffix(".crx3") {
+            Some(sha256) => state.releases.iter().any(|b| b.sha256 == sha256),
+            None => {
+                name == "state.json"
+                    || state
+                        .releases
+                        .iter()
+                        .take(PATCHED)
+                        .any(|b| b.sha256 == name)
+            }
+        };
 
         if !kept {
             let path = entry.path();
